@@ -7,7 +7,7 @@ import { ScreenBackground, GlassCard, useContentPadding } from '@/Glass';
 import { colors, radius, spacing } from '@/theme';
 import { hapticsOn, setHaptics } from '@/settings';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://127.0.0.1:3001';
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api-police.brsats.com';
 const SUPABASE_HOST = (() => {
   try {
     return new URL(process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').host;

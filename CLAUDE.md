@@ -50,6 +50,27 @@ Application de gestion d'embarquement pour aéroport utilisant des PDA Zebra And
 
 ---
 
+## 📦 Dépôts Git & déploiement
+
+Deux dépôts GitHub **séparés et indépendants** (choix assumé — pas de synchro auto) :
+
+| Dépôt | Contenu | Usage |
+|---|---|---|
+| [martinbitha5/Police](https://github.com/martinbitha5/Police) | Monorepo complet (mobile, web, api, packages) | Source de vérité du projet |
+| [martinbitha5/API-POLICE](https://github.com/martinbitha5/API-POLICE) | **Snapshot autonome de l'API** (`packages/api` + `shared` + `bcbp-parser` + `package.json` racine workspaces) | Déploiement Hostinger Cloud (option A : API autonome) |
+
+> ⚠️ **Le dépôt API-POLICE est un snapshot indépendant**, vit dans un dossier
+> séparé (`Desktop/api-police-repo`), **non relié au monorepo**. Modifier l'API
+> dans le monorepo ne se propage PAS vers API-POLICE — il faut recopier/repousser
+> manuellement. C'est voulu : on garde les deux séparés. Si une synchro devient
+> nécessaire, écrire un script dédié plutôt que de relier les deux repos.
+
+Déploiement API sur **Hostinger Cloud** (mutualisé hPanel, fonction « Node.js App ») :
+variables d'env (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `PORT`) à fournir
+côté hPanel — jamais committées. Retirer `--env-file=.env` du script `start` en prod.
+
+---
+
 ## 🗄️ Schéma base de données Supabase
 
 ```sql
