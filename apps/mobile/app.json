@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Police Bagage",
+    "slug": "boarding-scanner",
+    "scheme": "boardingscanner",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "platforms": ["android"],
+    "plugins": ["expo-router"],
+    "android": {
+      "package": "com.airport.boardingscanner"
+    }
+  }
+}

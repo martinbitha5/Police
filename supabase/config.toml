@@ -1,0 +1,17 @@
+project_id = "boarding-pass-scanner"
+
+[db]
+port = 54322
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[auth]
+enabled = true
+# createUser admin avec email_confirm: true → comptes actifs immédiatement
+enable_confirmations = false
