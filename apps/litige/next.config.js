@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
+  outputFileTracingRoot: path.join(__dirname, '../..'),
   transpilePackages: ['@police/shared'],
   webpack: (config) => {
     // Les paquets workspace en TS (ESM NodeNext) importent avec l'extension `.js`

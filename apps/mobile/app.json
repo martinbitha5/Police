@@ -7,10 +7,27 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "platforms": ["android"],
-    "plugins": ["expo-router"],
+    "platforms": [
+      "android"
+    ],
+    "icon": "./assets/icon.png",
+    "plugins": [
+      "expo-router"
+    ],
     "android": {
-      "package": "com.airport.boardingscanner"
-    }
+      "package": "com.airport.boardingscanner",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-foreground.png",
+        "backgroundImage": "./assets/adaptive-background.png",
+        "backgroundColor": "#2f87ee"
+      }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7c7a2973-bd8b-4879-bf86-63d98a9bebaa"
+      }
+    },
+    "owner": "martinbitha5"
   }
 }
