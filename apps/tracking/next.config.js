@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
+  // Monorepo : tracer les dépendances depuis la racine pour embarquer @police/shared.
+  outputFileTracingRoot: path.join(__dirname, '../..'),
   transpilePackages: ['@police/shared'],
   webpack: (config) => {
     // Les paquets workspace en TS (ESM NodeNext) importent avec l'extension `.js`
