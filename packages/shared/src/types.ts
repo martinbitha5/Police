@@ -9,6 +9,15 @@ export type UserRole = 'admin' | 'supervisor' | 'agent';
 
 export type FlightStatus = 'scheduled' | 'boarding' | 'closed';
 
+/** Statut d'un dossier de litige bagage. */
+export type DisputeStatus = 'open' | 'investigating' | 'resolved';
+
+export const DISPUTE_STATUS_LABEL: Record<DisputeStatus, string> = {
+  open: 'Ouvert',
+  investigating: 'En cours',
+  resolved: 'Résolu',
+} as const;
+
 /** Raisons de rejet d'un bagage (règles anti-fraude 1 à 5). */
 export const FRAUD_REASON = {
   PASSENGER_NOT_REGISTERED: 'Passager non enregistré',
@@ -19,6 +28,18 @@ export const FRAUD_REASON = {
 } as const;
 
 export type FraudReason = (typeof FRAUD_REASON)[keyof typeof FRAUD_REASON];
+
+/** Catégories de réclamation passager (app tracking → litige). */
+export type ClaimCategory = 'missing' | 'damaged' | 'contents' | 'delayed' | 'other';
+
+/** Libellé français stocké en base (l'app litige est en français). */
+export const CLAIM_CATEGORY_LABEL: Record<ClaimCategory, string> = {
+  missing: 'Bagage manquant',
+  damaged: 'Bagage endommagé',
+  contents: 'Objet manquant dans le bagage',
+  delayed: 'Bagage retardé',
+  other: 'Autre problème',
+} as const;
 
 // ─────────────────────────────────────────────────────────────
 // Résultats de parsing
@@ -137,6 +158,23 @@ export interface AirlineCode {
   name: string | null;
 }
 
+export interface BaggageDispute {
+  id: string;
+  baggage_id: string | null;
+  flight_id: string | null;
+  passenger_id: string | null;
+  tag_number: string | null;
+  status: DisputeStatus;
+  reason: string | null;
+  notes: string | null;
+  /** true = ouvert via une réclamation passager (app tracking), pas par un superviseur. */
+  from_passenger: boolean;
+  created_by: string | null;
+  created_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Résultats d'opérations de scan (api → clients)
 // ─────────────────────────────────────────────────────────────
@@ -200,6 +238,8 @@ export interface TrackedBag {
   /** true = étiquette physique scannée au tapis (bagage chargé). */
   status: BaggageStatus;
   scannedAt: string | null;
+  /** Statut du litige/réclamation si le passager a signalé un problème, sinon null. */
+  claimStatus: DisputeStatus | null;
 }
 
 export interface TrackedPassenger {
@@ -227,3 +267,19 @@ export interface BaggageTrackingNotFound {
 }
 
 export type BaggageTrackingResult = BaggageTrackingFound | BaggageTrackingNotFound;
+
+// ─────────────────────────────────────────────────────────────
+// Réclamation passager (app tracking → litige superviseur)
+// ─────────────────────────────────────────────────────────────
+
+export interface BaggageClaimAccepted {
+  status: 'accepted';
+  message: string;
+}
+
+export interface BaggageClaimRejected {
+  status: 'rejected';
+  message: string;
+}
+
+export type BaggageClaimResult = BaggageClaimAccepted | BaggageClaimRejected;

@@ -1,17 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { CSSProperties } from 'react';
-import type { BaggageTrackingResult, TrackedPassenger, TrackedBag } from '@police/shared';
+import type {
+  BaggageTrackingResult,
+  TrackedPassenger,
+  TrackedBag,
+  ClaimCategory,
+  DisputeStatus,
+} from '@police/shared';
 import loadingPlane from '@/loading-plane.json';
 import { useLang } from '@/i18n/LanguageProvider';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { glass, shared } from '@/components/theme';
-import { IconSearch, IconBag } from '@/components/icons';
+import { IconSearch, IconBag, IconAlert, IconCheck } from '@/components/icons';
 
 // lottie-react dépend de `window` → chargé côté client uniquement.
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
@@ -178,6 +184,10 @@ function HelpCard() {
 
 function PassengerCard({ pax }: { pax: TrackedPassenger }) {
   const { t } = useLang();
+  const [openTag, setOpenTag] = useState<string | null>(null);
+  // Statut de réclamation forcé localement après envoi, pour que l'étiquette
+  // passe à « Problème signalé » immédiatement sans relancer la recherche.
+  const [claimed, setClaimed] = useState<Record<string, DisputeStatus>>({});
   const allLoaded = pax.declaredBaggageCount > 0 && pax.confirmedBaggageCount >= pax.declaredBaggageCount;
   return (
     <section style={s.resultCard}>
@@ -200,27 +210,178 @@ function PassengerCard({ pax }: { pax: TrackedPassenger }) {
         </div>
       </div>
       <ul style={s.bagList}>
-        {pax.bags.map((b) => (
-          <BagRow key={b.tagNumber} bag={b} />
-        ))}
+        {pax.bags.map((b) => {
+          const claimStatus = claimed[b.tagNumber] ?? b.claimStatus;
+          return (
+            <Fragment key={b.tagNumber}>
+              <BagRow
+                bag={b}
+                claimStatus={claimStatus}
+                open={openTag === b.tagNumber}
+                onToggle={() => setOpenTag(openTag === b.tagNumber ? null : b.tagNumber)}
+              />
+              {openTag === b.tagNumber ? (
+                <li style={s.claimWrap}>
+                  <ClaimForm
+                    tagNumber={b.tagNumber}
+                    onDone={() => setOpenTag(null)}
+                    onSubmitted={() => setClaimed((m) => ({ ...m, [b.tagNumber]: 'open' }))}
+                  />
+                </li>
+              ) : null}
+            </Fragment>
+          );
+        })}
       </ul>
     </section>
   );
 }
 
-function BagRow({ bag }: { bag: TrackedBag }) {
+function BagRow({
+  bag,
+  claimStatus,
+  open,
+  onToggle,
+}: {
+  bag: TrackedBag;
+  claimStatus: DisputeStatus | null;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const { t } = useLang();
   const loaded = bag.status === 'loaded';
+  const claimLabel =
+    claimStatus === 'resolved'
+      ? t.claim.statusResolved
+      : claimStatus === 'investigating'
+        ? t.claim.statusInvestigating
+        : claimStatus === 'open'
+          ? t.claim.statusOpen
+          : null;
+  const claimStyle =
+    claimStatus === 'resolved' ? s.claimBadgeResolved : s.claimBadgeOpen;
   return (
     <li style={s.bagRow}>
       <span style={s.tag}><IconBag size={15} /> {bag.tagNumber}</span>
       <span style={{ ...s.badge, ...(loaded ? s.badgeLoaded : s.badgePending) }}>
         {loaded ? t.home.badgeLoaded : t.home.badgePending}
       </span>
+      {claimLabel ? (
+        <span style={{ ...s.badge, ...claimStyle }}>
+          {claimStatus === 'resolved' ? <IconCheck size={12} /> : <IconAlert size={12} />} {claimLabel}
+        </span>
+      ) : null}
       {loaded && bag.scannedAt ? (
         <span style={s.scannedAt}>{new Date(bag.scannedAt).toLocaleString('fr-FR')}</span>
       ) : null}
+      {claimStatus === 'resolved' ? null : (
+        <button type="button" style={s.reportBtn} onClick={onToggle}>
+          <IconAlert size={14} /> {open ? t.claim.cancel : t.claim.open}
+        </button>
+      )}
     </li>
+  );
+}
+
+function ClaimForm({
+  tagNumber,
+  onDone,
+  onSubmitted,
+}: {
+  tagNumber: string;
+  onDone: () => void;
+  onSubmitted: () => void;
+}) {
+  const { t } = useLang();
+  const cats: { key: ClaimCategory; label: string }[] = [
+    { key: 'missing', label: t.claim.catMissing },
+    { key: 'damaged', label: t.claim.catDamaged },
+    { key: 'contents', label: t.claim.catContents },
+    { key: 'delayed', label: t.claim.catDelayed },
+    { key: 'other', label: t.claim.catOther },
+  ];
+  const [category, setCategory] = useState<ClaimCategory>('missing');
+  const [message, setMessage] = useState('');
+  const [contact, setContact] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  async function submit() {
+    if (!message.trim()) {
+      setErr(t.claim.errEmpty);
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch('/api/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tagNumber, category, message: message.trim(), contact: contact.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.status !== 'accepted') {
+        setErr(data.message ?? t.claim.errSend);
+        setBusy(false);
+        return;
+      }
+      setDone(true);
+      onSubmitted();
+    } catch {
+      setErr(t.claim.errSend);
+      setBusy(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <div style={s.claimDone}>
+        <IconCheck size={18} /> <span>{t.claim.success}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={s.claimForm}>
+      <div style={s.claimTitle}>{t.claim.title}</div>
+
+      <label style={s.claimLabel}>{t.claim.category}</label>
+      <select style={s.input} value={category} onChange={(e) => setCategory(e.target.value as ClaimCategory)}>
+        {cats.map((c) => (
+          <option key={c.key} value={c.key}>
+            {c.label}
+          </option>
+        ))}
+      </select>
+
+      <label style={s.claimLabel}>{t.claim.message}</label>
+      <textarea
+        style={{ ...s.input, minHeight: 84, resize: 'vertical', fontFamily: 'inherit' }}
+        placeholder={t.claim.messagePh}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+      />
+
+      <label style={s.claimLabel}>{t.claim.contact}</label>
+      <input
+        style={s.input}
+        placeholder={t.claim.contactPh}
+        value={contact}
+        onChange={(e) => setContact(e.target.value)}
+      />
+
+      {err ? <div style={s.claimErr}>{err}</div> : null}
+
+      <div style={s.claimActions}>
+        <button type="button" style={s.claimCancel} onClick={onDone} disabled={busy}>
+          {t.claim.cancel}
+        </button>
+        <button type="button" style={s.claimSubmit} onClick={submit} disabled={busy}>
+          {busy ? t.claim.submitting : t.claim.submit}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -264,7 +425,88 @@ const s: Record<string, CSSProperties> = {
   badge: { fontSize: 13, fontWeight: 600, borderRadius: 999, padding: '4px 12px' },
   badgeLoaded: { background: 'rgba(22,163,74,0.2)', color: '#4ade80', border: '1px solid rgba(22,163,74,0.5)' },
   badgePending: { background: 'rgba(217,119,6,0.18)', color: '#fbbf24', border: '1px solid rgba(217,119,6,0.45)' },
+  claimBadgeOpen: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    background: 'rgba(220,38,38,0.16)',
+    color: '#fca5a5',
+    border: '1px solid rgba(220,38,38,0.45)',
+  },
+  claimBadgeResolved: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    background: 'rgba(37,99,235,0.16)',
+    color: '#93c5fd',
+    border: '1px solid rgba(37,99,235,0.45)',
+  },
   scannedAt: { marginLeft: 'auto', color: 'var(--muted)', fontSize: 12 },
+  reportBtn: {
+    marginLeft: 'auto',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    background: 'transparent',
+    border: '1px solid var(--glass-border)',
+    color: 'var(--muted)',
+    borderRadius: 999,
+    padding: '5px 12px',
+    fontSize: 13,
+    fontWeight: 600,
+  },
+
+  claimWrap: { listStyle: 'none', margin: 0, padding: 0 },
+  claimForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid var(--glass-border)',
+    borderRadius: 12,
+    padding: 16,
+  },
+  claimTitle: { fontSize: 15, fontWeight: 700, marginBottom: 2 },
+  claimLabel: { fontSize: 13, fontWeight: 600, color: '#e2e8f0', marginTop: 4 },
+  claimErr: {
+    color: '#fca5a5',
+    background: 'rgba(220,38,38,0.12)',
+    border: '1px solid rgba(220,38,38,0.4)',
+    borderRadius: 8,
+    padding: '8px 12px',
+    fontSize: 13,
+  },
+  claimActions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 6 },
+  claimCancel: {
+    background: 'rgba(255,255,255,0.07)',
+    color: 'var(--text)',
+    border: '1px solid var(--glass-border)',
+    borderRadius: 10,
+    padding: '9px 16px',
+    fontWeight: 600,
+    fontSize: 14,
+  },
+  claimSubmit: {
+    background: 'var(--primary)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 10,
+    padding: '9px 18px',
+    fontWeight: 700,
+    fontSize: 14,
+  },
+  claimDone: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    background: 'rgba(22,163,74,0.14)',
+    border: '1px solid rgba(22,163,74,0.45)',
+    color: '#4ade80',
+    borderRadius: 12,
+    padding: '14px 16px',
+    fontSize: 14,
+    fontWeight: 600,
+  },
 
   helpCard: { ...glass, borderRadius: 14, padding: 24, marginTop: 6 },
   helpTitle: { margin: '0 0 8px', fontSize: 20, fontWeight: 700 },

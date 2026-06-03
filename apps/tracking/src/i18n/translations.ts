@@ -58,6 +58,30 @@ export interface Dictionary {
     badgePending: string;
     pnrLabel: string;
   };
+  claim: {
+    open: string;
+    title: string;
+    category: string;
+    catMissing: string;
+    catDamaged: string;
+    catContents: string;
+    catDelayed: string;
+    catOther: string;
+    message: string;
+    messagePh: string;
+    contact: string;
+    contactPh: string;
+    submit: string;
+    submitting: string;
+    cancel: string;
+    success: string;
+    errEmpty: string;
+    errSend: string;
+    statusTitle: string;
+    statusOpen: string;
+    statusInvestigating: string;
+    statusResolved: string;
+  };
   help: {
     title: string;
     text: string;
@@ -131,6 +155,30 @@ export const translations: Record<Lang, Dictionary> = {
       badgeLoaded: 'Chargé en soute',
       badgePending: 'En attente',
       pnrLabel: 'PNR',
+    },
+    claim: {
+      open: 'Signaler un problème',
+      title: 'Signaler un problème sur ce bagage',
+      category: 'Type de problème',
+      catMissing: 'Bagage manquant',
+      catDamaged: 'Bagage endommagé',
+      catContents: 'Objet manquant dans le bagage',
+      catDelayed: 'Bagage retardé',
+      catOther: 'Autre problème',
+      message: 'Description',
+      messagePh: 'Décrivez le problème rencontré…',
+      contact: 'Email ou téléphone (optionnel)',
+      contactPh: 'Pour vous recontacter',
+      submit: 'Envoyer la réclamation',
+      submitting: 'Envoi…',
+      cancel: 'Annuler',
+      success: 'Réclamation envoyée. Notre équipe va la traiter.',
+      errEmpty: 'Veuillez décrire le problème.',
+      errSend: 'Échec de l’envoi. Réessayez.',
+      statusTitle: 'Réclamation',
+      statusOpen: 'Problème signalé',
+      statusInvestigating: 'En cours de traitement',
+      statusResolved: 'Réclamation traitée',
     },
     help: {
       title: 'Besoin d’aide ?',
@@ -345,6 +393,30 @@ export const translations: Record<Lang, Dictionary> = {
       badgeLoaded: 'Loaded in hold',
       badgePending: 'Pending',
       pnrLabel: 'PNR',
+    },
+    claim: {
+      open: 'Report an issue',
+      title: 'Report an issue with this bag',
+      category: 'Issue type',
+      catMissing: 'Missing baggage',
+      catDamaged: 'Damaged baggage',
+      catContents: 'Item missing from baggage',
+      catDelayed: 'Delayed baggage',
+      catOther: 'Other issue',
+      message: 'Description',
+      messagePh: 'Describe the issue you encountered…',
+      contact: 'Email or phone (optional)',
+      contactPh: 'So we can get back to you',
+      submit: 'Send claim',
+      submitting: 'Sending…',
+      cancel: 'Cancel',
+      success: 'Claim sent. Our team will handle it.',
+      errEmpty: 'Please describe the issue.',
+      errSend: 'Sending failed. Please try again.',
+      statusTitle: 'Claim',
+      statusOpen: 'Issue reported',
+      statusInvestigating: 'Being processed',
+      statusResolved: 'Claim resolved',
     },
     help: {
       title: 'Need help?',

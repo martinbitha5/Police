@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-// Icônes SVG (trait) — pas d'emojis, rendu net et professionnel.
+// Jeu d'icônes en SVG (trait) — pas d'emojis, rendu net et professionnel.
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
 function base({ size = 18, ref: _ref, ...props }: IconProps) {
@@ -17,15 +17,6 @@ function base({ size = 18, ref: _ref, ...props }: IconProps) {
   };
 }
 
-export function IconSearch(p: IconProps) {
-  return (
-    <svg {...base(p)}>
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.3-4.3" />
-    </svg>
-  );
-}
-
 export function IconBag(p: IconProps) {
   return (
     <svg {...base(p)}>
@@ -36,38 +27,30 @@ export function IconBag(p: IconProps) {
   );
 }
 
-export function IconGlobe(p: IconProps) {
+export function IconUser(p: IconProps) {
   return (
     <svg {...base(p)}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18" />
-      <path d="M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9s1.3-6.5 3.8-9z" />
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
     </svg>
   );
 }
 
-export function IconMail(p: IconProps) {
+export function IconLogout(p: IconProps) {
   return (
     <svg {...base(p)}>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="M3.5 6.5l8.5 6 8.5-6" />
+      <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" />
+      <path d="M3 12h12" />
+      <path d="M10 8l-4 4 4 4" />
     </svg>
   );
 }
 
-export function IconPhone(p: IconProps) {
+export function IconSearch(p: IconProps) {
   return (
     <svg {...base(p)}>
-      <path d="M6 3h3l1.5 4.5L8 9a12 12 0 0 0 7 7l1.5-2.5L21 15v3a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2z" />
-    </svg>
-  );
-}
-
-export function IconClock(p: IconProps) {
-  return (
-    <svg {...base(p)}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3.5 2" />
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.3-4.3" />
     </svg>
   );
 }
@@ -82,10 +65,28 @@ export function IconAlert(p: IconProps) {
   );
 }
 
+export function IconClose(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
 export function IconCheck(p: IconProps) {
   return (
     <svg {...base(p)}>
       <path d="M5 12l5 5L20 7" />
+    </svg>
+  );
+}
+
+export function IconDownload(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M12 4v11" />
+      <path d="M8 11l4 4 4-4" />
+      <path d="M5 20h14" />
     </svg>
   );
 }

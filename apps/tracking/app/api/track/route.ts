@@ -6,6 +6,7 @@ import type {
   TrackedBag,
   Flight,
   FlightStatus,
+  DisputeStatus,
 } from '@police/shared';
 import { createAdminClient } from '@/supabase/admin';
 
@@ -13,11 +14,17 @@ const TAG_RE = /^\d{10}$/;
 const NOT_FOUND = (message: string): BaggageTrackingResult => ({ status: 'not_found', message });
 
 interface BagRow {
+  id: string;
   tag_number: string;
   is_confirmed: boolean;
   scanned_at: string | null;
   passenger_id: string;
   flight_id: string;
+}
+
+interface DisputeStatusRow {
+  baggage_id: string | null;
+  status: DisputeStatus;
 }
 
 interface PaxRow {
@@ -58,7 +65,7 @@ export async function POST(request: NextRequest) {
     // Mode étiquette : 10 chiffres → tag_number exact.
     const { data, error } = await supabase
       .from('baggage')
-      .select('tag_number, is_confirmed, scanned_at, passenger_id, flight_id')
+      .select('id, tag_number, is_confirmed, scanned_at, passenger_id, flight_id')
       .eq('tag_number', query);
     if (error) return NextResponse.json({ error: 'Erreur de recherche' }, { status: 500 });
     bagRows = (data as BagRow[] | null) ?? [];
@@ -83,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
     const { data, error } = await supabase
       .from('baggage')
-      .select('tag_number, is_confirmed, scanned_at, passenger_id, flight_id')
+      .select('id, tag_number, is_confirmed, scanned_at, passenger_id, flight_id')
       .in('passenger_id', ids);
     if (error) return NextResponse.json({ error: 'Erreur de recherche' }, { status: 500 });
     bagRows = (data as BagRow[] | null) ?? [];
@@ -94,22 +101,38 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // ── Charge passagers + vols + escales en une passe ──────────────────────
+  // ── Charge passagers + vols + escales + litiges en une passe ────────────
   const paxIds = [...new Set(bagRows.map((b) => b.passenger_id))];
   const flightIds = [...new Set(bagRows.map((b) => b.flight_id))];
+  const bagIds = [...new Set(bagRows.map((b) => b.id))];
 
-  const [{ data: paxData }, { data: flightData }, { data: legData }] = await Promise.all([
-    supabase
-      .from('passengers')
-      .select('id, full_name, pnr, flight_id, declared_baggage_count')
-      .in('id', paxIds),
-    supabase.from('flights').select('*').in('id', flightIds),
-    supabase
-      .from('passenger_legs')
-      .select('passenger_id, origin, destination, leg_order')
-      .in('passenger_id', paxIds)
-      .order('leg_order'),
-  ]);
+  const [{ data: paxData }, { data: flightData }, { data: legData }, { data: disputeData }] =
+    await Promise.all([
+      supabase
+        .from('passengers')
+        .select('id, full_name, pnr, flight_id, declared_baggage_count')
+        .in('id', paxIds),
+      supabase.from('flights').select('*').in('id', flightIds),
+      supabase
+        .from('passenger_legs')
+        .select('passenger_id, origin, destination, leg_order')
+        .in('passenger_id', paxIds)
+        .order('leg_order'),
+      supabase
+        .from('baggage_disputes')
+        .select('baggage_id, status')
+        .in('baggage_id', bagIds)
+        .order('created_at', { ascending: false }),
+    ]);
+
+  // Statut de réclamation par bagage (le plus récent l'emporte : on garde la
+  // première occurrence, la requête étant triée du plus récent au plus ancien).
+  const claimByBagId = new Map<string, DisputeStatus>();
+  for (const d of (disputeData as DisputeStatusRow[] | null) ?? []) {
+    if (d.baggage_id && !claimByBagId.has(d.baggage_id)) {
+      claimByBagId.set(d.baggage_id, d.status);
+    }
+  }
 
   const paxById = new Map((paxData as PaxRow[] | null ?? []).map((p) => [p.id, p]));
   const flightById = new Map((flightData as Flight[] | null ?? []).map((f) => [f.id, f]));
@@ -150,6 +173,7 @@ export async function POST(request: NextRequest) {
         tagNumber: b.tag_number,
         status: b.is_confirmed ? 'loaded' : 'pending',
         scannedAt: b.is_confirmed ? b.scanned_at : null,
+        claimStatus: claimByBagId.get(b.id) ?? null,
       }));
     passengers.push({
       passengerName: pax.full_name,

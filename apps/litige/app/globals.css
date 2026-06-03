@@ -1,0 +1,57 @@
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --border: #334155;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --primary: #2563eb;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+
+  /* Surfaces quasi opaques pour un texte net (la photo reste visible autour). */
+  --glass: rgba(14, 21, 39, 0.95);
+  --glass-strong: rgba(11, 17, 33, 0.98);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-blur: blur(14px) saturate(140%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #08101f;
+}
+
+/* Couche photo de fond (IMG_9478.jpeg) appliquée directement sur body
+   pour rester visible derrière le contenu ; bg.svg en secours. */
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  min-height: 100vh;
+  background-color: #08101f;
+  background-image: linear-gradient(135deg, rgba(8, 16, 31, 0.60), rgba(8, 16, 31, 0.74)),
+    url('/IMG_9478.jpeg'), url('/bg.svg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+button {
+  cursor: pointer;
+  font: inherit;
+}
+
+a {
+  color: var(--primary);
+}
+
+/* Options des menus déroulants : fond sombre lisible (sinon blanc sur blanc). */
+select option {
+  background: #0f172a;
+  color: #f1f5f9;
+}

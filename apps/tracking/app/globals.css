@@ -58,10 +58,20 @@ a {
   text-decoration: none;
 }
 
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
-input::placeholder {
+input::placeholder,
+textarea::placeholder {
   color: rgba(203, 213, 225, 0.6);
+}
+
+/* Options des menus déroulants : fond sombre opaque et texte clair
+   (sinon le menu natif hérite d'un fond translucide illisible). */
+select option {
+  background: #0f172a;
+  color: #f1f5f9;
 }
