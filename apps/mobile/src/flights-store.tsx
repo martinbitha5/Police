@@ -8,9 +8,10 @@ export interface FlightStats {
   pax: number;
   bagTotal: number;
   bagOk: number;
+  boarded: number;
 }
 
-const EMPTY_STATS: FlightStats = { pax: 0, bagTotal: 0, bagOk: 0 };
+const EMPTY_STATS: FlightStats = { pax: 0, bagTotal: 0, bagOk: 0, boarded: 0 };
 
 interface FlightsState {
   flights: Flight[];
@@ -26,14 +27,15 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** Compte les passagers + bagages d'un vol en une passe (3 requêtes head/count). */
+/** Compte les passagers + bagages + embarqués d'un vol en une passe (4 requêtes head/count). */
 async function fetchStats(flightId: string): Promise<FlightStats> {
-  const [{ count: p }, { count: bt }, { count: bo }] = await Promise.all([
+  const [{ count: p }, { count: bt }, { count: bo }, { count: brd }] = await Promise.all([
     supabase.from('passengers').select('id', { count: 'exact', head: true }).eq('flight_id', flightId),
     supabase.from('baggage').select('id', { count: 'exact', head: true }).eq('flight_id', flightId),
     supabase.from('baggage').select('id', { count: 'exact', head: true }).eq('flight_id', flightId).eq('is_confirmed', true),
+    supabase.from('passengers').select('id', { count: 'exact', head: true }).eq('flight_id', flightId).eq('boarded', true),
   ]);
-  return { pax: p ?? 0, bagTotal: bt ?? 0, bagOk: bo ?? 0 };
+  return { pax: p ?? 0, bagTotal: bt ?? 0, bagOk: bo ?? 0, boarded: brd ?? 0 };
 }
 
 export function FlightsProvider({ children }: { children: ReactNode }) {

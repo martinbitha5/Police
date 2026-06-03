@@ -1,4 +1,4 @@
-import type { BaggageScanResult } from '@police/shared';
+import type { BaggageScanResult, BoardingGateResult } from '@police/shared';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api-police.brsats.com';
 
@@ -37,4 +37,12 @@ export function scanBaggage(
   scannedBy?: string,
 ): Promise<BaggageScanResult> {
   return post<BaggageScanResult>('/scan/baggage', { tag, flightId, gate, scannedBy });
+}
+
+export function scanEmbarquement(
+  raw: string,
+  flightId: string,
+  scannedBy?: string,
+): Promise<BoardingGateResult> {
+  return post<BoardingGateResult>('/scan/embarquement', { raw, flightId, scannedBy });
 }

@@ -27,7 +27,9 @@ export default function FlightDetail() {
   const router = useRouter();
   const { getFlight, statsFor, loading } = useFlights();
   const flight = flightId ? getFlight(flightId) : undefined;
-  const { pax, bagTotal, bagOk } = flightId ? statsFor(flightId) : { pax: 0, bagTotal: 0, bagOk: 0 };
+  const { pax, bagTotal, bagOk, boarded } = flightId
+    ? statsFor(flightId)
+    : { pax: 0, bagTotal: 0, bagOk: 0, boarded: 0 };
   const pad = useSafePadding();
 
   if (loading && !flight) {
@@ -83,6 +85,8 @@ export default function FlightDetail() {
           <Stat icon="people" label="Passagers" value={String(pax)} />
           <View style={styles.statDivider} />
           <Stat icon="bag-handle" label="Bagages" value={`${bagOk}/${bagTotal}`} />
+          <View style={styles.statDivider} />
+          <Stat icon="airplane" label="Embarqués" value={`${boarded}/${pax}`} />
         </View>
       </GlassCard>
 
@@ -101,6 +105,13 @@ export default function FlightDetail() {
         title="Bagages"
         subtitle="Scanner les étiquettes bagage"
         onPress={() => router.push({ pathname: '/baggage', params: { flightId: flight.id } })}
+      />
+      <OptionCard
+        icon="airplane"
+        tint={colors.success}
+        title="Embarquement"
+        subtitle="Confirmer les passagers à la porte"
+        onPress={() => router.push({ pathname: '/embarquement', params: { flightId: flight.id } })}
       />
     </View>
   );

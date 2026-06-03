@@ -71,12 +71,14 @@ export async function GET(request: NextRequest) {
   }
   const declaredTotal = passengers.reduce((s, p) => s + p.declared_baggage_count, 0);
   const confirmedTotal = [...confirmedByPax.values()].reduce((s, n) => s + n, 0);
+  const boardedTotal = passengers.reduce((s, p) => s + (p.boarded ? 1 : 0), 0);
 
   // Stats globales de la journée
   const { data: dayFlights } = await supabase.from('flights').select('id').eq('date', flight.date);
   const dayIds = ((dayFlights as { id: string }[] | null) ?? []).map((f) => f.id);
-  const [{ count: dayPax }, { count: dayBags }, { count: dayFraud }] = await Promise.all([
+  const [{ count: dayPax }, { count: dayBoarded }, { count: dayBags }, { count: dayFraud }] = await Promise.all([
     supabase.from('passengers').select('*', { count: 'exact', head: true }).in('flight_id', dayIds),
+    supabase.from('passengers').select('*', { count: 'exact', head: true }).in('flight_id', dayIds).eq('boarded', true),
     supabase.from('baggage').select('*', { count: 'exact', head: true }).in('flight_id', dayIds).eq('is_confirmed', true),
     supabase.from('fraud_alerts').select('*', { count: 'exact', head: true }).in('flight_id', dayIds),
   ]);
@@ -96,12 +98,13 @@ export async function GET(request: NextRequest) {
     { width: 22 },
     { width: 18 },
     { width: 18 },
+    { width: 14 },
   ];
 
   let r = 1;
 
   function title(text: string) {
-    ws.mergeCells(r, 1, r, 6);
+    ws.mergeCells(r, 1, r, 7);
     const cell = ws.getCell(r, 1);
     cell.value = text;
     cell.font = { bold: true, size: 16, color: { argb: COLOR.light } };
@@ -114,14 +117,14 @@ export async function GET(request: NextRequest) {
   function meta(label: string, value: string) {
     ws.getCell(r, 1).value = label;
     ws.getCell(r, 1).font = { bold: true, color: { argb: COLOR.header } };
-    ws.mergeCells(r, 2, r, 6);
+    ws.mergeCells(r, 2, r, 7);
     ws.getCell(r, 2).value = value;
     r += 1;
   }
 
   function section(text: string) {
     r += 1;
-    ws.mergeCells(r, 1, r, 6);
+    ws.mergeCells(r, 1, r, 7);
     const cell = ws.getCell(r, 1);
     cell.value = text;
     cell.font = { bold: true, size: 12, color: { argb: COLOR.light } };
@@ -167,9 +170,9 @@ export async function GET(request: NextRequest) {
 
   // 2. Liste passagers
   section('Passagers');
-  headerRow(['Passager', 'PNR', 'Siège', 'Classe', 'Route', 'Bagages (conf./décl.)']);
+  headerRow(['Passager', 'PNR', 'Siège', 'Classe', 'Route', 'Bagages (conf./décl.)', 'Embarqué']);
   if (passengers.length === 0) {
-    dataRow(['Aucun passager enregistré', '', '', '', '', '']);
+    dataRow(['Aucun passager enregistré', '', '', '', '', '', '']);
   } else {
     passengers.forEach((p, i) => {
       const conf = confirmedByPax.get(p.id) ?? 0;
@@ -181,6 +184,7 @@ export async function GET(request: NextRequest) {
           p.class ?? '—',
           routeByPax.get(p.id) ?? formatRoute(flight),
           `${conf} / ${p.declared_baggage_count}`,
+          p.boarded ? 'Oui' : 'Non',
         ],
         { zebra: i % 2 === 1 },
       );
@@ -192,6 +196,12 @@ export async function GET(request: NextRequest) {
   dataRow(['Total bagages déclarés', declaredTotal]);
   dataRow(['Total bagages confirmés', confirmedTotal]);
   dataRow(['Écart (déclarés - confirmés)', declaredTotal - confirmedTotal], { danger: declaredTotal - confirmedTotal !== 0 });
+
+  // 3b. Résumé embarquement
+  section('Résumé embarquement');
+  dataRow(['Passagers enregistrés', passengers.length]);
+  dataRow(['Passagers embarqués', boardedTotal]);
+  dataRow(['Reste à embarquer', passengers.length - boardedTotal], { danger: passengers.length - boardedTotal !== 0 });
 
   // 4. Alertes fraude
   section('Alertes fraude');
@@ -218,6 +228,7 @@ export async function GET(request: NextRequest) {
   section(`Statistiques globales — ${flight.date}`);
   dataRow(['Vols traités', dayIds.length]);
   dataRow(['Passagers enregistrés', dayPax ?? 0]);
+  dataRow(['Passagers embarqués', dayBoarded ?? 0]);
   dataRow(['Bagages confirmés', dayBags ?? 0]);
   dataRow(['Alertes fraude détectées', dayFraud ?? 0]);
 

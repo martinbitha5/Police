@@ -295,7 +295,7 @@ function FlightDetail({
   canManage: boolean;
   onUpdated: () => void;
 }) {
-  const { passengers, alerts, baggageDeclared, baggageConfirmed } = useFlightData(flight.id);
+  const { passengers, alerts, baggageDeclared, baggageConfirmed, boardedCount } = useFlightData(flight.id);
   const unresolved = alerts.filter((a) => !a.resolved);
 
   async function changeStatus(status: Flight['status']) {
@@ -336,6 +336,7 @@ function FlightDetail({
 
       <div style={s.statGrid}>
         <Stat label="Passagers" value={String(passengers.length)} icon={<IconUser size={20} />} tint="#2563eb" />
+        <Stat label="Embarqués" value={`${boardedCount} / ${passengers.length}`} icon={<IconPlaneDepart size={20} />} tint="#22c55e" />
         <Stat label="Bagages confirmés" value={`${baggageConfirmed} / ${baggageDeclared}`} icon={<IconBag size={20} />} tint="#14b8a6" />
         <Stat label="Alertes fraude" value={String(unresolved.length)} icon={<IconAlert size={20} />} tint="#dc2626" danger={unresolved.length > 0} />
       </div>
@@ -353,12 +354,13 @@ function FlightDetail({
               <th style={s.th}>Route</th>
               <th style={s.th}>PNR</th>
               <th style={s.th}>Bagages</th>
+              <th style={s.th}>Embarqué</th>
             </tr>
           </thead>
           <tbody>
             {passengers.length === 0 ? (
               <tr>
-                <td style={s.tdEmpty} colSpan={6}>
+                <td style={s.tdEmpty} colSpan={7}>
                   Aucun passager scanné pour le moment.
                 </td>
               </tr>
@@ -384,6 +386,16 @@ function PassengerRowView({ p, fallbackRoute }: { p: PassengerRow; fallbackRoute
       <td style={s.td}>{p.pnr}</td>
       <td style={{ ...s.td, color, fontWeight: 600 }}>
         {p.confirmedCount}/{p.declared_baggage_count}
+      </td>
+      <td style={s.td}>
+        {p.boarded ? (
+          <span style={{ ...badge, color: '#4ade80', borderColor: '#4ade80' }}>
+            <span style={{ ...s.statusDot, background: '#4ade80' }} />
+            Embarqué
+          </span>
+        ) : (
+          <span style={{ color: 'var(--muted)' }}>En attente</span>
+        )}
       </td>
     </tr>
   );

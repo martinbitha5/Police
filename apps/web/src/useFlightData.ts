@@ -14,6 +14,7 @@ export interface FlightData {
   alerts: FraudAlert[];
   baggageDeclared: number;
   baggageConfirmed: number;
+  boardedCount: number;
   reload: () => void;
 }
 
@@ -22,6 +23,7 @@ export function useFlightData(flightId: string | null): FlightData {
   const [alerts, setAlerts] = useState<FraudAlert[]>([]);
   const [baggageDeclared, setDeclared] = useState(0);
   const [baggageConfirmed, setConfirmed] = useState(0);
+  const [boardedCount, setBoarded] = useState(0);
 
   const load = useCallback(async () => {
     if (!flightId) return;
@@ -75,6 +77,7 @@ export function useFlightData(flightId: string | null): FlightData {
     setAlerts((fraud as FraudAlert[] | null) ?? []);
     setConfirmed(confirmedTotal);
     setDeclared(rows.reduce((sum, p) => sum + p.declared_baggage_count, 0));
+    setBoarded(rows.reduce((sum, p) => sum + (p.boarded ? 1 : 0), 0));
   }, [flightId]);
 
   useEffect(() => {
@@ -94,7 +97,7 @@ export function useFlightData(flightId: string | null): FlightData {
     };
   }, [flightId, load]);
 
-  return { passengers, alerts, baggageDeclared, baggageConfirmed, reload: load };
+  return { passengers, alerts, baggageDeclared, baggageConfirmed, boardedCount, reload: load };
 }
 
 export type { Flight };
