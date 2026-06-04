@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { Profile } from '@police/shared';
 import { createClient } from '@/supabase/client';
 import { glassStrong } from '@/ui/theme';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { IconDashboard, IconUsers, IconLogout } from './icons';
 
 const HUB = process.env.NEXT_PUBLIC_HUB ?? 'FIH';
@@ -21,20 +22,18 @@ export function useSession(): Profile | null {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const router = useRouter();
+  const router   = useRouter();
   const pathname = usePathname();
+  const isMobile = useIsMobile();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [authed, setAuthed] = useState(false);
+  const [authed, setAuthed]   = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) {
-        router.replace('/login');
-        return;
-      }
-      // On débloque le rendu dès l'auth confirmée ; le profil se charge en arrière-plan.
+      if (!auth.user) { router.replace('/login'); return; }
       setAuthed(true);
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', auth.user.id).single();
       setProfile((prof as Profile | null) ?? null);
@@ -46,30 +45,93 @@ export function AppShell({ children }: { children: ReactNode }) {
     router.replace('/login');
   }
 
+  // La page Comptes est RÉSERVÉE aux admins. Les superviseurs ne la voient pas.
   const isAdmin = profile?.role === 'admin';
   const nav = [
-    { href: '/', label: 'Tableau de bord', icon: IconDashboard, show: true },
-    { href: '/admin', label: 'Comptes', icon: IconUsers, show: isAdmin },
+    { href: '/',      label: 'Tableau de bord', icon: IconDashboard, show: true },
+    { href: '/admin', label: 'Comptes',          icon: IconUsers,     show: isAdmin },
   ].filter((n) => n.show);
 
+  // ── Layout mobile ────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <SessionCtx.Provider value={profile}>
+        <div style={m.root}>
+          {/* Barre du haut */}
+          <header style={m.topBar}>
+            <div style={m.topBrand}>
+              <span style={m.topBrandName}>Police Bagage</span>
+              <span style={m.topBrandHub}>Hub {HUB}</span>
+            </div>
+            <div style={m.topRight}>
+              {profile ? (
+                <div style={m.topAvatar}>{(profile.full_name ?? '?').charAt(0).toUpperCase()}</div>
+              ) : null}
+              <button style={m.menuBtn} onClick={() => setMenuOpen((v) => !v)} aria-label="Menu">
+                <HamburgerIcon open={menuOpen} />
+              </button>
+            </div>
+          </header>
+
+          {/* Drawer menu */}
+          {menuOpen ? (
+            <div style={m.drawer}>
+              <div style={m.drawerUser}>
+                <div style={m.drawerAvatar}>{(profile?.full_name ?? '?').charAt(0).toUpperCase()}</div>
+                <div>
+                  <div style={m.drawerName}>{profile?.full_name ?? '—'}</div>
+                  <div style={m.drawerRole}>{profile?.role ?? ''}</div>
+                </div>
+              </div>
+              {nav.map((n) => {
+                const active = n.href === '/' ? pathname === '/' : pathname.startsWith(n.href);
+                const Icon = n.icon;
+                return (
+                  <Link
+                    key={n.href}
+                    href={n.href}
+                    style={{ ...m.drawerItem, ...(active ? m.drawerItemActive : {}) }}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Icon size={18} />
+                    <span>{n.label}</span>
+                  </Link>
+                );
+              })}
+              <button style={m.drawerLogout} onClick={logout}>
+                <IconLogout size={16} /> Déconnexion
+              </button>
+            </div>
+          ) : null}
+
+          {/* Contenu principal */}
+          <main style={m.main}>
+            {authed ? children : <div style={m.loading}>Chargement…</div>}
+          </main>
+        </div>
+      </SessionCtx.Provider>
+    );
+  }
+
+  // ── Layout desktop ───────────────────────────────────────────
   return (
     <SessionCtx.Provider value={profile}>
-      <div style={s.layout}>
-        <aside style={s.sidebar}>
-          <div style={s.brandBox}>
+      <div style={d.layout}>
+        <aside style={d.sidebar}>
+          <div style={d.brandBox}>
             <div>
-              <div style={s.brand}>Police Bagage</div>
-              <div style={s.brandSub}>Hub {HUB}</div>
+              <div style={d.brand}>Police Bagage</div>
+              <div style={d.brandSub}>Hub {HUB}</div>
             </div>
           </div>
 
-          <nav style={s.nav}>
+          <nav style={d.nav}>
             {nav.map((n) => {
               const active = n.href === '/' ? pathname === '/' : pathname.startsWith(n.href);
               const Icon = n.icon;
               return (
-                <Link key={n.href} href={n.href} style={{ ...s.navItem, ...(active ? s.navItemActive : {}) }}>
-                  {active ? <span style={s.navAccent} /> : null}
+                <Link key={n.href} href={n.href} style={{ ...d.navItem, ...(active ? d.navItemActive : {}) }}>
+                  {active ? <span style={d.navAccent} /> : null}
                   <Icon size={18} />
                   <span>{n.label}</span>
                 </Link>
@@ -77,32 +139,116 @@ export function AppShell({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          <div style={s.dateBox}>{formatToday()}</div>
+          <div style={d.dateBox}>{formatToday()}</div>
 
-          <div style={s.user}>
-            <div style={s.userRow}>
-              <div style={s.avatar}>{(profile?.full_name ?? '?').charAt(0).toUpperCase()}</div>
+          <div style={d.user}>
+            <div style={d.userRow}>
+              <div style={d.avatar}>{(profile?.full_name ?? '?').charAt(0).toUpperCase()}</div>
               <div style={{ overflow: 'hidden' }}>
-                <div style={s.userName}>{profile?.full_name ?? '—'}</div>
-                <div style={s.userRole}>{profile?.role ?? ''}</div>
+                <div style={d.userName}>{profile?.full_name ?? '—'}</div>
+                <div style={d.userRole}>{profile?.role ?? ''}</div>
               </div>
             </div>
-            <button onClick={logout} style={s.logout}>
-              <IconLogout size={16} />
-              Déconnexion
+            <button onClick={logout} style={d.logout}>
+              <IconLogout size={16} /> Déconnexion
             </button>
           </div>
         </aside>
 
-        <main style={s.main}>
-          {authed ? children : <div style={s.centered}>Chargement…</div>}
+        <main style={d.main}>
+          {authed ? children : <div style={d.centered}>Chargement…</div>}
         </main>
       </div>
     </SessionCtx.Provider>
   );
 }
 
-const s: Record<string, CSSProperties> = {
+/** Icône hamburger / croix animée. */
+function HamburgerIcon({ open }: { open: boolean }) {
+  const bar: CSSProperties = { width: 22, height: 2.5, borderRadius: 2, background: '#f1f5f9', transition: 'all 0.2s' };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: 2 }}>
+      <span style={{ ...bar, transform: open ? 'rotate(45deg) translate(5px, 5px)' : 'none' }} />
+      <span style={{ ...bar, opacity: open ? 0 : 1 }} />
+      <span style={{ ...bar, transform: open ? 'rotate(-45deg) translate(5px, -5px)' : 'none' }} />
+    </div>
+  );
+}
+
+// ── Styles mobile ───────────────────────────────────────────────
+const m: Record<string, CSSProperties> = {
+  root: { display: 'flex', flexDirection: 'column', minHeight: '100vh' },
+
+  topBar: {
+    ...glassStrong,
+    position: 'sticky',
+    top: 0,
+    zIndex: 20,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '14px 16px',
+    borderTop: 'none',
+    borderLeft: 'none',
+    borderRight: 'none',
+  },
+  topBrand: { display: 'flex', flexDirection: 'column', gap: 1 },
+  topBrandName: { fontWeight: 800, fontSize: 17, letterSpacing: -0.3 },
+  topBrandHub: { color: 'var(--muted)', fontSize: 11, fontWeight: 600 },
+  topRight: { display: 'flex', alignItems: 'center', gap: 10 },
+  topAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, var(--primary), #1d4ed8)',
+    color: '#fff',
+    display: 'grid',
+    placeItems: 'center',
+    fontWeight: 700,
+    fontSize: 15,
+  },
+  menuBtn: { background: 'transparent', border: 'none', color: '#f1f5f9', padding: 6, display: 'grid', placeItems: 'center' },
+
+  drawer: {
+    ...glassStrong,
+    position: 'fixed',
+    top: 64,
+    left: 0,
+    right: 0,
+    zIndex: 15,
+    padding: '16px 14px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
+    borderTop: '1px solid var(--glass-border)',
+    borderLeft: 'none',
+    borderRight: 'none',
+  },
+  drawerUser: { display: 'flex', alignItems: 'center', gap: 12, padding: '8px 6px 14px', borderBottom: '1px solid var(--glass-border)', marginBottom: 6 },
+  drawerAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, var(--primary), #1d4ed8)',
+    color: '#fff',
+    display: 'grid',
+    placeItems: 'center',
+    fontWeight: 700,
+    fontSize: 16,
+    flexShrink: 0,
+  },
+  drawerName: { fontWeight: 700, fontSize: 15 },
+  drawerRole: { color: 'var(--muted)', fontSize: 12, textTransform: 'capitalize', marginTop: 2 },
+  drawerItem: { display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderRadius: 12, color: 'var(--muted)', fontSize: 15, fontWeight: 600, textDecoration: 'none' },
+  drawerItemActive: { background: 'rgba(37,99,235,0.20)', color: '#f1f5f9' },
+  drawerLogout: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--danger)', borderRadius: 12, padding: '12px', fontWeight: 600, fontSize: 14, marginTop: 8 },
+
+  main: { flex: 1, padding: '0 0 24px' },
+  loading: { color: 'var(--muted)', display: 'grid', placeItems: 'center', height: '60vh' },
+};
+
+// ── Styles desktop ──────────────────────────────────────────────
+const d: Record<string, CSSProperties> = {
   layout: { display: 'flex', minHeight: '100vh' },
   sidebar: {
     ...glassStrong,
@@ -118,17 +264,6 @@ const s: Record<string, CSSProperties> = {
     height: '100vh',
   },
   brandBox: { display: 'flex', alignItems: 'center', gap: 12, padding: '0 6px 20px' },
-  brandMark: {
-    width: 38,
-    height: 38,
-    borderRadius: 11,
-    background: 'var(--primary)',
-    color: '#fff',
-    display: 'grid',
-    placeItems: 'center',
-    flexShrink: 0,
-    boxShadow: '0 6px 16px rgba(37,99,235,0.45)',
-  },
   brand: { fontWeight: 800, fontSize: 16, letterSpacing: -0.3 },
   brandSub: { color: 'var(--muted)', fontSize: 12, marginTop: 1 },
 
@@ -145,7 +280,7 @@ const s: Record<string, CSSProperties> = {
     fontWeight: 600,
     textDecoration: 'none',
   },
-  navItemActive: { background: 'rgba(37,99,235,0.16)', color: 'var(--text)' },
+  navItemActive: { background: 'rgba(37,99,235,0.18)', color: 'var(--text)' },
   navAccent: {
     position: 'absolute',
     left: 0,
@@ -156,13 +291,7 @@ const s: Record<string, CSSProperties> = {
     background: 'var(--primary)',
   },
 
-  dateBox: {
-    marginTop: 'auto',
-    color: 'var(--muted)',
-    fontSize: 12,
-    padding: '0 8px 12px',
-  },
-
+  dateBox: { marginTop: 'auto', color: 'var(--muted)', fontSize: 12, padding: '0 8px 12px' },
   user: { display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid var(--glass-border)', paddingTop: 14 },
   userRow: { display: 'flex', alignItems: 'center', gap: 10 },
   avatar: {

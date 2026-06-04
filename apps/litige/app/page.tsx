@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import type { Baggage, Passenger, Flight, BaggageDispute, DisputeStatus } from '@police/shared';
 import { formatRoute, DISPUTE_STATUS_LABEL } from '@police/shared';
 import { createClient } from '@/supabase/client';
@@ -32,7 +33,8 @@ export default function Page() {
 }
 
 function LitigeView() {
-  const profile = useSession();
+  const profile  = useSession();
+  const isMobile = useIsMobile();
   const [rows, setRows] = useState<BaggageRow[]>([]);
   const [disputes, setDisputes] = useState<BaggageDispute[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,8 +129,8 @@ function LitigeView() {
   const openCount = useMemo(() => disputes.filter((d) => d.status !== 'resolved').length, [disputes]);
 
   return (
-    <div style={s.wrap}>
-      <header style={s.header}>
+    <div style={isMobile ? { ...s.wrap, ...s.wrapMobile } : s.wrap}>
+      <header style={isMobile ? { ...s.header, ...s.headerMobile } : s.header}>
         <div>
           <h1 style={s.title}>Litiges bagage</h1>
           <p style={s.sub}>
@@ -147,7 +149,7 @@ function LitigeView() {
       </header>
 
       <div style={{ ...card, padding: 16 }}>
-        <div style={s.filters}>
+        <div style={isMobile ? { ...s.filters, ...s.filtersMobile } : s.filters}>
           <div style={s.searchBox}>
             <IconSearch size={16} />
             <input
@@ -285,9 +287,66 @@ function LitigeView() {
           }}
         />
       ) : null}
+
+      <AirportLinks />
     </div>
   );
 }
+
+const AIRPORT_LINKS = [
+  { href: 'https://fih-rva.com/guide/securite-bagages', label: 'Sécurité bagages', desc: 'Règles et objets interdits' },
+  { href: 'https://fih-rva.com/guide', label: 'Guide voyageur', desc: 'Visa, vaccins, douanes' },
+  { href: 'https://fih-rva.com/contact', label: 'Contact aéroport', desc: 'RVA — Régie des Voies Aériennes' },
+];
+
+function AirportLinks() {
+  return (
+    <div style={al.wrap}>
+      <a style={al.main} href="https://fih-rva.com" target="_blank" rel="noopener noreferrer">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <span style={al.logoWrap}><img src="/fih-logo.png" alt="RVA" width={28} height={28} style={{ objectFit: 'contain' }} /></span>
+        <span style={al.mainTexts}>
+          <span style={al.mainName}>Site officiel — Aéroport International de Kinshasa (FIH)</span>
+          <span style={al.mainUrl}>fih-rva.com · Régie des Voies Aériennes</span>
+        </span>
+        <ExternalIcon />
+      </a>
+      <div style={al.grid}>
+        {AIRPORT_LINKS.map((l) => (
+          <a key={l.href} style={al.card} href={l.href} target="_blank" rel="noopener noreferrer">
+            <span style={al.cardTexts}>
+              <span style={al.cardLabel}>{l.label}</span>
+              <span style={al.cardDesc}>{l.desc}</span>
+            </span>
+            <ExternalIcon />
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ExternalIcon() {
+  return (
+    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.7 }}>
+      <path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
+    </svg>
+  );
+}
+
+const al: Record<string, CSSProperties> = {
+  wrap: { display: 'flex', flexDirection: 'column', gap: 10 },
+  main: { display: 'flex', alignItems: 'center', gap: 14, background: 'linear-gradient(135deg, rgba(37,99,235,0.22), rgba(255,255,255,0.10))', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: '1px solid rgba(37,99,235,0.4)', borderRadius: 14, padding: '14px 18px', color: 'var(--text)', boxShadow: '0 8px 28px rgba(0,0,0,0.18)' },
+  logoWrap: { width: 44, height: 44, borderRadius: 12, background: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0 },
+  mainTexts: { display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 },
+  mainName: { fontSize: 14, fontWeight: 700 },
+  mainUrl: { fontSize: 12, color: 'var(--muted)' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 },
+  card: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: 'var(--glass)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: '1px solid var(--glass-border)', borderRadius: 12, padding: '12px 14px', color: 'var(--text)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' },
+  cardTexts: { display: 'flex', flexDirection: 'column', gap: 2 },
+  cardLabel: { fontSize: 14, fontWeight: 700 },
+  cardDesc: { fontSize: 12, color: 'var(--muted)' },
+};
 
 function DisputePanel({
   row,
@@ -455,11 +514,14 @@ function Detail({ icon, label: lab, value, mono }: { icon?: React.ReactNode; lab
 
 const s: Record<string, CSSProperties> = {
   wrap: { padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 1280, margin: '0 auto' },
+  wrapMobile: { padding: '16px 12px', gap: 14 },
   header: { display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' },
+  headerMobile: { flexDirection: 'column', alignItems: 'flex-start', gap: 10 },
   title: { margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: -0.4 },
   sub: { margin: '4px 0 0', color: 'var(--muted)', fontSize: 14 },
 
   filters: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' },
+  filtersMobile: { flexDirection: 'column', alignItems: 'stretch' },
   searchBox: {
     display: 'flex',
     alignItems: 'center',

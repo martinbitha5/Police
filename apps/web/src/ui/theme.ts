@@ -14,7 +14,7 @@ export const card: CSSProperties = {
   ...glass,
   borderRadius: 16,
   padding: 20,
-  boxShadow: '0 10px 30px rgba(0,0,0,0.22)',
+  boxShadow: '0 8px 28px rgba(0,0,0,0.18)',
 };
 
 export const btnPrimary: CSSProperties = {

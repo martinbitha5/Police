@@ -4,6 +4,7 @@ import { Fragment, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { CSSProperties } from 'react';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import type {
   BaggageTrackingResult,
   TrackedPassenger,
@@ -25,7 +26,8 @@ const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 const TAG_RE = /^\d{10}$/;
 
 export default function TrackingPage() {
-  const { t } = useLang();
+  const { t }    = useLang();
+  const isMobile = useIsMobile();
   const [pnr, setPnr] = useState('');
   const [flightNumber, setFlightNumber] = useState('');
   const [date, setDate] = useState('');
@@ -75,11 +77,11 @@ export default function TrackingPage() {
       <Header />
       <Breadcrumb current={t.breadcrumb.tracking} />
 
-      <main style={shared.main}>
-        <h1 style={s.title}>{t.home.title}</h1>
+      <main style={isMobile ? { ...shared.main, ...shared.mainMobile } : shared.main}>
+        <h1 style={isMobile ? { ...s.title, fontSize: 30 } : s.title}>{t.home.title}</h1>
 
         <form onSubmit={onSubmit} style={s.panel}>
-          <div style={s.grid}>
+          <div style={isMobile ? { ...s.grid, gridTemplateColumns: '1fr' } : s.grid}>
             <Field label={t.home.fieldPnr} required>
               <input
                 style={s.input}

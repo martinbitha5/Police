@@ -54,6 +54,7 @@ export const shared: Record<string, CSSProperties> = {
     flexDirection: 'column',
     gap: 22,
   },
+  mainMobile: { padding: '16px 14px 48px', gap: 16 },
 
   // Pages de contenu (À propos, légal)
   contentTitle: {

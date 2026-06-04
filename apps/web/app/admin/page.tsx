@@ -1,17 +1,36 @@
 'use client';
 
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Profile, UserRole } from '@police/shared';
-import { AppShell } from '@/components/AppShell';
+import { AppShell, useSession } from '@/components/AppShell';
 import { card, btnPrimary, input, label, sectionHeading, badge, ROLE_COLOR, ROLE_LABEL } from '@/ui/theme';
 import { IconPlus, IconUser } from '@/components/icons';
 
 export default function AdminPage() {
   return (
     <AppShell>
-      <AccountManager />
+      <AdminGuard />
     </AppShell>
   );
+}
+
+/** Bloque l'accès si l'utilisateur n'est pas admin. */
+function AdminGuard() {
+  const profile = useSession();
+  const router  = useRouter();
+
+  useEffect(() => {
+    // profile est null pendant le chargement — on attend qu'il soit défini.
+    if (profile !== null && profile.role !== 'admin') {
+      router.replace('/');
+    }
+  }, [profile, router]);
+
+  if (profile === null) return null; // chargement
+  if (profile.role !== 'admin') return null; // redirection en cours
+
+  return <AccountManager />;
 }
 
 const EMPTY = { email: '', password: '', full_name: '', role: 'agent' as UserRole, gate: '' };

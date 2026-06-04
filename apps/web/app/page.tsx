@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import type { Flight, FraudAlert } from '@police/shared';
 import { formatRoute } from '@police/shared';
 import { createClient } from '@/supabase/client';
@@ -55,7 +56,8 @@ export default function DashboardPage() {
 }
 
 function Dashboard() {
-  const profile = useSession();
+  const profile  = useSession();
+  const isMobile = useIsMobile();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [alertsByFlight, setAlertsByFlight] = useState<Record<string, number>>({});
   const [recentAlerts, setRecentAlerts] = useState<FraudAlert[]>([]);
@@ -102,9 +104,9 @@ function Dashboard() {
   const totalAlerts = Object.values(alertsByFlight).reduce((a, b) => a + b, 0);
 
   return (
-    <div style={s.content}>
+    <div style={isMobile ? { ...s.content, ...s.contentMobile } : s.content}>
       {selected ? (
-        <FlightDetail flight={selected} onBack={() => setSelectedId(null)} canManage={canManage} onUpdated={loadFlights} />
+        <FlightDetail flight={selected} onBack={() => setSelectedId(null)} canManage={canManage} onUpdated={loadFlights} isMobile={isMobile} />
       ) : (
         <Overview
           flights={flights}
@@ -114,6 +116,7 @@ function Dashboard() {
           recentAlerts={recentAlerts}
           alerts={alertsByFlight}
           canManage={canManage}
+          isMobile={isMobile}
           onSelect={setSelectedId}
           onAdd={() => setShowForm(true)}
         />
@@ -145,6 +148,7 @@ function Overview({
   recentAlerts,
   alerts,
   canManage,
+  isMobile,
   onSelect,
   onAdd,
 }: {
@@ -155,12 +159,13 @@ function Overview({
   recentAlerts: FraudAlert[];
   alerts: Record<string, number>;
   canManage: boolean;
+  isMobile: boolean;
   onSelect: (id: string) => void;
   onAdd: () => void;
 }) {
   return (
     <div>
-      <div style={s.pageHeader}>
+      <div style={isMobile ? { ...s.pageHeader, ...s.pageHeaderMobile } : s.pageHeader}>
         <div>
           <h1 style={s.pageTitle}>Tableau de bord</h1>
           <div style={s.pageSub}>{formatToday()}</div>
@@ -172,7 +177,7 @@ function Overview({
         ) : null}
       </div>
 
-      <div style={s.statGrid}>
+      <div style={isMobile ? { ...s.statGrid, gridTemplateColumns: 'repeat(2, 1fr)' } : s.statGrid}>
         <Stat label="Vols du jour" value={String(flights.length)} icon={<IconPlane size={20} />} tint="#2563eb" />
         <Stat label="Départs" value={String(departures.length)} icon={<IconPlaneDepart size={20} />} tint="#0ea5e9" />
         <Stat label="Arrivées" value={String(arrivals.length)} icon={<IconPlaneArrive size={20} />} tint="#14b8a6" />
@@ -291,11 +296,13 @@ function FlightDetail({
   onBack,
   canManage,
   onUpdated,
+  isMobile,
 }: {
   flight: Flight;
   onBack: () => void;
   canManage: boolean;
   onUpdated: () => void;
+  isMobile: boolean;
 }) {
   const { passengers, alerts, baggageDeclared, baggageConfirmed, boardedCount } = useFlightData(flight.id);
   const unresolved = alerts.filter((a) => !a.resolved);
@@ -311,7 +318,7 @@ function FlightDetail({
         <IconBack size={16} /> Tableau de bord
       </button>
 
-      <div style={s.detailHeader}>
+      <div style={isMobile ? { ...s.detailHeader, ...s.detailHeaderMobile } : s.detailHeader}>
         <div>
           <div style={s.detailRoute}>
             <h1 style={{ margin: 0, fontSize: 28 }}>{flight.flight_number}</h1>
@@ -337,7 +344,7 @@ function FlightDetail({
         </div>
       </div>
 
-      <div style={s.statGrid}>
+      <div style={isMobile ? { ...s.statGrid, gridTemplateColumns: 'repeat(2, 1fr)' } : s.statGrid}>
         <Stat label="Passagers" value={String(passengers.length)} icon={<IconUser size={20} />} tint="#2563eb" />
         <Stat label="Embarqués" value={`${boardedCount} / ${passengers.length}`} icon={<IconPlaneDepart size={20} />} tint="#22c55e" />
         <Stat label="Bagages confirmés" value={`${baggageConfirmed} / ${baggageDeclared}`} icon={<IconBag size={20} />} tint="#14b8a6" />
@@ -626,8 +633,10 @@ function FlightFormModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
 const s: Record<string, CSSProperties> = {
   content: { padding: 28, maxWidth: 1160, margin: '0 auto', width: '100%' },
+  contentMobile: { padding: '16px 14px' },
 
   pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 16, flexWrap: 'wrap' },
+  pageHeaderMobile: { flexDirection: 'column', gap: 12, marginBottom: 16 },
   pageTitle: { margin: 0, fontSize: 28, fontWeight: 800, textShadow: '0 2px 10px rgba(0,0,0,0.65)' },
   pageSub: { color: '#cbd5e1', fontSize: 14, marginTop: 4, textShadow: '0 1px 6px rgba(0,0,0,0.6)' },
 
@@ -678,6 +687,7 @@ const s: Record<string, CSSProperties> = {
 
   backBtn: { display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: 'var(--primary)', padding: 0, marginBottom: 16, fontSize: 14, fontWeight: 600 },
   detailHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22, gap: 16, flexWrap: 'wrap' },
+  detailHeaderMobile: { flexDirection: 'column', gap: 12, marginBottom: 14 },
   detailRoute: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
   routeChip: { background: 'rgba(255,255,255,0.06)', border: '1px solid var(--glass-border)', borderRadius: 8, padding: '4px 10px', fontSize: 14 },
   statusSelect: { background: 'var(--glass)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: '1px solid var(--glass-border)', color: 'var(--text)', borderRadius: 10, padding: '9px 12px', colorScheme: 'dark' },
