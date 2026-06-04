@@ -56,6 +56,8 @@ export interface Dictionary {
     summaryLoaded: string;
     badgeLoaded: string;
     badgePending: string;
+    badgeRegistered: string;
+    badgeRush: string;
     pnrLabel: string;
   };
   claim: {
@@ -151,9 +153,11 @@ export const translations: Record<Lang, Dictionary> = {
       errConn: 'Connexion impossible. Réessayez.',
       searching: 'Recherche de votre bagage en cours…',
       notFound: 'Aucun bagage trouvé.',
-      summaryLoaded: 'chargés',
+      summaryLoaded: 'traités',
       badgeLoaded: 'Chargé en soute',
       badgePending: 'En attente',
+      badgeRegistered: 'Enregistré',
+      badgeRush: 'Réacheminement',
       pnrLabel: 'PNR',
     },
     claim: {
@@ -389,9 +393,11 @@ export const translations: Record<Lang, Dictionary> = {
       errConn: 'Connection failed. Please try again.',
       searching: 'Searching for your baggage…',
       notFound: 'No baggage found.',
-      summaryLoaded: 'loaded',
+      summaryLoaded: 'processed',
       badgeLoaded: 'Loaded in hold',
       badgePending: 'Pending',
+      badgeRegistered: 'Registered',
+      badgeRush: 'Rerouting',
       pnrLabel: 'PNR',
     },
     claim: {

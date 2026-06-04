@@ -10,11 +10,13 @@ const STATUS_LABEL: Record<FlightStatus, string> = {
   scheduled: 'Programmé',
   boarding: 'Embarquement',
   closed: 'Fermé',
+  cancelled: 'Annulé',
 };
 const STATUS_COLOR: Record<FlightStatus, string> = {
   scheduled: colors.muted,
   boarding: colors.success,
   closed: colors.danger,
+  cancelled: colors.warning,
 };
 
 function formatTime(ts: string | null): string {
@@ -112,6 +114,20 @@ export default function FlightDetail() {
         title="Embarquement"
         subtitle="Confirmer les passagers à la porte"
         onPress={() => router.push({ pathname: '/embarquement', params: { flightId: flight.id } })}
+      />
+      <OptionCard
+        icon="cube"
+        tint={colors.accent}
+        title="Charger"
+        subtitle="Bagages chargés en soute pour la destination"
+        onPress={() => router.push({ pathname: '/charger', params: { flightId: flight.id } })}
+      />
+      <OptionCard
+        icon="repeat"
+        tint={colors.warning}
+        title="Rush"
+        subtitle="Bagages restants à réacheminer"
+        onPress={() => router.push({ pathname: '/rush', params: { flightId: flight.id } })}
       />
     </View>
   );

@@ -251,7 +251,22 @@ function BagRow({
   onToggle: () => void;
 }) {
   const { t } = useLang();
-  const loaded = bag.status === 'loaded';
+  const statusLabel =
+    bag.status === 'rush'
+      ? t.home.badgeRush
+      : bag.status === 'loaded'
+        ? t.home.badgeLoaded
+        : bag.status === 'registered'
+          ? t.home.badgeRegistered
+          : t.home.badgePending;
+  const statusStyle =
+    bag.status === 'rush'
+      ? s.badgeRush
+      : bag.status === 'loaded'
+        ? s.badgeLoaded
+        : bag.status === 'registered'
+          ? s.badgeRegistered
+          : s.badgePending;
   const claimLabel =
     claimStatus === 'resolved'
       ? t.claim.statusResolved
@@ -265,15 +280,13 @@ function BagRow({
   return (
     <li style={s.bagRow}>
       <span style={s.tag}><IconBag size={15} /> {bag.tagNumber}</span>
-      <span style={{ ...s.badge, ...(loaded ? s.badgeLoaded : s.badgePending) }}>
-        {loaded ? t.home.badgeLoaded : t.home.badgePending}
-      </span>
+      <span style={{ ...s.badge, ...statusStyle }}>{statusLabel}</span>
       {claimLabel ? (
         <span style={{ ...s.badge, ...claimStyle }}>
           {claimStatus === 'resolved' ? <IconCheck size={12} /> : <IconAlert size={12} />} {claimLabel}
         </span>
       ) : null}
-      {loaded && bag.scannedAt ? (
+      {bag.scannedAt ? (
         <span style={s.scannedAt}>{new Date(bag.scannedAt).toLocaleString('fr-FR')}</span>
       ) : null}
       {claimStatus === 'resolved' ? null : (
@@ -426,7 +439,9 @@ const s: Record<string, CSSProperties> = {
   tag: { display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 15 },
   badge: { fontSize: 13, fontWeight: 600, borderRadius: 999, padding: '4px 12px' },
   badgeLoaded: { background: 'rgba(22,163,74,0.2)', color: '#4ade80', border: '1px solid rgba(22,163,74,0.5)' },
-  badgePending: { background: 'rgba(217,119,6,0.18)', color: '#fbbf24', border: '1px solid rgba(217,119,6,0.45)' },
+  badgePending: { background: 'rgba(148,163,184,0.18)', color: '#cbd5e1', border: '1px solid rgba(148,163,184,0.4)' },
+  badgeRegistered: { background: 'rgba(37,99,235,0.18)', color: '#93c5fd', border: '1px solid rgba(37,99,235,0.5)' },
+  badgeRush: { background: 'rgba(217,119,6,0.2)', color: '#fbbf24', border: '1px solid rgba(217,119,6,0.5)' },
   claimBadgeOpen: {
     display: 'inline-flex',
     alignItems: 'center',
