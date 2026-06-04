@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "apps/web"],
+      "port": 3000
+    },
+    {
+      "name": "tracking",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "apps/tracking"],
+      "port": 3002
+    },
+    {
+      "name": "litige",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "apps/litige"],
+      "port": 3003
+    },
+    {
+      "name": "vols",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "apps/vols"],
+      "port": 3004
+    }
+  ]
+}

@@ -206,74 +206,117 @@ function LitigeView() {
 
       {error ? <div style={s.error}>Erreur : {error}</div> : null}
 
-      <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
-        <div style={s.tableScroll}>
-          <table style={s.table}>
-            <thead>
-              <tr>
-                <th style={s.th}>Étiquette</th>
-                <th style={s.th}>Série</th>
-                <th style={s.th}>Chargement</th>
-                <th style={s.th}>Vol</th>
-                <th style={s.th}>Route</th>
-                <th style={s.th}>PNR</th>
-                <th style={s.th}>Passager</th>
-                <th style={s.th}>Litige</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+      {isMobile ? (
+        // Mobile : cartes empilées (la table à 8 colonnes scrollerait horizontalement).
+        loading ? (
+          <div style={{ ...card }}>Chargement…</div>
+        ) : filtered.length === 0 ? (
+          <div style={{ ...card }}>Aucun bagage ne correspond.</div>
+        ) : (
+          <div style={s.bagCardList}>
+            {filtered.map((r) => {
+              const d = disputeByBag.get(r.id);
+              return (
+                <button key={r.id} style={s.bagCard} onClick={() => setSelected(r)}>
+                  <div style={s.bagCardHead}>
+                    <span style={s.bagCardTag}>{r.tag_number}</span>
+                    {r.is_confirmed ? (
+                      <span style={{ ...badge, color: 'var(--success)', borderColor: 'var(--success)' }}>Chargé</span>
+                    ) : (
+                      <span style={{ ...badge, color: 'var(--muted)', borderColor: 'var(--glass-border)' }}>En attente</span>
+                    )}
+                  </div>
+                  <div style={s.bagCardRoute}>
+                    {r.flight?.flight_number ?? '—'} · {r.flight ? formatRoute(r.flight) : '—'}
+                  </div>
+                  <div style={s.bagCardPax}>
+                    {r.passenger?.full_name ?? '—'} · PNR {r.passenger?.pnr ?? '—'} · Série {r.serial_number ?? '—'}
+                  </div>
+                  {d ? (
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
+                      <span style={{ ...badge, color: DISPUTE_COLOR[d.status], borderColor: DISPUTE_COLOR[d.status] }}>
+                        {DISPUTE_STATUS_LABEL[d.status]}
+                      </span>
+                      {d.from_passenger ? (
+                        <span style={{ ...badge, color: 'var(--primary)', borderColor: 'var(--primary)' }}>Passager</span>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        )
+      ) : (
+        <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
+          <div style={s.tableScroll}>
+            <table style={s.table}>
+              <thead>
                 <tr>
-                  <td style={s.empty} colSpan={8}>
-                    Chargement…
-                  </td>
+                  <th style={s.th}>Étiquette</th>
+                  <th style={s.th}>Série</th>
+                  <th style={s.th}>Chargement</th>
+                  <th style={s.th}>Vol</th>
+                  <th style={s.th}>Route</th>
+                  <th style={s.th}>PNR</th>
+                  <th style={s.th}>Passager</th>
+                  <th style={s.th}>Litige</th>
                 </tr>
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td style={s.empty} colSpan={8}>
-                    Aucun bagage ne correspond.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((r) => {
-                  const d = disputeByBag.get(r.id);
-                  return (
-                    <tr key={r.id} style={s.tr} onClick={() => setSelected(r)}>
-                      <td style={s.tdMono}>{r.tag_number}</td>
-                      <td style={s.tdMono}>{r.serial_number ?? '—'}</td>
-                      <td style={s.td}>
-                        {r.is_confirmed ? (
-                          <span style={{ ...badge, color: 'var(--success)', borderColor: 'var(--success)' }}>Chargé</span>
-                        ) : (
-                          <span style={{ ...badge, color: 'var(--muted)', borderColor: 'var(--glass-border)' }}>En attente</span>
-                        )}
-                      </td>
-                      <td style={s.td}>{r.flight?.flight_number ?? '—'}</td>
-                      <td style={s.td}>{r.flight ? formatRoute(r.flight) : '—'}</td>
-                      <td style={s.tdMono}>{r.passenger?.pnr ?? '—'}</td>
-                      <td style={s.td}>{r.passenger?.full_name ?? '—'}</td>
-                      <td style={s.td}>
-                        {d ? (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ ...badge, color: DISPUTE_COLOR[d.status], borderColor: DISPUTE_COLOR[d.status] }}>
-                              {DISPUTE_STATUS_LABEL[d.status]}
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td style={s.empty} colSpan={8}>
+                      Chargement…
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td style={s.empty} colSpan={8}>
+                      Aucun bagage ne correspond.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((r) => {
+                    const d = disputeByBag.get(r.id);
+                    return (
+                      <tr key={r.id} style={s.tr} onClick={() => setSelected(r)}>
+                        <td style={s.tdMono}>{r.tag_number}</td>
+                        <td style={s.tdMono}>{r.serial_number ?? '—'}</td>
+                        <td style={s.td}>
+                          {r.is_confirmed ? (
+                            <span style={{ ...badge, color: 'var(--success)', borderColor: 'var(--success)' }}>Chargé</span>
+                          ) : (
+                            <span style={{ ...badge, color: 'var(--muted)', borderColor: 'var(--glass-border)' }}>En attente</span>
+                          )}
+                        </td>
+                        <td style={s.td}>{r.flight?.flight_number ?? '—'}</td>
+                        <td style={s.td}>{r.flight ? formatRoute(r.flight) : '—'}</td>
+                        <td style={s.tdMono}>{r.passenger?.pnr ?? '—'}</td>
+                        <td style={s.td}>{r.passenger?.full_name ?? '—'}</td>
+                        <td style={s.td}>
+                          {d ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ ...badge, color: DISPUTE_COLOR[d.status], borderColor: DISPUTE_COLOR[d.status] }}>
+                                {DISPUTE_STATUS_LABEL[d.status]}
+                              </span>
+                              {d.from_passenger ? (
+                                <span style={{ ...badge, color: 'var(--primary)', borderColor: 'var(--primary)' }}>Passager</span>
+                              ) : null}
                             </span>
-                            {d.from_passenger ? (
-                              <span style={{ ...badge, color: 'var(--primary)', borderColor: 'var(--primary)' }}>Passager</span>
-                            ) : null}
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--muted)' }}>—</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                          ) : (
+                            <span style={{ color: 'var(--muted)' }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {selected ? (
         <DisputePanel
@@ -522,6 +565,13 @@ const s: Record<string, CSSProperties> = {
 
   filters: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' },
   filtersMobile: { flexDirection: 'column', alignItems: 'stretch' },
+
+  bagCardList: { display: 'flex', flexDirection: 'column', gap: 10 },
+  bagCard: { ...card, padding: 14, display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'left', cursor: 'pointer', width: '100%' },
+  bagCardHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  bagCardTag: { fontFamily: 'ui-monospace, monospace', fontWeight: 700, fontSize: 15 },
+  bagCardRoute: { fontSize: 14, fontWeight: 600 },
+  bagCardPax: { color: 'var(--muted)', fontSize: 12.5 },
   searchBox: {
     display: 'flex',
     alignItems: 'center',
