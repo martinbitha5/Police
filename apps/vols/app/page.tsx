@@ -253,9 +253,9 @@ const s: Record<string, CSSProperties> = {
 
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 },
   headerMobile: { flexDirection: 'column', alignItems: 'stretch', gap: 12 },
-  title: { margin: 0, fontSize: 40, fontWeight: 800, letterSpacing: -0.5, textShadow: '0 4px 24px rgba(0,0,0,0.5)' },
+  title: { margin: 0, fontSize: 40, fontWeight: 800, letterSpacing: -0.5, textShadow: '0 2px 16px rgba(0,0,0,0.85)' },
   titleMobile: { fontSize: 27 },
-  subtitle: { margin: '6px 0 0', color: 'var(--muted)', fontSize: 14, fontWeight: 500 },
+  subtitle: { margin: '6px 0 0', color: '#e2e8f0', fontSize: 14, fontWeight: 600, textShadow: '0 1px 8px rgba(0,0,0,0.8)' },
   controls: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' },
   controlsMobile: { flexDirection: 'column', alignItems: 'stretch', width: '100%' },
   search: {
@@ -365,7 +365,7 @@ const s: Record<string, CSSProperties> = {
   footerText: { color: 'var(--muted)', fontSize: 12, textAlign: 'center', margin: 0 },
 
   servicesWrap: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 },
-  servicesTitle: { margin: '4px 0', fontSize: 18, fontWeight: 800, letterSpacing: -0.2 },
+  servicesTitle: { margin: '4px 0', fontSize: 18, fontWeight: 800, letterSpacing: -0.2, textShadow: '0 1px 10px rgba(0,0,0,0.8)' },
   siteBanner: {
     ...glass,
     display: 'flex',
