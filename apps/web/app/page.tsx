@@ -26,11 +26,13 @@ const STATUS_LABEL: Record<Flight['status'], string> = {
   scheduled: 'Programmé',
   boarding: 'Embarquement',
   closed: 'Fermé',
+  cancelled: 'Annulé',
 };
 const STATUS_COLOR: Record<Flight['status'], string> = {
   scheduled: 'var(--muted)',
   boarding: 'var(--success)',
   closed: 'var(--danger)',
+  cancelled: '#f59e0b',
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -326,6 +328,7 @@ function FlightDetail({
               <option value="scheduled">Programmé</option>
               <option value="boarding">Embarquement</option>
               <option value="closed">Fermé</option>
+              <option value="cancelled">Annulé</option>
             </select>
           ) : null}
           <a href={`/api/report?flightId=${flight.id}`} style={btnGhost}>
@@ -602,6 +605,7 @@ function FlightFormModal({ onClose, onCreated }: { onClose: () => void; onCreate
             <option value="scheduled">Programmé</option>
             <option value="boarding">Embarquement</option>
             <option value="closed">Fermé</option>
+            <option value="cancelled">Annulé</option>
           </select>
         </div>
 

@@ -34,18 +34,21 @@ const STATUS_LABEL: Record<FlightStatus, string> = {
   scheduled: 'Programmé',
   boarding: 'Embarquement',
   closed: 'Fermé',
+  cancelled: 'Annulé',
 };
 
 const STATUS_COLOR: Record<FlightStatus, string> = {
   scheduled: colors.muted,
   boarding: colors.success,
   closed: colors.danger,
+  cancelled: colors.warning,
 };
 
 const STATUS_BG: Record<FlightStatus, string> = {
   scheduled: colors.surfaceAlt,
   boarding: colors.successBg,
   closed: colors.dangerBg,
+  cancelled: colors.warningBg,
 };
 
 function formatTime(ts: string | null): string {

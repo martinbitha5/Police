@@ -71,6 +71,15 @@ export default function Settings() {
         <InfoRow icon="cloud" label="Base Supabase" value={SUPABASE_HOST} />
       </Section>
 
+      <Section title="Légal">
+        <LinkRow
+          icon="shield-checkmark"
+          label="Mentions légales & confidentialité"
+          hint="Conditions d'utilisation, données, sécurité"
+          onPress={() => router.push('/legal')}
+        />
+      </Section>
+
       <Section title="À propos">
         <InfoRow icon="information-circle" label="Application" value="Police Bagage" />
         <Divider />

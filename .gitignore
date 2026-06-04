@@ -9,3 +9,5 @@ coverage/
 .env.local
 .DS_Store
 .expo/
+# Archives de déploiement (zips/tgz générés pour Hostinger)
+deploy/

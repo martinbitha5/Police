@@ -57,6 +57,7 @@ export default function RootLayout() {
             <Stack.Screen name="embarquement" options={{ headerShown: false }} />
             <Stack.Screen name="company" options={{ headerShown: false }} />
             <Stack.Screen name="contact" options={{ headerShown: false }} />
+            <Stack.Screen name="legal" options={{ headerShown: false }} />
             <Stack.Screen name="profile-edit" options={{ headerShown: false }} />
           </Stack>
         </FlightsProvider>

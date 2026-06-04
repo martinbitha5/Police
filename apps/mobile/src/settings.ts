@@ -22,6 +22,16 @@ export async function markOnboarded(): Promise<void> {
   }
 }
 
+/** Réinitialise l'onboarding : à la prochaine ouverture, l'écran d'accueil
+ *  s'affiche de nouveau (appelé à la déconnexion). */
+export async function resetOnboarded(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(KEY_ONBOARDED);
+  } catch {
+    // Ignore l'échec d'écriture.
+  }
+}
+
 let hapticsEnabled = true;
 const listeners = new Set<() => void>();
 

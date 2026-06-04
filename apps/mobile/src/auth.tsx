@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Session } from '@supabase/supabase-js';
 import type { Profile } from '@police/shared';
 import { supabase } from './supabase';
+import { resetOnboarded } from './settings';
 
 interface AuthState {
   session: Session | null;
@@ -13,6 +14,44 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
+
+/**
+ * Traduit les messages d'erreur techniques de Supabase en messages clairs
+ * pour l'agent (pas de jargon développeur).
+ */
+function friendlyAuthError(raw: string): string {
+  const m = raw.toLowerCase();
+
+  if (m.includes('invalid login credentials')) {
+    return 'Email ou mot de passe incorrect. Vérifiez vos identifiants.';
+  }
+  if (m.includes('email not confirmed')) {
+    return 'Ce compte n’est pas encore activé. Contactez votre superviseur.';
+  }
+  if (m.includes('invalid email') || m.includes('unable to validate email')) {
+    return 'Adresse email invalide.';
+  }
+  if (m.includes('user not found')) {
+    return 'Aucun compte ne correspond à cet email.';
+  }
+  if (m.includes('too many requests') || m.includes('rate limit')) {
+    return 'Trop de tentatives. Patientez un instant avant de réessayer.';
+  }
+  if (
+    m.includes('network') ||
+    m.includes('fetch') ||
+    m.includes('failed to fetch') ||
+    m.includes('timeout')
+  ) {
+    return 'Connexion impossible. Vérifiez votre réseau et réessayez.';
+  }
+  if (m.includes('password')) {
+    return 'Mot de passe incorrect.';
+  }
+
+  // Repli générique — jamais le message brut technique.
+  return 'Connexion impossible. Vérifiez vos identifiants et réessayez.';
+}
 
 async function fetchProfile(userId: string): Promise<Profile | null> {
   try {
@@ -66,10 +105,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    return { error: error ? friendlyAuthError(error.message) : null };
   }
 
   async function signOut() {
+    // Réinitialise l'onboarding : après déconnexion + fermeture de l'app,
+    // la réouverture repasse par l'écran d'accueil, puis le login.
+    await resetOnboarded();
     await supabase.auth.signOut();
   }
 

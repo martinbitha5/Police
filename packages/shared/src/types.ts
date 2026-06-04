@@ -7,7 +7,15 @@
 
 export type UserRole = 'admin' | 'supervisor' | 'agent';
 
-export type FlightStatus = 'scheduled' | 'boarding' | 'closed';
+export type FlightStatus = 'scheduled' | 'boarding' | 'closed' | 'cancelled';
+
+/** Libellés français des statuts de vol (partagés web / public / mobile). */
+export const FLIGHT_STATUS_LABEL: Record<FlightStatus, string> = {
+  scheduled: 'Programmé',
+  boarding: 'Embarquement',
+  closed: 'Fermé',
+  cancelled: 'Annulé',
+} as const;
 
 /** Statut d'un dossier de litige bagage. */
 export type DisputeStatus = 'open' | 'investigating' | 'resolved';
