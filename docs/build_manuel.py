@@ -8,7 +8,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from reportlab.platypus import (
     BaseDocTemplate, PageTemplate, Frame, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, ListFlowable, ListItem, KeepTogether, HRFlowable,
+    PageBreak, ListFlowable, ListItem, KeepTogether, HRFlowable, Image as RLImage,
 )
 
 OUT = "Manuel-Utilisateur-Police-Bagage.pdf"
@@ -45,6 +45,8 @@ S("CellH", fontName="Helvetica-Bold", fontSize=9.5, leading=13, textColor=colors
 S("Note", fontName="Helvetica", fontSize=9.8, leading=14, textColor=DARK, alignment=TA_LEFT)
 S("TOCItem", fontName="Helvetica", fontSize=11, leading=20, textColor=DARK)
 S("Foot", fontName="Helvetica", fontSize=8, textColor=GREY)
+S("Cap", fontName="Helvetica-Oblique", fontSize=9, leading=12, textColor=GREY, alignment=TA_CENTER, spaceBefore=4, spaceAfter=8)
+S("Leg", fontName="Helvetica", fontSize=9.6, leading=14, textColor=DARK)
 
 DOC_TITLE = "Police Bagage — Manuel d'utilisateur"
 
@@ -125,6 +127,37 @@ def table(headers, rows, widths):
         ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
         ("LEFTPADDING", (0,0), (-1,-1), 6), ("RIGHTPADDING", (0,0), (-1,-1), 6),
         ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5),
+    ]))
+    return t
+
+def figure(path, width_mm, caption):
+    img = RLImage(path)
+    w = width_mm * mm
+    h = w * img.imageHeight / img.imageWidth
+    img.drawWidth = w; img.drawHeight = h
+    img.hAlign = "CENTER"
+    return KeepTogether([img, Paragraph(caption, styles["Cap"])])
+
+def legend(items):
+    # items : liste de (numero, texte). Pastille rouge + explication.
+    rows = []
+    for n, t in items:
+        bullet = Paragraph('<font color="#FFFFFF"><b>%s</b></font>' % n, ParagraphStyle(
+            "ln", parent=styles["Leg"], alignment=TA_CENTER, textColor=colors.white))
+        cell = Table([[bullet]], colWidths=[7*mm], rowHeights=[7*mm])
+        cell.setStyle(TableStyle([
+            ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#E11D48")),
+            ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+            ("LEFTPADDING",(0,0),(-1,-1),0),("RIGHTPADDING",(0,0),(-1,-1),0),
+            ("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0),
+            ("ROUNDEDCORNERS",[4,4,4,4]),
+        ]))
+        rows.append([cell, Paragraph(t, styles["Leg"])])
+    t = Table(rows, colWidths=[10*mm, 160*mm])
+    t.setStyle(TableStyle([
+        ("VALIGN", (0,0), (-1,-1), "TOP"),
+        ("LEFTPADDING",(0,0),(0,-1),0),("RIGHTPADDING",(0,0),(0,-1),4),
+        ("TOPPADDING",(0,0),(-1,-1),3),("BOTTOMPADDING",(0,0),(-1,-1),3),
     ]))
     return t
 
@@ -251,6 +284,14 @@ story.append(steps([
     "Le détail du vol s'ouvre, avec les fonctions disponibles. Faites défiler "
     "l'écran pour voir toutes les fonctions.",
 ]))
+story.append(figure("img/mobile_flight.png", 64, "Écran : détail d'un vol et fonctions disponibles"))
+story.append(legend([
+    ("1", "Check-in — enregistrer les passagers en scannant leur boarding pass."),
+    ("2", "Bagages — confirmer chaque bagage au tapis (contrôle anti-fraude)."),
+    ("3", "Embarquement — confirmer les passagers à la porte."),
+    ("4", "Charger — charger en soute tous les bagages enregistrés (groupé)."),
+    ("5", "Rush — marquer les bagages restants à réacheminer."),
+]))
 
 story.append(h2("4.3 Check-in : scanner les boarding pass"))
 story.append(p("Cette fonction enregistre les passagers à partir de leur carte d'embarquement."))
@@ -280,6 +321,11 @@ story.append(info_box(
     "L'agent bagage n'est jamais en faute. Vous scannez ce qui se présente sur le "
     "tapis. Un refus signifie que le superviseur doit intervenir : ne forcez "
     "jamais le passage d'un bagage refusé."))
+story.append(figure("img/mobile_baggage.png", 64, "Écran : scan d'un bagage et résultat"))
+story.append(legend([
+    ("1", "Zone de scan : visez l'étiquette ; le résultat s'affiche aussitôt."),
+    ("2", "Dernier scan : passager concerné et compteur de bagages confirmés."),
+]))
 
 story.append(h2("4.5 Embarquement : confirmer les passagers à la porte"))
 story.append(steps([
@@ -301,6 +347,11 @@ story.append(steps([
     "Appuyez sur Charger les bagages.",
     "Le nombre de bagages chargés en soute s'affiche, ainsi que les bagages exclus "
     "(rush) et le total des bagages enregistrés.",
+]))
+story.append(figure("img/mobile_charger.png", 64, "Écran : chargement groupé en soute"))
+story.append(legend([
+    ("1", "Bouton Charger les bagages : pousse en soute tout le reste, sans scan."),
+    ("2", "Résultat : nombre de bagages chargés en soute."),
 ]))
 
 story.append(h2("4.7 Rush : marquer les bagages à réacheminer"))
@@ -338,6 +389,12 @@ story.append(p(
     "ainsi que les compteurs clés : nombre de vols, départs, arrivées et alertes "
     "fraude. Les alertes en cours apparaissent en évidence."
 ))
+story.append(figure("img/web_dashboard.png", 155, "Écran : tableau de bord (vue d'ensemble)"))
+story.append(legend([
+    ("1", "Menu de navigation : Tableau de bord, Rapports, et Comptes (admins)."),
+    ("2", "Compteurs clés, dont les alertes fraude du jour."),
+    ("3", "Cartes des vols : cliquez pour ouvrir le détail d'un vol."),
+]))
 story.append(h2("5.3 Consulter le détail d'un vol"))
 story.append(steps([
     "Cliquez sur un vol pour ouvrir son détail.",
@@ -365,6 +422,11 @@ story.append(steps([
     "Choisissez la période : Jour, Semaine, Mois, Année ou Personnalisé.",
     "Pour une période personnalisée, indiquez les dates de début et de fin.",
     "Consultez les statistiques affichées, puis cliquez sur Télécharger Excel.",
+]))
+story.append(figure("img/web_report.png", 155, "Écran : page Rapports et filtre de période"))
+story.append(legend([
+    ("1", "Onglets de période : Jour, Semaine, Mois, Année, Personnalisé."),
+    ("2", "Bouton Télécharger Excel : génère le rapport de la période choisie."),
 ]))
 story.append(info_box(
     "Le fichier Excel contient plusieurs feuilles : un résumé chiffré, le détail "
@@ -441,6 +503,12 @@ story.append(steps([
     "Pour voir tous vos bagages, saisissez votre référence de réservation (PNR).",
     "Pour voir un seul bagage, saisissez son numéro d'étiquette (dix chiffres).",
     "Consultez le statut de chaque bagage.",
+]))
+story.append(figure("img/tracking.png", 150, "Écran : suivi bagage (recherche et résultat)"))
+story.append(legend([
+    ("1", "Recherche par PNR : affiche tous les bagages du passager."),
+    ("2", "Recherche par numéro d'étiquette : affiche uniquement ce bagage."),
+    ("3", "Résultat : passager, vol et statut de chaque bagage."),
 ]))
 story.append(h2("8.2 Signaler un problème"))
 story.append(steps([
