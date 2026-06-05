@@ -1,4 +1,9 @@
-import type { BaggageScanResult, BoardingGateResult, BaggageActionResult } from '@police/shared';
+import type {
+  BaggageScanResult,
+  BoardingGateResult,
+  BaggageActionResult,
+  BaggageLoadAllResult,
+} from '@police/shared';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api-police.brsats.com';
 
@@ -47,12 +52,12 @@ export function scanEmbarquement(
   return post<BoardingGateResult>('/scan/embarquement', { raw, flightId, scannedBy });
 }
 
-/** Charger : marque le bagage comme chargé en soute pour la destination. */
-export function loadBaggage(tag: string, flightId: string, scannedBy?: string): Promise<BaggageActionResult> {
-  return post<BaggageActionResult>('/scan/load', { tag, flightId, scannedBy });
-}
-
 /** Rush : marque le bagage restant pour réacheminement sur le prochain vol. */
 export function rushBaggage(tag: string, flightId: string, scannedBy?: string): Promise<BaggageActionResult> {
   return post<BaggageActionResult>('/scan/rush', { tag, flightId, scannedBy });
+}
+
+/** Charger : pousse en soute tous les bagages enregistrés non-rush (groupé, sans scan). */
+export function loadAllBaggage(flightId: string, scannedBy?: string): Promise<BaggageLoadAllResult> {
+  return post<BaggageLoadAllResult>('/scan/load-all', { flightId, scannedBy });
 }

@@ -4,31 +4,15 @@ import { useLocalSearchParams } from 'expo-router';
 import type { BaggageActionResult } from '@police/shared';
 import { useAuth } from './auth';
 import { useFlights } from './flights-store';
-import { loadBaggage, rushBaggage } from './api';
+import { rushBaggage } from './api';
 import { HiddenScanner } from './HiddenScanner';
 import { ScanLottie, type ScanState } from './ScanLottie';
 import { ScreenBackground, GlassCard, useSafePadding } from './Glass';
 import { feedbackSuccess, feedbackWarning } from './feedback';
 import { colors, radius, spacing } from './theme';
 
-type Mode = 'load' | 'rush';
-
-const CONFIG: Record<Mode, { title: string; hint: string; okTitle: string; tint: string }> = {
-  load: {
-    title: 'Charger en soute',
-    hint: 'Scannez chaque bagage qui entre en soute',
-    okTitle: 'Chargé en soute',
-    tint: colors.success,
-  },
-  rush: {
-    title: 'Réacheminement (Rush)',
-    hint: 'Scannez les bagages restants à réacheminer',
-    okTitle: 'Marqué pour réacheminement',
-    tint: colors.warning,
-  },
-};
-
-export function BaggageActionScreen({ mode }: { mode: Mode }) {
+/** Écran Rush : scan des bagages restants à réacheminer sur le prochain vol. */
+export function RushScreen() {
   const { flightId } = useLocalSearchParams<{ flightId: string }>();
   const { profile } = useAuth();
   const { getFlight } = useFlights();
@@ -37,15 +21,12 @@ export function BaggageActionScreen({ mode }: { mode: Mode }) {
   const [scanState, setScanState] = useState<ScanState>('scanning');
   const scanSeq = useRef(0);
   const pad = useSafePadding();
-  const cfg = CONFIG[mode];
 
   async function onScan(tag: string) {
     if (!flightId) return;
     scanSeq.current += 1;
     try {
-      const res = mode === 'load'
-        ? await loadBaggage(tag, flightId, profile?.id)
-        : await rushBaggage(tag, flightId, profile?.id);
+      const res = await rushBaggage(tag, flightId, profile?.id);
       setLast(res);
       if (res.status === 'accepted') {
         setScanState('success');
@@ -76,27 +57,27 @@ export function BaggageActionScreen({ mode }: { mode: Mode }) {
               {flight ? `${flight.origin}  →  ${flight.destination}` : 'Chargement…'}
             </Text>
           </View>
-          <View style={[styles.modePill, { borderColor: cfg.tint }]}>
-            <Text style={[styles.modeText, { color: cfg.tint }]}>{mode === 'load' ? 'SOUTE' : 'RUSH'}</Text>
+          <View style={[styles.modePill, { borderColor: colors.warning }]}>
+            <Text style={[styles.modeText, { color: colors.warning }]}>RUSH</Text>
           </View>
         </GlassCard>
 
         <GlassCard strong rounded={radius.xl} contentStyle={styles.stage}>
           <ScanLottie state={scanState} replayKey={scanSeq.current} size={210} />
           <Text style={styles.stageTitle}>
-            {scanState === 'success' ? cfg.okTitle : scanState === 'error' ? 'Refusé' : cfg.title}
+            {scanState === 'success' ? 'Marqué pour réacheminement' : scanState === 'error' ? 'Refusé' : 'Réacheminement (Rush)'}
           </Text>
           <Text style={styles.stageHint}>
-            {scanState === 'scanning' ? cfg.hint : 'Prêt pour le prochain scan'}
+            {scanState === 'scanning' ? 'Scannez les bagages restants à réacheminer' : 'Prêt pour le prochain scan'}
           </Text>
         </GlassCard>
 
         {last ? (
           accepted && last.status === 'accepted' ? (
-            <GlassCard strong contentStyle={[styles.result, { borderLeftWidth: 4, borderLeftColor: cfg.tint }]}>
+            <GlassCard strong contentStyle={[styles.result, { borderLeftWidth: 4, borderLeftColor: colors.warning }]}>
               <Text style={styles.resultName}>{last.passengerName}</Text>
               <Text style={styles.resultTag}>{last.tagNumber}</Text>
-              <Text style={[styles.resultMsg, { color: cfg.tint }]}>{last.message}</Text>
+              <Text style={[styles.resultMsg, { color: colors.warning }]}>{last.message}</Text>
             </GlassCard>
           ) : (
             <View style={[styles.result, styles.resultWarn]}>

@@ -1,5 +1,5 @@
-import { BaggageActionScreen } from '@/BaggageActionScreen';
+import { RushScreen } from '@/BaggageActionScreen';
 
 export default function Rush() {
-  return <BaggageActionScreen mode="rush" />;
+  return <RushScreen />;
 }
