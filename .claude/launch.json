@@ -8,6 +8,18 @@
       "port": 3000
     },
     {
+      "name": "webprod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start", "-w", "apps/web"],
+      "port": 3000
+    },
+    {
+      "name": "webdeploy",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/GOBLAIRE/Desktop/police-web-repo", "run", "start"],
+      "port": 3000
+    },
+    {
       "name": "tracking",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "-w", "apps/tracking"],

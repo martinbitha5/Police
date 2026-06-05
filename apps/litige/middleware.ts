@@ -33,7 +33,8 @@ export async function middleware(request: NextRequest) {
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
-  if (user && pathname.startsWith('/login')) {
+  // Déjà connecté : on saute la landing et le login → direct aux litiges.
+  if (user && (pathname === '/' || pathname.startsWith('/login'))) {
     return NextResponse.redirect(new URL('/litiges', request.url));
   }
 
