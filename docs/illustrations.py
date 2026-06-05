@@ -284,4 +284,84 @@ def track(d, ox, oy, w, h):
 
 window(track, "tracking.png", h=440)
 
+# ============ VOLS DU JOUR (public) ============
+def vols(d, ox, oy, w, h):
+    cx = ox + 30 * S
+    txt(d, (cx, oy + 22 * S), "Vols du jour", fb(22))
+    txt(d, (cx, oy + 54 * S), "Vendredi 5 juin 2026 · Aéroport FIH", f(11), MUT)
+    rr(d, [ox + w - 300 * S, oy + 22 * S, ox + w - 30 * S, oy + 52 * S], r=10 * S, fill=CARD, outline=BORD, width=S)
+    txt(d, (ox + w - 288 * S, oy + 30 * S), "Rechercher un vol (ex. ET0062)", f(11), MUT)
+    cards = [("KQ 555", "FIH → NBO", "10:00", "Embarquement", GREEN, True),
+             ("ET 0062", "FIH → FBM", "15:00", "Fermé", DANGER, False)]
+    y = oy + 78 * S
+    for num, route, tm, st, c, retard in cards:
+        rr(d, [cx, y, ox + w - 30 * S, y + 92 * S], r=14 * S, fill=CARD, outline=BORD, width=S)
+        pill(d, cx + 16 * S, y + 14 * S, "DÉPART", fb(10), (147, 197, 253), (20, 40, 70))
+        txt(d, (cx + 16 * S, y + 42 * S), num, fb(20))
+        txt(d, (cx + 16 * S, y + 70 * S), route, f(12), MUT)
+        txt(d, (ox + w - 240 * S, y + 28 * S), "DÉPART", f(9), MUT)
+        txt(d, (ox + w - 240 * S, y + 42 * S), tm, fb(20))
+        pill(d, ox + w - 160 * S, y + 30 * S, st, fb(12), c, (28, 40, 60))
+        if retard:
+            pill(d, ox + w - 160 * S, y + 60 * S, "Retardé", f(10), (252, 165, 165), (60, 24, 28))
+        y += 104 * S
+    txt(d, (cx, y + 4 * S), "Services de l'aéroport", fb(14))
+    rr(d, [cx, y + 28 * S, ox + w - 30 * S, y + 72 * S], r=12 * S, fill=(30, 48, 86), outline=(37, 99, 235), width=S)
+    rr(d, [cx + 12 * S, y + 36 * S, cx + 44 * S, y + 64 * S], r=8 * S, fill=(255, 255, 255))
+    txt(d, (cx + 56 * S, y + 38 * S), "Site officiel de l'Aéroport de Kinshasa (FIH)", fb(12))
+    txt(d, (cx + 56 * S, y + 56 * S), "fih-rva.com · Régie des Voies Aériennes", f(10), MUT)
+    badge(d, 1, ox + w - 50 * S, oy + 37 * S)
+    badge(d, 2, ox + w - 26 * S, oy + 118 * S)
+    badge(d, 3, ox + w - 50 * S, y + 50 * S)
+
+window(vols, "vols.png", h=560)
+
+# ============ LITIGES (superviseur) ============
+def litige(d, ox, oy, w, h):
+    sb = 200 * S
+    rr(d, [ox, oy, ox + sb, oy + h], r=0, fill=(18, 26, 40))
+    rr(d, [ox + 18 * S, oy + 20 * S, ox + 52 * S, oy + 54 * S], r=10 * S, fill=BLUE)
+    txt(d, (ox + 64 * S, oy + 22 * S), "Litige Bagage", fb(13))
+    txt(d, (ox + 64 * S, oy + 40 * S), "Hub FIH", f(9), MUT)
+    rr(d, [ox + 12 * S, oy + 80 * S, ox + sb - 12 * S, oy + 112 * S], r=10 * S, fill=(37, 99, 235))
+    txt(d, (ox + 26 * S, oy + 88 * S), "Litiges bagage", fb(12))
+    cx = ox + sb + 26 * S
+    txt(d, (cx, oy + 22 * S), "Litiges bagage", fb(20))
+    txt(d, (cx, oy + 50 * S), "Aujourd'hui · 35 bagages · 2 litiges en cours", f(11), MUT)
+    pill(d, ox + w - 180 * S, oy + 22 * S, "Rapport du jour", fb(12), WHITE, BLUE, padx=14)
+    fy = oy + 80 * S
+    fx = cx
+    for label, wd in [("Recherche…", 140), ("Tous les vols", 105), ("Aujourd'hui", 105), ("Litige : tous", 105)]:
+        rr(d, [fx, fy, fx + wd * S, fy + 30 * S], r=8 * S, fill=CARD, outline=BORD, width=S)
+        txt(d, (fx + 10 * S, fy + 8 * S), label, f(10), MUT)
+        fx += (wd + 10) * S
+    ly = oy + 126 * S
+    headers = ["Étiquette", "Passager", "Vol", "Chargement", "Litige"]
+    colx = [cx, cx + 120 * S, cx + 270 * S, cx + 340 * S, cx + 450 * S]
+    rr(d, [cx, ly, ox + w - 30 * S, ly + 28 * S], r=0, fill=(20, 30, 48))
+    for i, hh in enumerate(headers):
+        txt(d, (colx[i] + 6 * S, ly + 8 * S), hh, fb(9), MUT)
+    ly += 28 * S
+    rows = [("4071303821", "MUKENDI Moise", "ET0062", "Chargé", "Ouvert", True),
+            ("4071303759", "DIASOLWA Marie", "ET0062", "En attente", "En cours", False),
+            ("4071303760", "KALONJI Oscar", "KQ0555", "Chargé", None, False)]
+    for tag, pax, vol, chg, lit, passenger in rows:
+        txt(d, (colx[0] + 6 * S, ly + 10 * S), tag, f(10))
+        txt(d, (colx[1] + 6 * S, ly + 10 * S), pax, f(10))
+        txt(d, (colx[2] + 6 * S, ly + 10 * S), vol, f(10))
+        txt(d, (colx[3] + 6 * S, ly + 10 * S), chg, f(10), GREEN if chg == "Chargé" else MUT)
+        if lit:
+            pill(d, colx[4] + 4 * S, ly + 5 * S, lit, fb(9), DANGER if lit == "Ouvert" else WARN, (40, 26, 26))
+            if passenger:
+                pill(d, colx[4] + 76 * S, ly + 5 * S, "Passager", fb(9), (147, 197, 253), (20, 40, 70))
+        else:
+            txt(d, (colx[4] + 6 * S, ly + 10 * S), "—", f(10), MUT)
+        d.line([(cx, ly + 36 * S), (ox + w - 30 * S, ly + 36 * S)], fill=BORD, width=S)
+        ly += 40 * S
+    badge(d, 1, cx + 250 * S, oy + 95 * S)
+    badge(d, 2, ox + w - 60 * S, oy + 126 * S + 28 * S + 18 * S)
+    badge(d, 3, ox + w - 26 * S, oy + 36 * S)
+
+window(litige, "litige.png", h=420)
+
 print("OK illustrations")

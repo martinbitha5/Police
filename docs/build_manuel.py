@@ -449,6 +449,12 @@ story.append(steps([
     "Utilisez la recherche pour retrouver une étiquette, une série, un PNR ou un "
     "nom de passager.",
 ]))
+story.append(figure("img/litige.png", 155, "Écran : application litiges (liste et filtres)"))
+story.append(legend([
+    ("1", "Filtres : recherche, vol, date et statut de litige."),
+    ("2", "Statut du litige et mention « Passager » si la réclamation vient d'un passager."),
+    ("3", "Rapport du jour : télécharge le fichier Excel des litiges de la journée."),
+]))
 story.append(h2("6.2 Ouvrir et suivre un litige"))
 story.append(steps([
     "Cliquez sur un bagage pour ouvrir son panneau de détail.",
@@ -524,6 +530,12 @@ story.append(p(
     "indication de retard éventuel. Des liens donnent accès aux services du "
     "portail officiel de l'aéroport."
 ))
+story.append(figure("img/vols.png", 155, "Écran : vols du jour (statuts et services)"))
+story.append(legend([
+    ("1", "Recherche d'un vol par son numéro."),
+    ("2", "Statut du vol et indication « Retardé » le cas échéant."),
+    ("3", "Liens vers le portail officiel de l'aéroport (fih-rva.com)."),
+]))
 story.append(PageBreak())
 
 # ---- 9. Statuts bagage ----
