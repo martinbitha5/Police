@@ -6,6 +6,14 @@ const nextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../..'),
   transpilePackages: ['@police/shared'],
+  async headers() {
+    return [
+      {
+        source: '/:path((?!_next/static|_next/image|favicon\\.ico).*)',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+    ];
+  },
   webpack: (config) => {
     // Les paquets workspace en TS (ESM NodeNext) importent avec l'extension `.js`
     // (ex. `export * from './types.js'`) alors que les fichiers réels sont `.ts`.
