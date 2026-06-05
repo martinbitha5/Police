@@ -364,4 +364,56 @@ def litige(d, ox, oy, w, h):
 
 window(litige, "litige.png", h=420)
 
+# ============ MOBILE : EMBARQUEMENT ============
+def mob_emb(d, ox, oy, w, h):
+    pad = 22 * S; x = ox + pad; cw = w - 2 * pad
+    rr(d, [x, oy + 40 * S, x + cw, oy + 110 * S], r=18 * S, fill=CARD, outline=BORD, width=S)
+    txt(d, (x + 20 * S, oy + 56 * S), "ET 0062", fb(20))
+    txt(d, (x + 20 * S, oy + 84 * S), "FIH  →  FBM", f(12), MUT)
+    rr(d, [x + cw - 120 * S, oy + 56 * S, x + cw - 16 * S, oy + 98 * S], r=12 * S, fill=CARD2, outline=BORD, width=S)
+    txt(d, (x + cw - 68 * S, oy + 62 * S), "Reste", f(10), MUT, anchor="ma")
+    txt(d, (x + cw - 68 * S, oy + 74 * S), "5", fb(18), GREEN, anchor="ma")
+    rr(d, [x, oy + 130 * S, x + cw, oy + 360 * S], r=22 * S, fill=CARD, outline=BORD, width=S)
+    d.ellipse([x + cw//2 - 55*S, oy + 165*S, x + cw//2 + 55*S, oy + 275*S], outline=GREEN, width=4*S)
+    d.line([(x+cw//2-22*S, oy+222*S),(x+cw//2-4*S, oy+242*S)], fill=GREEN, width=5*S)
+    d.line([(x+cw//2-4*S, oy+242*S),(x+cw//2+26*S, oy+200*S)], fill=GREEN, width=5*S)
+    txt(d, (ox + w//2, oy + 300*S), "Passager embarqué", fb(17), WHITE, anchor="ma")
+    txt(d, (ox + w//2, oy + 326*S), "Scannez le boarding pass à la porte", f(11), MUT, anchor="ma")
+    rr(d, [x, oy + 380 * S, x + cw, oy + 460 * S], r=16 * S, fill=CARD)
+    d.rectangle([x, oy + 380*S, x + 6*S, oy + 460*S], fill=GREEN)
+    txt(d, (x + 24 * S, oy + 398 * S), "MUKEBA Jean", fb(16))
+    txt(d, (x + 24 * S, oy + 426 * S), "Siège 07C · Embarqué", f(13), GREEN)
+    badge(d, 1, x + cw//2, oy + 220*S)
+    badge(d, 2, x + cw - 68 * S + 60*S, oy + 78*S)
+
+phone(mob_emb, "mobile_embarquement.png")
+
+# ============ MOBILE : RUSH ============
+def mob_rush(d, ox, oy, w, h):
+    pad = 22 * S; x = ox + pad; cw = w - 2 * pad
+    rr(d, [x, oy + 40 * S, x + cw, oy + 110 * S], r=18 * S, fill=CARD, outline=BORD, width=S)
+    txt(d, (x + 20 * S, oy + 56 * S), "ET 0062", fb(20))
+    txt(d, (x + 20 * S, oy + 84 * S), "FIH  →  FBM", f(12), MUT)
+    pill(d, x + cw - 100 * S, oy + 64 * S, "RUSH", fb(13), WARN, (50, 36, 14))
+    rr(d, [x, oy + 130 * S, x + cw, oy + 360 * S], r=22 * S, fill=CARD, outline=BORD, width=S)
+    d.ellipse([x + cw//2 - 52*S, oy + 168*S, x + cw//2 + 52*S, oy + 272*S], outline=WARN, width=4*S)
+    # double fleche de reacheminement
+    d.line([(x+cw//2-22*S, oy+212*S),(x+cw//2+22*S, oy+212*S)], fill=WARN, width=5*S)
+    d.line([(x+cw//2+10*S, oy+200*S),(x+cw//2+24*S, oy+212*S)], fill=WARN, width=5*S)
+    d.line([(x+cw//2+10*S, oy+224*S),(x+cw//2+24*S, oy+212*S)], fill=WARN, width=5*S)
+    d.line([(x+cw//2+22*S, oy+232*S),(x+cw//2-22*S, oy+232*S)], fill=WARN, width=5*S)
+    d.line([(x+cw//2-10*S, oy+220*S),(x+cw//2-24*S, oy+232*S)], fill=WARN, width=5*S)
+    d.line([(x+cw//2-10*S, oy+244*S),(x+cw//2-24*S, oy+232*S)], fill=WARN, width=5*S)
+    txt(d, (ox + w//2, oy + 300*S), "Réacheminement (Rush)", fb(17), WHITE, anchor="ma")
+    txt(d, (ox + w//2, oy + 326*S), "Scannez les bagages restants", f(11), MUT, anchor="ma")
+    rr(d, [x, oy + 380 * S, x + cw, oy + 470 * S], r=16 * S, fill=CARD)
+    d.rectangle([x, oy + 380*S, x + 6*S, oy + 470*S], fill=WARN)
+    txt(d, (x + 24 * S, oy + 398 * S), "DIASOLWA Marie", fb(16))
+    txt(d, (x + 24 * S, oy + 424 * S), "0071161899", f(13), MUT)
+    txt(d, (x + 24 * S, oy + 446 * S), "Marqué pour réacheminement", fb(12), WARN)
+    badge(d, 1, ox + w - 16 * S, oy + 82*S)
+    badge(d, 2, ox + w - 16 * S, oy + 425*S)
+
+phone(mob_rush, "mobile_rush.png")
+
 print("OK illustrations")

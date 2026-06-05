@@ -334,6 +334,11 @@ story.append(steps([
     "Le passager est marqué comme embarqué ; le compteur des passagers restants "
     "se met à jour.",
 ]))
+story.append(figure("img/mobile_embarquement.png", 64, "Écran : embarquement à la porte"))
+story.append(legend([
+    ("1", "Zone de scan : scannez le boarding pass à la porte."),
+    ("2", "Compteur des passagers restant à embarquer."),
+]))
 
 story.append(h2("4.6 Charger : charger les bagages en soute"))
 story.append(p(
@@ -363,6 +368,11 @@ story.append(steps([
     "Depuis le détail du vol, appuyez sur Rush.",
     "Scannez chaque bagage restant à réacheminer.",
     "Chaque bagage marqué est confirmé à l'écran.",
+]))
+story.append(figure("img/mobile_rush.png", 64, "Écran : marquage des bagages à réacheminer"))
+story.append(legend([
+    ("1", "Mode Rush actif : scannez les bagages restants à réacheminer."),
+    ("2", "Confirmation : bagage marqué pour le prochain vol."),
 ]))
 story.append(warn_box(
     "Ordre recommandé : scannez d'abord les bagages Rush, puis utilisez Charger "
