@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { FlightStatus } from '@police/shared';
@@ -53,8 +53,13 @@ export default function FlightDetail() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: pad.paddingTop }]}>
+    <View style={styles.root}>
       <ScreenBackground />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingTop: pad.paddingTop, paddingBottom: pad.paddingBottom }]}
+        showsVerticalScrollIndicator={false}
+      >
       {/* Carte vol */}
       <GlassCard strong rounded={radius.xl} contentStyle={styles.flightCard}>
         <View style={styles.flightTop}>
@@ -129,6 +134,7 @@ export default function FlightDetail() {
         subtitle="Bagages restants à réacheminer"
         onPress={() => router.push({ pathname: '/rush', params: { flightId: flight.id } })}
       />
+      </ScrollView>
     </View>
   );
 }
@@ -173,7 +179,9 @@ function OptionCard({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: spacing(2), gap: spacing(2) },
+  root: { flex: 1 },
+  scroll: { flex: 1 },
+  content: { paddingHorizontal: spacing(2), gap: spacing(2) },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   muted: { color: colors.muted, fontSize: 16 },
   flightCard: { padding: spacing(2.5) },
