@@ -606,7 +606,9 @@ const s: Record<string, CSSProperties> = {
   },
   todayBtn: {
     background: 'rgba(255,255,255,0.06)',
-    border: '1px solid var(--glass-border)',
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: 'var(--glass-border)',
     borderRadius: 10,
     padding: '10px 12px',
     color: 'var(--muted)',
