@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import type { BaggageActionResult, SoutePosition } from '@police/shared';
 import { useAuth } from '@/auth';
 import { useFlights } from '@/flights-store';
@@ -49,67 +50,106 @@ export default function Soute() {
     setScanState('scanning');
   }
 
+  function backToSelect() {
+    setMode(null);
+    setLast(null);
+    setScanState('scanning');
+  }
+
+  const modeColor = mode === 'avant' ? colors.primary : colors.accent;
+  const modeLabel = mode === 'avant' ? 'SOUTE AVANT' : 'SOUTE ARRIÈRE';
+
+  // ── Étape 1 : choix du compartiment ─────────────────────────
+  if (!mode) {
+    return (
+      <View style={styles.root}>
+        <ScreenBackground />
+        <ScrollView style={styles.container} contentContainerStyle={[styles.content, pad]}>
+          {/* Carte vol */}
+          <GlassCard strong contentStyle={styles.flightCard}>
+            <Text style={styles.flightNumber}>{flight?.flight_number ?? '—'}</Text>
+            <Text style={styles.flightRoute}>
+              {flight ? `${flight.origin}  →  ${flight.destination}` : 'Chargement…'}
+            </Text>
+          </GlassCard>
+
+          <Text style={styles.sectionTitle}>Choisir le compartiment</Text>
+
+          {/* Soute avant */}
+          <Pressable
+            style={({ pressed }) => [{ opacity: pressed ? 0.72 : 1 }]}
+            onPress={() => selectMode('avant')}
+          >
+            <GlassCard contentStyle={styles.compartmentCard}>
+              <View style={[styles.compartmentIcon, { backgroundColor: colors.primary }]}>
+                <Ionicons name="layers" size={30} color={colors.onPrimary} />
+              </View>
+              <View style={styles.compartmentTexts}>
+                <Text style={styles.compartmentTitle}>Soute avant</Text>
+                <Text style={styles.compartmentSub}>Compartiment avant de l'avion</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color={colors.muted} />
+            </GlassCard>
+          </Pressable>
+
+          {/* Soute arrière */}
+          <Pressable
+            style={({ pressed }) => [{ opacity: pressed ? 0.72 : 1 }]}
+            onPress={() => selectMode('arriere')}
+          >
+            <GlassCard contentStyle={styles.compartmentCard}>
+              <View style={[styles.compartmentIcon, { backgroundColor: colors.accent }]}>
+                <Ionicons name="layers-outline" size={30} color={colors.onPrimary} />
+              </View>
+              <View style={styles.compartmentTexts}>
+                <Text style={styles.compartmentTitle}>Soute arrière</Text>
+                <Text style={styles.compartmentSub}>Compartiment arrière de l'avion</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color={colors.muted} />
+            </GlassCard>
+          </Pressable>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // ── Étape 2 : scanner (compartiment choisi) ──────────────────
   const accepted = last?.status === 'accepted';
-  const modeColor = mode === 'avant' ? colors.primary : mode === 'arriere' ? colors.accent : colors.muted;
-  const modeLabel = mode === 'avant' ? 'SOUTE AVANT' : mode === 'arriere' ? 'SOUTE ARRIÈRE' : null;
 
   return (
     <View style={styles.root}>
       <ScreenBackground />
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, pad]}>
-        {mode ? <HiddenScanner onScan={onScan} /> : null}
+        <HiddenScanner onScan={onScan} />
 
         {/* En-tête vol + pill mode */}
         <GlassCard strong contentStyle={styles.header}>
           <View>
-            <Text style={styles.flight}>{flight?.flight_number ?? '—'}</Text>
-            <Text style={styles.route}>
+            <Text style={styles.flightNumber}>{flight?.flight_number ?? '—'}</Text>
+            <Text style={styles.flightRoute}>
               {flight ? `${flight.origin}  →  ${flight.destination}` : 'Chargement…'}
             </Text>
           </View>
-          {modeLabel ? (
-            <View style={[styles.modePill, { borderColor: modeColor }]}>
-              <Text style={[styles.modeText, { color: modeColor }]}>{modeLabel}</Text>
-            </View>
-          ) : null}
-        </GlassCard>
-
-        {/* Sélecteur de compartiment */}
-        <GlassCard strong contentStyle={styles.selector}>
-          <Text style={styles.selectorLabel}>Choisir le compartiment</Text>
-          <View style={styles.selectorRow}>
-            <ModeButton
-              label="Soute avant"
-              active={mode === 'avant'}
-              color={colors.primary}
-              onPress={() => selectMode('avant')}
-            />
-            <ModeButton
-              label="Soute arrière"
-              active={mode === 'arriere'}
-              color={colors.accent}
-              onPress={() => selectMode('arriere')}
-            />
+          <View style={[styles.modePill, { borderColor: modeColor }]}>
+            <Text style={[styles.modeText, { color: modeColor }]}>{modeLabel}</Text>
           </View>
         </GlassCard>
 
         {/* Zone scan */}
         <GlassCard strong rounded={radius.xl} contentStyle={styles.stage}>
-          <ScanLottie state={mode ? scanState : 'scanning'} replayKey={scanSeq.current} size={200} />
+          <ScanLottie state={scanState} replayKey={scanSeq.current} size={210} />
           <Text style={styles.stageTitle}>
-            {!mode
-              ? 'Sélectionnez un compartiment'
-              : scanState === 'success'
+            {scanState === 'success'
               ? 'Bagage placé'
               : scanState === 'error'
               ? 'Refusé'
-              : `Scan — ${mode === 'avant' ? 'soute avant' : 'soute arrière'}`}
+              : mode === 'avant'
+              ? 'Soute avant'
+              : 'Soute arrière'}
           </Text>
           <Text style={styles.stageHint}>
-            {!mode
-              ? 'Appuyez sur Soute avant ou Soute arrière ci-dessus'
-              : scanState === 'scanning'
-              ? 'Scannez l\'étiquette du bagage'
+            {scanState === 'scanning'
+              ? 'Scannez l\'étiquette bagage'
               : 'Prêt pour le prochain scan'}
           </Text>
         </GlassCard>
@@ -129,29 +169,17 @@ export default function Soute() {
             </View>
           )
         ) : null}
+
+        {/* Bouton changer de compartiment */}
+        <Pressable
+          style={({ pressed }) => [styles.changeBtn, { opacity: pressed ? 0.7 : 1 }]}
+          onPress={backToSelect}
+        >
+          <Ionicons name="swap-horizontal" size={16} color={colors.muted} />
+          <Text style={styles.changeBtnText}>Changer de compartiment</Text>
+        </Pressable>
       </ScrollView>
     </View>
-  );
-}
-
-function ModeButton({
-  label,
-  active,
-  color,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  color: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.modeBtn, active && { ...styles.modeBtnActive, borderColor: color, backgroundColor: `${color}22` }, pressed && { opacity: 0.75 }]}
-      onPress={onPress}
-    >
-      <Text style={[styles.modeBtnText, active && { color }]}>{label}</Text>
-    </Pressable>
   );
 }
 
@@ -159,27 +187,46 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   container: { flex: 1 },
   content: { paddingHorizontal: spacing(2), gap: spacing(2) },
+
+  // Vol
+  flightCard: { padding: spacing(2.5) },
+  flightNumber: { color: colors.text, fontSize: 24, fontWeight: '800', letterSpacing: 0.5 },
+  flightRoute: { color: colors.muted, fontSize: 15, marginTop: 2, fontWeight: '600' },
+
+  // Sélection compartiment
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '700',
+    marginTop: spacing(0.5),
+    marginLeft: spacing(0.5),
+  },
+  compartmentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing(2),
+    gap: spacing(2),
+  },
+  compartmentIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compartmentTexts: { flex: 1 },
+  compartmentTitle: { color: colors.text, fontSize: 19, fontWeight: '800' },
+  compartmentSub: { color: colors.muted, fontSize: 14, marginTop: 2, fontWeight: '600' },
+
+  // Scanner
   header: { padding: spacing(2.5), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  flight: { color: colors.text, fontSize: 24, fontWeight: '800', letterSpacing: 0.5 },
-  route: { color: colors.muted, fontSize: 15, marginTop: 2, fontWeight: '600' },
   modePill: { borderWidth: 1.5, borderRadius: radius.pill, paddingHorizontal: spacing(1.5), paddingVertical: spacing(0.5) },
   modeText: { fontSize: 13, fontWeight: '800', letterSpacing: 1 },
-  selector: { padding: spacing(2), gap: spacing(1.5) },
-  selectorLabel: { color: colors.muted, fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  selectorRow: { flexDirection: 'row', gap: spacing(1.5) },
-  modeBtn: {
-    flex: 1,
-    paddingVertical: spacing(1.75),
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  modeBtnActive: { borderWidth: 2 },
-  modeBtnText: { color: colors.muted, fontSize: 15, fontWeight: '800' },
   stage: { paddingVertical: spacing(3), alignItems: 'center' },
   stageTitle: { color: colors.text, fontSize: 19, fontWeight: '700', marginTop: spacing(1), textAlign: 'center' },
   stageHint: { color: colors.muted, fontSize: 14, marginTop: 2, textAlign: 'center' },
+
+  // Résultat
   result: { padding: spacing(2.5), alignItems: 'center' },
   resultWarn: { backgroundColor: colors.warningBg, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.warningBorder },
   resultName: { color: colors.text, fontSize: 22, fontWeight: '800', textAlign: 'center' },
@@ -187,4 +234,14 @@ const styles = StyleSheet.create({
   resultMsg: { fontSize: 16, fontWeight: '700', marginTop: spacing(1), textAlign: 'center' },
   resultBadge: { color: colors.warning, fontWeight: '900', fontSize: 14, letterSpacing: 1, marginBottom: spacing(0.5) },
   resultReason: { color: colors.text, fontSize: 17, fontWeight: '700', textAlign: 'center' },
+
+  // Changer compartiment
+  changeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing(0.75),
+    paddingVertical: spacing(1),
+  },
+  changeBtnText: { color: colors.muted, fontSize: 14, fontWeight: '600' },
 });
