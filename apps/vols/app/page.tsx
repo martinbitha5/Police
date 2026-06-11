@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
@@ -88,9 +88,11 @@ export default function VolsPage() {
   });
 
   return (
-    <main style={isMobile ? { ...s.shell, ...s.shellMobile } : s.shell}>
-      <div style={s.container}>
-        <header style={isMobile ? { ...s.header, ...s.headerMobile } : s.header}>
+    <div style={s.pageWrap}>
+      <header style={isMobile ? s.stickyHeaderMobile : s.stickyHeader}>
+        <div style={s.brandBlock}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/air.png" alt="Air Congo" style={isMobile ? { ...s.logo, height: 36 } : s.logo} />
           <div>
             <h1 style={isMobile ? { ...s.title, ...s.titleMobile } : s.title}>Vols du jour</h1>
             <p style={s.subtitle}>
@@ -98,47 +100,53 @@ export default function VolsPage() {
               {updatedAt ? ` · maj ${updatedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''}
             </p>
           </div>
-          <div style={isMobile ? { ...s.controls, ...s.controlsMobile } : s.controls}>
-            <input
-              style={isMobile ? { ...s.search, ...s.searchMobile } : s.search}
-              placeholder="Rechercher un vol (ex. ET0062)"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-        </header>
+        </div>
+        <div style={isMobile ? { ...s.controls, ...s.controlsMobile } : s.controls}>
+          <input
+            style={isMobile ? { ...s.search, ...s.searchMobile } : s.search}
+            placeholder="Rechercher un vol (ex. ET0062)"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+      </header>
 
-        {error ? <div style={s.error}>{error}</div> : null}
+      <main style={isMobile ? { ...s.shell, ...s.shellMobile } : s.shell}>
+        <div style={s.container}>
+          {error ? <div style={s.error}>{error}</div> : null}
 
-        {loading ? (
-          <div style={s.loader}>
-            <span style={s.spinner} />
-            <span>Chargement des vols…</span>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div style={s.empty}>
-            {query ? 'Aucun vol ne correspond à votre recherche.' : 'Aucun vol programmé aujourd’hui.'}
-          </div>
-        ) : (
-          <ul style={s.list}>
-            {filtered.map((f) => (
-              <FlightCard key={`${f.flight_number}-${f.departure_time ?? f.date}`} flight={f} hub={hub} isMobile={isMobile} />
-            ))}
-          </ul>
-        )}
+          {loading ? (
+            <div style={s.loader}>
+              <span style={s.spinner} />
+              <span>Chargement des vols…</span>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={s.empty}>
+              {query ? 'Aucun vol ne correspond à votre recherche.' : "Aucun vol programmé aujourd'hui."}
+            </div>
+          ) : (
+            <ul style={s.list}>
+              {filtered.map((f) => (
+                <FlightCard key={`${f.flight_number}-${f.departure_time ?? f.date}`} flight={f} hub={hub} isMobile={isMobile} />
+              ))}
+            </ul>
+          )}
 
-        <AirportServices />
+          <AirportServices />
 
-        <footer style={s.footer}>
-          <nav style={s.footerNav}>
-            <Link href="/conditions" style={s.footerLink}>Conditions d’utilisation</Link>
-            <Link href="/confidentialite" style={s.footerLink}>Confidentialité</Link>
-            <Link href="/cookies" style={s.footerLink}>Cookies</Link>
-          </nav>
-          <p style={s.footerText}>Informations fournies à titre indicatif · Police Bagage · ATS Handling</p>
-        </footer>
-      </div>
-    </main>
+          <footer style={s.footer}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/air.png" alt="Air Congo" style={s.footerLogo} />
+            <nav style={s.footerNav}>
+              <Link href="/conditions" style={s.footerLink}>Conditions d'utilisation</Link>
+              <Link href="/confidentialite" style={s.footerLink}>Confidentialité</Link>
+              <Link href="/cookies" style={s.footerLink}>Cookies</Link>
+            </nav>
+            <p style={s.footerText}>Informations fournies à titre indicatif · Police Bagage · ATS Handling</p>
+          </footer>
+        </div>
+      </main>
+    </div>
   );
 }
 
@@ -150,14 +158,14 @@ const AIRPORT_LINKS: { href: string; title: string; desc: string }[] = [
   { href: '/guide/securite-bagages', title: 'Sécurité bagages', desc: 'Règles, objets interdits, franchise' },
   { href: '/stationnement-transport', title: 'Stationnement & transport', desc: 'Parking, taxis agréés, navettes' },
   { href: '/boutiques-restaurants', title: 'Boutiques & restaurants', desc: 'Change, duty free, salons VIP' },
-  { href: '/contact', title: 'Contact', desc: 'Joindre l’aéroport (RVA)' },
+  { href: '/contact', title: 'Contact', desc: "Joindre l'aéroport (RVA)" },
 ];
 
 /** Liens vers le portail officiel de l'Aéroport International de Kinshasa (FIH). */
 function AirportServices() {
   return (
     <section style={s.servicesWrap}>
-      <h2 style={s.servicesTitle}>Services de l’aéroport</h2>
+      <h2 style={s.servicesTitle}>Services de l'aéroport</h2>
 
       <a style={s.siteBanner} href={AIRPORT_SITE} target="_blank" rel="noopener noreferrer">
         <span style={s.siteIcon}>
@@ -165,7 +173,7 @@ function AirportServices() {
           <img src="/fih-logo.png" alt="Logo RVA — Aéroport de Kinshasa" width={32} height={32} style={s.siteLogo} />
         </span>
         <span style={s.siteTexts}>
-          <span style={s.siteName}>Site officiel de l’Aéroport International de Kinshasa (FIH)</span>
+          <span style={s.siteName}>Site officiel de l'Aéroport International de Kinshasa (FIH)</span>
           <span style={s.siteUrl}>fih-rva.com · Régie des Voies Aériennes</span>
         </span>
         <ExternalIcon />
@@ -247,12 +255,43 @@ const glass: CSSProperties = {
 };
 
 const s: Record<string, CSSProperties> = {
-  shell: { minHeight: '100vh', display: 'flex', justifyContent: 'center', padding: '32px 20px 48px' },
+  pageWrap: { minHeight: '100vh', display: 'flex', flexDirection: 'column' },
+  stickyHeader: {
+    ...glass,
+    position: 'sticky' as const,
+    top: 0,
+    zIndex: 20,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap' as const,
+    gap: 14,
+    padding: '12px 32px',
+    borderLeft: 'none',
+    borderRight: 'none',
+    borderTop: 'none',
+  },
+  stickyHeaderMobile: {
+    ...glass,
+    position: 'sticky' as const,
+    top: 0,
+    zIndex: 20,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'stretch' as const,
+    gap: 12,
+    padding: '12px 16px',
+    borderLeft: 'none',
+    borderRight: 'none',
+    borderTop: 'none',
+  },
+  shell: { flex: 1, display: 'flex', justifyContent: 'center', padding: '28px 20px 48px' },
   shellMobile: { padding: '18px 12px 32px' },
   container: { width: '100%', maxWidth: 980, display: 'flex', flexDirection: 'column', gap: 20 },
 
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 },
-  headerMobile: { flexDirection: 'column', alignItems: 'stretch', gap: 12 },
+  brandBlock: { display: 'flex', alignItems: 'center', gap: 14 },
+  logo: { height: 44, objectFit: 'contain' as const, filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.6))', flexShrink: 0 },
+  footerLogo: { height: 36, objectFit: 'contain' as const, opacity: 0.85, display: 'block', margin: '0 auto 6px' },
   title: { margin: 0, fontSize: 40, fontWeight: 800, letterSpacing: -0.5, textShadow: '0 2px 16px rgba(0,0,0,0.85)' },
   titleMobile: { fontSize: 27 },
   subtitle: { margin: '6px 0 0', color: '#e2e8f0', fontSize: 14, fontWeight: 600, textShadow: '0 1px 8px rgba(0,0,0,0.8)' },

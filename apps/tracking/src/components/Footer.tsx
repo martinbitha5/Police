@@ -25,7 +25,9 @@ export function Footer() {
     <footer style={s.footer}>
       <div style={s.footerInner}>
         <div>
-          <div style={s.brand}>
+          <div style={{ ...s.brand, flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/air.png" alt="Air Congo" height={38} style={{ objectFit: 'contain', display: 'block' }} />
             <span style={s.footerBrandText}>{t.brand}</span>
           </div>
           <p style={s.footerTagline}>{t.footer.tagline}</p>

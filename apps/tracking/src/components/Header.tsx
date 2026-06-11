@@ -25,6 +25,8 @@ export function Header() {
       <>
         <header style={m.header}>
           <Link href="/" style={s.brand} onClick={() => setOpen(false)}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/air.png" alt="Air Congo" height={30} style={{ objectFit: 'contain', flexShrink: 0 }} />
             <span style={s.brandText}>{t.brand}</span>
           </Link>
           <div style={m.headerRight}>
@@ -57,8 +59,10 @@ export function Header() {
   }
 
   return (
-    <header style={s.header}>
+    <header style={{ ...s.header, position: 'sticky', top: 0, zIndex: 20 }}>
       <Link href="/" style={s.brand}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/air.png" alt="Air Congo" height={32} style={{ objectFit: 'contain', flexShrink: 0 }} />
         <span style={s.brandText}>{t.brand}</span>
       </Link>
       <nav style={s.nav}>

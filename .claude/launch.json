@@ -24,7 +24,8 @@
       "name": "tracking",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "-w", "apps/tracking"],
-      "port": 3002
+      "port": 3002,
+      "autoPort": true
     },
     {
       "name": "litige",
@@ -36,7 +37,8 @@
       "name": "vols",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "-w", "apps/vols"],
-      "port": 3004
+      "port": 3004,
+      "autoPort": true
     }
   ]
 }
