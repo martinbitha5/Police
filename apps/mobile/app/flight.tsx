@@ -138,6 +138,13 @@ export default function FlightDetail() {
         subtitle="Bagages restants à réacheminer"
         onPress={() => router.push({ pathname: '/rush', params: { flightId: flight.id } })}
       />
+      <OptionCard
+        icon="layers"
+        tint={colors.accent}
+        title="Soute"
+        subtitle="Identifier le compartiment de chargement"
+        onPress={() => router.push({ pathname: '/soute', params: { flightId: flight.id } })}
+      />
       </ScrollView>
     </View>
   );

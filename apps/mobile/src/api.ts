@@ -3,6 +3,7 @@ import type {
   BoardingGateResult,
   BaggageActionResult,
   BaggageLoadAllResult,
+  SoutePosition,
 } from '@police/shared';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api-police.brsats.com';
@@ -60,4 +61,14 @@ export function rushBaggage(tag: string, flightId: string, scannedBy?: string): 
 /** Charger : pousse en soute tous les bagages enregistrés non-rush (groupé, sans scan). */
 export function loadAllBaggage(flightId: string, scannedBy?: string): Promise<BaggageLoadAllResult> {
   return post<BaggageLoadAllResult>('/scan/load-all', { flightId, scannedBy });
+}
+
+/** Soute : identifie dans quel compartiment (avant/arrière) le bagage est chargé. */
+export function scanSoute(
+  tag: string,
+  flightId: string,
+  soute: SoutePosition,
+  scannedBy?: string,
+): Promise<BaggageActionResult> {
+  return post<BaggageActionResult>('/scan/soute', { tag, flightId, soute, scannedBy });
 }
