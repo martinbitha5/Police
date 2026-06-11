@@ -9,7 +9,7 @@ import { colors, radius, spacing } from '@/theme';
 const STATUS_LABEL: Record<FlightStatus, string> = {
   scheduled: 'Programmé',
   boarding: 'Embarquement',
-  closed: 'Fermé',
+  closed: 'Porte fermée',
   cancelled: 'Annulé',
 };
 const STATUS_COLOR: Record<FlightStatus, string> = {
@@ -33,6 +33,8 @@ export default function FlightDetail() {
     ? statsFor(flightId)
     : { pax: 0, bagTotal: 0, bagOk: 0, boarded: 0 };
   const pad = useSafePadding();
+  const isLocked = flight?.status === 'closed' || flight?.status === 'cancelled';
+  const lockReason = flight?.status === 'cancelled' ? 'Vol annulé' : 'Porte fermée';
 
   if (loading && !flight) {
     return (
@@ -104,6 +106,7 @@ export default function FlightDetail() {
         tint={colors.primary}
         title="Check-in"
         subtitle="Scanner les boarding pass"
+        lockedReason={isLocked ? lockReason : undefined}
         onPress={() => router.push({ pathname: '/checkin', params: { flightId: flight.id } })}
       />
       <OptionCard
@@ -118,6 +121,7 @@ export default function FlightDetail() {
         tint={colors.success}
         title="Embarquement"
         subtitle="Confirmer les passagers à la porte"
+        lockedReason={isLocked ? lockReason : undefined}
         onPress={() => router.push({ pathname: '/embarquement', params: { flightId: flight.id } })}
       />
       <OptionCard
@@ -155,24 +159,35 @@ function OptionCard({
   title,
   subtitle,
   onPress,
+  lockedReason,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   tint: string;
   title: string;
   subtitle: string;
   onPress: () => void;
+  lockedReason?: string;
 }) {
+  const locked = !!lockedReason;
   return (
-    <Pressable style={({ pressed }) => [pressed && styles.optionPressed]} onPress={onPress}>
+    <Pressable
+      style={({ pressed }) => [{ opacity: locked ? 0.45 : pressed ? 0.7 : 1 }]}
+      onPress={locked ? undefined : onPress}
+      disabled={locked}
+    >
       <GlassCard contentStyle={styles.option}>
-        <View style={[styles.optionIcon, { backgroundColor: tint }]}>
-          <Ionicons name={icon} size={28} color={colors.onPrimary} />
+        <View style={[styles.optionIcon, { backgroundColor: locked ? colors.muted : tint }]}>
+          <Ionicons name={locked ? 'lock-closed' : icon} size={28} color={colors.onPrimary} />
         </View>
         <View style={styles.optionTexts}>
-          <Text style={styles.optionTitle}>{title}</Text>
-          <Text style={styles.optionSubtitle}>{subtitle}</Text>
+          <Text style={[styles.optionTitle, locked && { color: colors.muted }]}>{title}</Text>
+          <Text style={styles.optionSubtitle}>{locked ? lockedReason : subtitle}</Text>
         </View>
-        <Ionicons name="chevron-forward" size={24} color={colors.muted} />
+        {locked ? (
+          <Ionicons name="lock-closed" size={18} color={colors.muted} />
+        ) : (
+          <Ionicons name="chevron-forward" size={24} color={colors.muted} />
+        )}
       </GlassCard>
     </Pressable>
   );

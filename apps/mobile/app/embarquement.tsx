@@ -23,6 +23,10 @@ export default function Embarquement() {
   const [scanState, setScanState] = useState<ScanState>('scanning');
   const scanSeq = useRef(0);
   const pad = useSafePadding();
+  const isLocked = flight?.status === 'closed' || flight?.status === 'cancelled';
+  const lockReason = flight?.status === 'cancelled'
+    ? 'Vol annulé — les scans d\'embarquement sont désactivés.'
+    : 'Porte fermée — les scans d\'embarquement sont désactivés.';
 
   async function onScan(raw: string) {
     if (!flightId) return;
@@ -55,7 +59,7 @@ export default function Embarquement() {
     <View style={styles.root}>
       <ScreenBackground />
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, pad]}>
-        <HiddenScanner onScan={onScan} />
+        {!isLocked ? <HiddenScanner onScan={onScan} /> : null}
 
         {/* En-tête vol */}
         <GlassCard strong contentStyle={styles.header}>
@@ -80,57 +84,67 @@ export default function Embarquement() {
           </View>
         </GlassCard>
 
-        {/* Scène de scan animée */}
-        <GlassCard strong rounded={radius.xl} contentStyle={styles.stage}>
-          <ScanLottie state={scanState} replayKey={scanSeq.current} size={210} />
-          <Text style={styles.stageTitle}>
-            {scanState === 'success'
-              ? last?.alreadyBoarded
-                ? 'Déjà embarqué'
-                : 'Passager embarqué'
-              : scanState === 'error'
-                ? 'Embarquement refusé'
-                : 'Scannez un boarding pass'}
-          </Text>
-          <Text style={styles.stageHint}>
-            {scanState === 'scanning' ? 'En attente de lecture…' : 'Prêt pour le prochain scan'}
-          </Text>
-        </GlassCard>
-
-        {message ? (
-          message.text.includes('Mauvais vol') ? (
-            <View style={styles.wrongFlightBanner}>
-              <Ionicons name="airplane" size={22} color={colors.danger} />
-              <View style={styles.wrongFlightTexts}>
-                <Text style={styles.wrongFlightTitle}>MAUVAIS VOL</Text>
-                <Text style={styles.wrongFlightText}>{message.text.replace('⚠️ ', '')}</Text>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorBannerText}>⚠️  {message.text}</Text>
-            </View>
-          )
-        ) : null}
-
-        {last ? (
-          <GlassCard strong contentStyle={styles.lastCard}>
-            <View style={styles.lastTopRow}>
-              <Text style={styles.lastLabel}>DERNIER SCAN</Text>
-              <View style={last.alreadyBoarded ? styles.dupBadge : styles.okBadge}>
-                <Text style={last.alreadyBoarded ? styles.dupBadgeText : styles.okBadgeText}>
-                  {last.alreadyBoarded ? 'DÉJÀ' : '✓ EMBARQUÉ'}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.lastName}>{last.passengerName}</Text>
-            <View style={styles.metaRow}>
-              <Meta label="Siège" value={last.seat || '—'} />
-              <Meta label="Embarqués" value={`${last.counts.boarded}/${last.counts.registered}`} />
-              <Meta label="Reste" value={String(last.counts.remaining)} />
-            </View>
+        {isLocked ? (
+          <GlassCard strong rounded={radius.xl} contentStyle={styles.lockedStage}>
+            <Ionicons name="lock-closed" size={52} color={colors.danger} />
+            <Text style={styles.lockedTitle}>Embarquement fermé</Text>
+            <Text style={styles.lockedSub}>{lockReason}</Text>
           </GlassCard>
-        ) : null}
+        ) : (
+          <>
+            {/* Scène de scan animée */}
+            <GlassCard strong rounded={radius.xl} contentStyle={styles.stage}>
+              <ScanLottie state={scanState} replayKey={scanSeq.current} size={210} />
+              <Text style={styles.stageTitle}>
+                {scanState === 'success'
+                  ? last?.alreadyBoarded
+                    ? 'Déjà embarqué'
+                    : 'Passager embarqué'
+                  : scanState === 'error'
+                    ? 'Embarquement refusé'
+                    : 'Scannez un boarding pass'}
+              </Text>
+              <Text style={styles.stageHint}>
+                {scanState === 'scanning' ? 'En attente de lecture…' : 'Prêt pour le prochain scan'}
+              </Text>
+            </GlassCard>
+
+            {message ? (
+              message.text.includes('Mauvais vol') ? (
+                <View style={styles.wrongFlightBanner}>
+                  <Ionicons name="airplane" size={22} color={colors.danger} />
+                  <View style={styles.wrongFlightTexts}>
+                    <Text style={styles.wrongFlightTitle}>MAUVAIS VOL</Text>
+                    <Text style={styles.wrongFlightText}>{message.text.replace('⚠️ ', '')}</Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.errorBanner}>
+                  <Text style={styles.errorBannerText}>⚠️  {message.text}</Text>
+                </View>
+              )
+            ) : null}
+
+            {last ? (
+              <GlassCard strong contentStyle={styles.lastCard}>
+                <View style={styles.lastTopRow}>
+                  <Text style={styles.lastLabel}>DERNIER SCAN</Text>
+                  <View style={last.alreadyBoarded ? styles.dupBadge : styles.okBadge}>
+                    <Text style={last.alreadyBoarded ? styles.dupBadgeText : styles.okBadgeText}>
+                      {last.alreadyBoarded ? 'DÉJÀ' : '✓ EMBARQUÉ'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.lastName}>{last.passengerName}</Text>
+                <View style={styles.metaRow}>
+                  <Meta label="Siège" value={last.seat || '—'} />
+                  <Meta label="Embarqués" value={`${last.counts.boarded}/${last.counts.registered}`} />
+                  <Meta label="Reste" value={String(last.counts.remaining)} />
+                </View>
+              </GlassCard>
+            ) : null}
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -198,6 +212,9 @@ const styles = StyleSheet.create({
   wrongFlightTitle: { color: colors.danger, fontWeight: '900', fontSize: 15, letterSpacing: 1 },
   wrongFlightText: { color: colors.danger, fontWeight: '700', fontSize: 14, marginTop: 2 },
   stage: { paddingVertical: spacing(3), alignItems: 'center' },
+  lockedStage: { paddingVertical: spacing(4), alignItems: 'center', gap: spacing(1.5) },
+  lockedTitle: { color: colors.danger, fontSize: 22, fontWeight: '800', marginTop: spacing(1.5), textAlign: 'center' },
+  lockedSub: { color: colors.muted, fontSize: 14, textAlign: 'center', lineHeight: 20, paddingHorizontal: spacing(2), marginTop: spacing(0.5) },
   stageTitle: { color: colors.text, fontSize: 19, fontWeight: '700', marginTop: spacing(1) },
   stageHint: { color: colors.muted, fontSize: 14, marginTop: 2 },
   errorBanner: {

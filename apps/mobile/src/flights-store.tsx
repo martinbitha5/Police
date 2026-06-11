@@ -91,6 +91,12 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
       .channel('flights-store')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'passengers' }, onChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'baggage' }, onChange)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'flights' }, (payload) => {
+        const updated = payload.new as Flight;
+        if (updated?.id && flightIds.current.has(updated.id)) {
+          setFlights((prev) => prev.map((f) => (f.id === updated.id ? updated : f)));
+        }
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(channel);

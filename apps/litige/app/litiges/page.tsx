@@ -404,8 +404,10 @@ function DisputePanel({
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }) {
+  const fromPassenger = !!dispute?.from_passenger;
   const [reason, setReason] = useState(dispute?.reason ?? '');
   const [notes, setNotes] = useState(dispute?.notes ?? '');
+  const [supervisorNotes, setSupervisorNotes] = useState('');
   const [status, setStatus] = useState<DisputeStatus>(dispute?.status ?? 'open');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -416,15 +418,24 @@ function DisputePanel({
     const supabase = createClient();
     const resolving = status === 'resolved';
     if (dispute) {
+      const updatePayload: Record<string, unknown> = {
+        status,
+        resolved_at: resolving ? new Date().toISOString() : null,
+        resolved_by: resolving ? userId : null,
+      };
+      if (fromPassenger) {
+        if (supervisorNotes.trim()) {
+          const stamp = new Date().toLocaleString('fr-FR');
+          const block = `[Note superviseur — ${stamp}]\n${supervisorNotes.trim()}`;
+          updatePayload.notes = dispute.notes ? `${dispute.notes}\n\n${block}` : block;
+        }
+      } else {
+        updatePayload.reason = reason.trim() || null;
+        updatePayload.notes = notes.trim() || null;
+      }
       const { error } = await supabase
         .from('baggage_disputes')
-        .update({
-          reason: reason.trim() || null,
-          notes: notes.trim() || null,
-          status,
-          resolved_at: resolving ? new Date().toISOString() : null,
-          resolved_by: resolving ? userId : null,
-        })
+        .update(updatePayload)
         .eq('id', dispute.id);
       if (error) {
         setErr(error.message);
@@ -503,24 +514,52 @@ function DisputePanel({
               ))}
             </select>
           </div>
-          <div>
-            <label style={label}>Motif</label>
-            <input
-              style={{ ...input, marginTop: 6 }}
-              placeholder="Bagage égaré, non réclamé, endommagé…"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            />
-          </div>
-          <div>
-            <label style={label}>Notes</label>
-            <textarea
-              style={{ ...input, marginTop: 6, minHeight: 90, resize: 'vertical', fontFamily: 'inherit' }}
-              placeholder="Détails de l'enquête, actions prises…"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
+          {fromPassenger ? (
+            <>
+              <div>
+                <label style={label}>Motif (signalé par le passager)</label>
+                <div style={{ ...input, marginTop: 6, background: 'rgba(255,255,255,0.03)', color: 'var(--muted)', cursor: 'default', userSelect: 'text' }}>
+                  {reason || '—'}
+                </div>
+              </div>
+              <div>
+                <label style={label}>Signalement passager</label>
+                <pre style={{ ...input, marginTop: 6, minHeight: 90, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', fontSize: 13, background: 'rgba(255,255,255,0.03)', color: 'var(--muted)', cursor: 'default', overflowX: 'auto', margin: 0 }}>
+                  {notes || '—'}
+                </pre>
+              </div>
+              <div>
+                <label style={label}>Notes superviseur</label>
+                <textarea
+                  style={{ ...input, marginTop: 6, minHeight: 90, resize: 'vertical', fontFamily: 'inherit' }}
+                  placeholder="Votre note interne, actions prises…"
+                  value={supervisorNotes}
+                  onChange={(e) => setSupervisorNotes(e.target.value)}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label style={label}>Motif</label>
+                <input
+                  style={{ ...input, marginTop: 6 }}
+                  placeholder="Bagage égaré, non réclamé, endommagé…"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={label}>Notes</label>
+                <textarea
+                  style={{ ...input, marginTop: 6, minHeight: 90, resize: 'vertical', fontFamily: 'inherit' }}
+                  placeholder="Détails de l'enquête, actions prises…"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+            </>
+          )}
 
           {err ? (
             <div style={{ ...s.error, marginTop: 0 }}>
