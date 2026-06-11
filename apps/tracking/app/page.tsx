@@ -2,7 +2,6 @@
 
 import { Fragment, useState } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import type { CSSProperties } from 'react';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import type {
@@ -12,16 +11,12 @@ import type {
   ClaimCategory,
   DisputeStatus,
 } from '@police/shared';
-import loadingPlane from '@/loading-plane.json';
 import { useLang } from '@/i18n/LanguageProvider';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { glass, shared } from '@/components/theme';
 import { IconSearch, IconBag, IconAlert, IconCheck } from '@/components/icons';
-
-// lottie-react dépend de `window` → chargé côté client uniquement.
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 const TAG_RE = /^\d{10}$/;
 
@@ -130,7 +125,7 @@ export default function TrackingPage() {
 
         {busy ? (
           <div style={s.loader}>
-            <Lottie animationData={loadingPlane} loop style={{ width: 150, height: 150 }} />
+            <span style={s.spinner} />
             <p style={s.loaderText}>{t.home.searching}</p>
           </div>
         ) : null}
@@ -422,8 +417,9 @@ const s: Record<string, CSSProperties> = {
   cta: { background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 10, padding: '13px 26px', fontWeight: 700, fontSize: 15, boxShadow: '0 10px 24px rgba(37,99,235,0.4)' },
   helper: { margin: 0, color: 'var(--muted)', fontSize: 13 },
 
-  loader: { ...glass, borderRadius: 14, padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, boxShadow: '0 24px 60px rgba(0,0,0,0.4)' },
+  loader: { ...glass, borderRadius: 14, padding: '36px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, boxShadow: '0 24px 60px rgba(0,0,0,0.4)' },
   loaderText: { margin: 0, color: 'var(--muted)', fontSize: 15, fontWeight: 500 },
+  spinner: { width: 38, height: 38, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.18)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite', display: 'inline-block' },
 
   error: { ...glass, color: '#fca5a5', borderColor: 'rgba(220,38,38,0.5)', borderRadius: 12, padding: '14px 18px', margin: 0 },
   notFound: { ...glass, display: 'flex', alignItems: 'center', gap: 12, borderRadius: 12, padding: '18px 20px', color: 'var(--muted)' },

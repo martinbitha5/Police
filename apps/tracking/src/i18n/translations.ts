@@ -230,20 +230,52 @@ export const translations: Record<Lang, Dictionary> = {
       faqTitle: 'Questions fréquentes',
       faq: [
         {
-          q: 'Où trouver mon PNR ?',
-          a: 'Le PNR (référence de réservation) figure sur votre boarding pass, généralement composé de 6 caractères (ex : EYFMKNE).',
+          q: ‘Où trouver mon PNR ?’,
+          a: ‘Le PNR (référence de réservation) figure sur votre boarding pass, généralement composé de 6 caractères (ex : EYFMKNE).’,
         },
         {
-          q: 'Où trouver le numéro d’étiquette bagage ?',
-          a: 'Le numéro d’étiquette à 10 chiffres se trouve sur le ticket collé à votre bagage lors de l’enregistrement.',
+          q: ‘Où trouver le numéro d’étiquette bagage ?’,
+          a: ‘Le numéro d’étiquette à 10 chiffres se trouve sur le ticket collé à votre bagage lors de l’enregistrement au comptoir.’,
         },
         {
-          q: 'Que signifie « En attente » ?',
-          a: 'Le bagage a été déclaré mais n’a pas encore été scanné comme chargé en soute. Son statut passera à « Chargé en soute » dès confirmation.',
+          q: ‘Que signifie « En attente » ?’,
+          a: ‘Votre bagage a été déclaré au check-in mais l’étiquette physique n’a pas encore été scannée sur le tapis. Le statut passera à « Enregistré » dès le scan au tapis, puis à « Chargé en soute » après chargement.’,
         },
         {
-          q: 'Mon bagage est introuvable, que faire ?',
-          a: 'Vérifiez votre PNR ou numéro d’étiquette. Si le problème persiste, contactez notre support avec votre référence de réservation.',
+          q: ‘Que signifie « Enregistré » ?’,
+          a: ‘L’étiquette physique de votre bagage a été scannée et validée à la zone de tri. Le bagage est contrôlé et confirmé — il va être chargé en soute.’,
+        },
+        {
+          q: ‘Que signifie « Chargé en soute » ?’,
+          a: ‘Votre bagage est physiquement dans la soute de l’avion. Vous pouvez embarquer sereinement.’,
+        },
+        {
+          q: ‘Que signifie « Réacheminement » ?’,
+          a: ‘Le bagage a manqué le chargement de votre vol et a été mis à part pour être envoyé sur le prochain vol disponible. Notre équipe vous contactera pour coordonner la livraison.’,
+        },
+        {
+          q: ‘Comment signaler un problème sur mon bagage ?’,
+          a: ‘Cherchez votre bagage sur cette page avec votre PNR ou numéro d’étiquette. Cliquez sur « Signaler un problème » à côté du bagage concerné, choisissez la catégorie (manquant, endommagé, etc.) et décrivez la situation. Votre signalement est transmis en temps réel aux superviseurs de l’aéroport.’,
+        },
+        {
+          q: ‘Que se passe-t-il après un signalement ?’,
+          a: ‘Un superviseur reçoit immédiatement une alerte avec votre signalement. Il traite la réclamation depuis son tableau de bord. Le statut de votre signalement passe de « Problème signalé » à « En cours de traitement », puis à « Réclamation traitée » une fois résolu. Vous pouvez relancer le suivi à tout moment pour voir l’avancement.’,
+        },
+        {
+          q: ‘Mon bagage est endommagé à l’arrivée, que faire ?’,
+          a: ‘Avant de quitter l’aéroport, signalez le dommage en utilisant le formulaire de réclamation (catégorie « Bagage endommagé »). Fournissez une description précise et, si possible, votre numéro d’étiquette. Notre équipe ouvrira un dossier et vous recontactera.’,
+        },
+        {
+          q: ‘Mon bagage est introuvable après l’atterrissage ?’,
+          a: ‘Effectuez d’abord une recherche avec votre PNR. Si le statut reste « En attente » ou si aucun résultat ne s’affiche, signalez immédiatement un « Bagage manquant » via le formulaire. Restez joignable à l’adresse ou au numéro que vous indiquez dans le formulaire.’,
+        },
+        {
+          q: ‘Combien de temps pour traiter ma réclamation ?’,
+          a: ‘Les réclamations pour bagages manquants ou endommagés sont traitées en priorité, généralement dans la journée pour les vols du jour. Pour les cas plus complexes (bagage retrouvé sur un autre vol), le délai peut aller jusqu’à 48 h.’,
+        },
+        {
+          q: ‘Pourquoi mon bagage n’apparaît pas dans le suivi ?’,
+          a: ‘Le suivi est disponible uniquement pour les bagages enregistrés sur les vols opérés par Air Congo / Ethiopian Airlines sur nos aéroports. Si votre PNR ou étiquette est correct mais aucune donnée n’apparaît, contactez le support en indiquant votre numéro de vol et votre date de départ.’,
         },
       ],
     },
@@ -475,15 +507,47 @@ export const translations: Record<Lang, Dictionary> = {
         },
         {
           q: 'Where do I find the baggage tag number?',
-          a: 'The 10-digit tag number is on the ticket attached to your bag at check-in.',
+          a: 'The 10-digit tag number is on the sticker attached to your bag at the check-in counter.',
         },
         {
           q: 'What does "Pending" mean?',
-          a: 'The bag has been declared but not yet scanned as loaded in the hold. Its status changes to "Loaded in hold" once confirmed.',
+          a: 'Your bag has been declared at check-in but the physical tag has not yet been scanned at the sorting belt. The status will change to "Registered" after belt scan, then to "Loaded in hold" after loading.',
         },
         {
-          q: 'My baggage cannot be found, what should I do?',
-          a: 'Check your PNR or tag number. If the issue persists, contact our support with your booking reference.',
+          q: 'What does "Registered" mean?',
+          a: 'The physical tag of your bag has been scanned and validated at the sorting area. The bag has passed the security check and will be loaded into the hold.',
+        },
+        {
+          q: 'What does "Loaded in hold" mean?',
+          a: 'Your bag is physically in the aircraft hold. You can board without worry.',
+        },
+        {
+          q: 'What does "Rerouting" mean?',
+          a: 'The bag missed the loading for your flight and has been set aside to be sent on the next available flight. Our team will contact you to coordinate delivery.',
+        },
+        {
+          q: 'How do I report an issue with my bag?',
+          a: 'Search for your bag on this page using your PNR or tag number. Click "Report an issue" next to the bag, select the category (missing, damaged, etc.) and describe the situation. Your report is sent in real time to airport supervisors.',
+        },
+        {
+          q: 'What happens after I report an issue?',
+          a: 'A supervisor immediately receives an alert with your report and processes the claim from their dashboard. The status changes from "Issue reported" to "Being processed", then to "Claim resolved" once handled. You can recheck the tracking at any time to see progress.',
+        },
+        {
+          q: 'My bag is damaged on arrival — what should I do?',
+          a: 'Before leaving the airport, submit a claim using the report form (category "Damaged baggage"). Provide a precise description and, if possible, your tag number. Our team will open a case and contact you.',
+        },
+        {
+          q: 'My bag cannot be found after landing?',
+          a: 'First search with your PNR. If the status stays "Pending" or nothing appears, immediately report a "Missing baggage" via the form. Stay reachable at the contact details you provide in the form.',
+        },
+        {
+          q: 'How long does it take to resolve a claim?',
+          a: 'Claims for missing or damaged bags are handled as a priority, usually the same day for current-day flights. For more complex cases (bag found on another flight), the delay may be up to 48 hours.',
+        },
+        {
+          q: 'Why does my bag not appear in tracking?',
+          a: 'Tracking is only available for bags registered on flights operated by Air Congo / Ethiopian Airlines at our airports. If your PNR or tag is correct but no data appears, contact support with your flight number and departure date.',
         },
       ],
     },
