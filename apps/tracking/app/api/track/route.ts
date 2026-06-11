@@ -80,7 +80,9 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('baggage')
       .select(BAG_COLUMNS)
-      .eq('tag_number', query);
+      .eq('tag_number', query)
+      .order('scanned_at', { ascending: false })
+      .limit(1);
     if (error) return NextResponse.json({ error: 'Erreur de recherche' }, { status: 500 });
     bagRows = (data as BagRow[] | null) ?? [];
     if (bagRows.length === 0) {

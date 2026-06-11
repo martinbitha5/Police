@@ -28,6 +28,7 @@ export default function TrackingPage() {
   const [date, setDate] = useState('');
   const [tag, setTag] = useState('');
   const [result, setResult] = useState<BaggageTrackingResult | null>(null);
+  const [searchedTag, setSearchedTag] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -47,6 +48,7 @@ export default function TrackingPage() {
     setBusy(true);
     setError(null);
     setResult(null);
+    setSearchedTag(cleanTag);
     // Durée minimale d'affichage du loader pour que l'animation reste visible.
     const minDelay = new Promise((r) => setTimeout(r, 900));
     try {
@@ -138,7 +140,9 @@ export default function TrackingPage() {
         ) : null}
 
         {result?.status === 'found'
-          ? result.passengers.map((p, i) => <PassengerCard key={`${p.pnr}-${i}`} pax={p} />)
+          ? result.passengers.map((p, i) => (
+              <PassengerCard key={`${p.pnr}-${i}`} pax={p} tagFilter={searchedTag || undefined} />
+            ))
           : null}
 
         <HelpCard />
@@ -179,12 +183,13 @@ function HelpCard() {
   );
 }
 
-function PassengerCard({ pax }: { pax: TrackedPassenger }) {
+function PassengerCard({ pax, tagFilter }: { pax: TrackedPassenger; tagFilter?: string }) {
   const { t } = useLang();
   const [openTag, setOpenTag] = useState<string | null>(null);
   // Statut de réclamation forcé localement après envoi, pour que l'étiquette
   // passe à « Problème signalé » immédiatement sans relancer la recherche.
   const [claimed, setClaimed] = useState<Record<string, DisputeStatus>>({});
+  const visibleBags = tagFilter ? pax.bags.filter((b) => b.tagNumber === tagFilter) : pax.bags;
   const allLoaded = pax.declaredBaggageCount > 0 && pax.confirmedBaggageCount >= pax.declaredBaggageCount;
   return (
     <section style={s.resultCard}>
@@ -207,7 +212,7 @@ function PassengerCard({ pax }: { pax: TrackedPassenger }) {
         </div>
       </div>
       <ul style={s.bagList}>
-        {pax.bags.map((b) => {
+        {visibleBags.map((b) => {
           const claimStatus = claimed[b.tagNumber] ?? b.claimStatus;
           return (
             <Fragment key={b.tagNumber}>
