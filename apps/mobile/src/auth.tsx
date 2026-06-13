@@ -80,21 +80,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // On libère l'écran de chargement tout de suite, sans attendre le réseau.
     supabase.auth
       .getSession()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
         if (!mounted) return;
+        if (error) {
+          // Session corrompue ou refresh token invalide dès le démarrage
+          setLoading(false);
+          void supabase.auth.signOut();
+          return;
+        }
         setSession(data.session);
         setLoading(false);
         if (data.session) void loadProfile(data.session.user.id);
       })
       .catch(() => {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          void supabase.auth.signOut();
+        }
       });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       if (!mounted) return;
       setSession(next);
-      if (next) void loadProfile(next.user.id);
-      else setProfile(null);
+      if (next) {
+        void loadProfile(next.user.id);
+      } else {
+        setProfile(null);
+        // Refresh token révoqué côté serveur : vider le flag onboarding
+        // pour que le prochain démarrage repasse proprement par le login.
+        if (event === 'SIGNED_OUT') {
+          void resetOnboarded();
+        }
+      }
     });
 
     return () => {

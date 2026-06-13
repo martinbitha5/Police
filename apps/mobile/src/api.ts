@@ -25,7 +25,14 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  const json = await res.json();
+
+  let json: unknown;
+  try {
+    json = await res.json();
+  } catch {
+    throw new Error('Serveur indisponible — réessayez dans quelques instants.');
+  }
+
   if (!res.ok) {
     throw new Error((json as { error?: string }).error ?? `Erreur ${res.status}`);
   }

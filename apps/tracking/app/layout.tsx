@@ -14,7 +14,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="fr">
       <head>
         <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY }} />
-        <link rel="preload" href="/air%20congo.jpg" as="image" />
         <link rel="preload" href="/air.png" as="image" />
       </head>
       <body>

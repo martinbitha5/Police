@@ -19,6 +19,7 @@ interface FlightsState {
   getFlight: (id: string) => Flight | undefined;
   statsFor: (id: string) => FlightStats;
   refresh: () => Promise<void>;
+  refreshStatsFor: (id: string) => Promise<void>;
 }
 
 const FlightsContext = createContext<FlightsState | undefined>(undefined);
@@ -107,7 +108,7 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
   const statsFor = useCallback((id: string) => stats[id] ?? EMPTY_STATS, [stats]);
 
   return (
-    <FlightsContext.Provider value={{ flights, loading, getFlight, statsFor, refresh }}>
+    <FlightsContext.Provider value={{ flights, loading, getFlight, statsFor, refresh, refreshStatsFor: refreshStats }}>
       {children}
     </FlightsContext.Provider>
   );

@@ -106,12 +106,12 @@ const FIH_LINKS = [
 ];
 
 const f: Record<string, CSSProperties> = {
-  fihLink: { color: 'var(--muted)', fontSize: 14, fontWeight: 500 },
+  fihLink: { color: 'var(--side-muted)', fontSize: 14, fontWeight: 500 },
   fihBanner: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 10,
-    color: 'var(--muted)',
+    color: 'var(--side-muted)',
     fontSize: 13,
     fontWeight: 500,
   },

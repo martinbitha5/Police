@@ -86,7 +86,7 @@ export function Header() {
 }
 
 function BurgerIcon({ open }: { open: boolean }) {
-  const bar: CSSProperties = { width: 22, height: 2.5, borderRadius: 2, background: '#f1f5f9', transition: 'all 0.2s' };
+  const bar: CSSProperties = { width: 22, height: 2.5, borderRadius: 2, background: '#ffffff', transition: 'all 0.2s' };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
       <span style={{ ...bar, transform: open ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
@@ -96,18 +96,33 @@ function BurgerIcon({ open }: { open: boolean }) {
   );
 }
 
-const glass: CSSProperties = {
-  background: 'var(--glass-strong)',
-  backdropFilter: 'var(--glass-blur)',
-  WebkitBackdropFilter: 'var(--glass-blur)',
-  border: '1px solid var(--glass-border)',
-};
-
 const m: Record<string, CSSProperties> = {
-  header: { ...glass, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderLeft: 'none', borderRight: 'none', borderTop: 'none', position: 'sticky', top: 0, zIndex: 20 },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '14px 16px',
+    background: 'linear-gradient(165deg, var(--side-bg), var(--side-bg-2))',
+    borderBottom: '1px solid var(--side-border)',
+    color: 'var(--side-text)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 20,
+  },
   headerRight: { display: 'flex', alignItems: 'center', gap: 12 },
-  burger: { background: 'transparent', border: 'none', color: '#f1f5f9', padding: 4, display: 'grid', placeItems: 'center' },
-  drawer: { ...glass, display: 'flex', flexDirection: 'column', gap: 2, padding: '12px 16px', borderLeft: 'none', borderRight: 'none', position: 'sticky', top: 56, zIndex: 19 },
+  burger: { background: 'transparent', border: 'none', color: '#fff', padding: 4, display: 'grid', placeItems: 'center' },
+  drawer: {
+    background: 'var(--surface)',
+    borderBottom: '1px solid var(--border)',
+    boxShadow: 'var(--shadow-lg)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+    padding: '12px 16px',
+    position: 'sticky',
+    top: 56,
+    zIndex: 19,
+  },
   drawerLink: { padding: '12px 8px', fontSize: 15, fontWeight: 600, color: 'var(--muted)', borderRadius: 8 },
-  drawerActive: { padding: '12px 8px', fontSize: 15, fontWeight: 700, color: 'var(--text)', borderRadius: 8 },
+  drawerActive: { padding: '12px 8px', fontSize: 15, fontWeight: 700, color: 'var(--primary)', borderRadius: 8 },
 };

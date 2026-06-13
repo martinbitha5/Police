@@ -1,47 +1,56 @@
 :root {
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --border: #334155;
-  --text: #f1f5f9;
-  --muted: #cbd5e1;
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --success: #16a34a;
-  --danger: #dc2626;
-  --warning: #d97706;
+  /* Palette claire — suivi bagages public, identité Police Bagage */
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-alt: #f9fafb;
+  --border: #e3e6ea;
+  --border-strong: #d3d8de;
+  --text: #15181d;
+  --muted: #5c6470;
+  --faint: #8b939e;
 
-  /* Glassmorphism — verre translucide blanc, pas noir */
-  --glass: rgba(255, 255, 255, 0.13);
-  --glass-strong: rgba(255, 255, 255, 0.20);
-  --glass-border: rgba(255, 255, 255, 0.22);
-  --glass-blur: blur(18px) saturate(160%);
+  --primary: #1e4ed8;
+  --primary-hover: #1a44bd;
+  --primary-soft: #eef2fd;
+  --success: #15803d;
+  --success-soft: #ecfdf3;
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
+  --warning: #b45309;
+  --warning-soft: #fffbeb;
+
+  /* Marine profonde — header et footer */
+  --side-bg: #0c1322;
+  --side-bg-2: #13233f;
+  --side-border: #1d2940;
+  --side-text: #e7ebf2;
+  --side-muted: #8e99ad;
+
+  /* Compatibilité : anciens tokens "glass" remappés sur le thème clair */
+  --glass: #ffffff;
+  --glass-strong: #ffffff;
+  --glass-border: #e3e6ea;
+  --glass-blur: none;
+
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-md: 0 1px 3px rgba(16, 24, 40, 0.07), 0 4px 12px rgba(16, 24, 40, 0.05);
+  --shadow-lg: 0 8px 24px rgba(16, 24, 40, 0.12);
 }
 
 * { box-sizing: border-box; }
 
-html { background: #7998bb; }
+html { background: var(--bg); }
 
 body {
   margin: 0;
   padding: 0;
   color: var(--text);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
   min-height: 100vh;
-  background-color: #7998bb;
-  background-image: linear-gradient(160deg, rgba(8, 16, 31, 0.15), rgba(8, 16, 31, 0.35)),
-    url('/air congo.jpg'), url('/bg.svg');
-  background-size: cover;
-  background-position: center center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-}
-
-@media (max-width: 768px) {
-  html, body {
-    background-attachment: scroll;
-    background-position: center top;
-    background-size: cover;
-  }
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
 
 @keyframes spin {
@@ -52,6 +61,17 @@ button { cursor: pointer; font: inherit; }
 button:disabled { opacity: 0.55; cursor: default; }
 a { color: inherit; text-decoration: none; }
 
-input, select, textarea { font: inherit; }
-input::placeholder, textarea::placeholder { color: rgba(203, 213, 225, 0.6); }
-select option { background: #0f172a; color: #f1f5f9; }
+button,
+a {
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease,
+    box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+input, select, textarea { font: inherit; transition: border-color 0.16s ease, box-shadow 0.16s ease; }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(30, 78, 216, 0.13);
+}
+input::placeholder, textarea::placeholder { color: var(--faint); }
+select option { background: #ffffff; color: var(--text); }

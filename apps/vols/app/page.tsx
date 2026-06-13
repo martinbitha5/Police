@@ -7,10 +7,10 @@ import type { PublicFlight, FlightsResponse } from '@/types';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 const STATUS_STYLE: Record<FlightStatus, { color: string; bg: string; border: string }> = {
-  scheduled: { color: '#cbd5e1', bg: 'rgba(148,163,184,0.14)', border: 'rgba(148,163,184,0.4)' },
-  boarding: { color: '#4ade80', bg: 'rgba(22,163,74,0.18)', border: 'rgba(22,163,74,0.5)' },
-  closed: { color: '#fca5a5', bg: 'rgba(220,38,38,0.16)', border: 'rgba(220,38,38,0.45)' },
-  cancelled: { color: '#fbbf24', bg: 'rgba(245,158,11,0.18)', border: 'rgba(245,158,11,0.5)' },
+  scheduled: { color: '#5c6470', bg: '#f3f4f6', border: '#d3d8de' },
+  boarding: { color: '#15803d', bg: '#ecfdf3', border: '#bbe0c8' },
+  closed: { color: '#b91c1c', bg: '#fef2f2', border: '#f1c5c5' },
+  cancelled: { color: '#b45309', bg: '#fffbeb', border: '#f0d9a8' },
 };
 
 function todayISO(): string {
@@ -127,7 +127,12 @@ export default function VolsPage() {
           ) : (
             <ul style={s.list}>
               {filtered.map((f) => (
-                <FlightCard key={`${f.flight_number}-${f.departure_time ?? f.date}`} flight={f} hub={hub} isMobile={isMobile} />
+                <FlightCard
+                  key={`${f.flight_number}-${f.departure_time ?? f.date}`}
+                  flight={f}
+                  hub={hub}
+                  isMobile={isMobile}
+                />
               ))}
             </ul>
           )}
@@ -183,6 +188,7 @@ function AirportServices() {
         {AIRPORT_LINKS.map((l) => (
           <a
             key={l.href}
+            className="fl-link"
             style={s.linkCard}
             href={`${AIRPORT_SITE}${l.href}`}
             target="_blank"
@@ -223,7 +229,7 @@ function FlightCard({ flight, hub, isMobile }: { flight: PublicFlight; hub: stri
     new Date(mainTime).getTime() < Date.now();
 
   return (
-    <li style={isMobile ? { ...s.card, ...s.cardMobile } : s.card}>
+    <li className="fl-card" style={isMobile ? { ...s.card, ...s.cardMobile } : s.card}>
       <div style={s.cardLeft}>
         <span style={{ ...s.kindTag, ...(isDeparture ? s.kindDep : s.kindArr) }}>{kind}</span>
         <div style={s.flightNumber}>{flight.flight_number}</div>
@@ -247,17 +253,14 @@ function FlightCard({ flight, hub, isMobile }: { flight: PublicFlight; hub: stri
   );
 }
 
-const glass: CSSProperties = {
-  background: 'var(--glass)',
-  backdropFilter: 'var(--glass-blur)',
-  WebkitBackdropFilter: 'var(--glass-blur)',
-  border: '1px solid var(--glass-border)',
+const surface: CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
 };
 
 const s: Record<string, CSSProperties> = {
-  pageWrap: { minHeight: '100vh', display: 'flex', flexDirection: 'column' },
+  pageWrap: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' },
   stickyHeader: {
-    ...glass,
     position: 'sticky' as const,
     top: 0,
     zIndex: 20,
@@ -266,13 +269,12 @@ const s: Record<string, CSSProperties> = {
     alignItems: 'center',
     flexWrap: 'wrap' as const,
     gap: 14,
-    padding: '12px 32px',
-    borderLeft: 'none',
-    borderRight: 'none',
-    borderTop: 'none',
+    padding: '14px 32px',
+    background: 'linear-gradient(165deg, var(--side-bg), var(--side-bg-2))',
+    borderBottom: '1px solid var(--side-border)',
+    color: 'var(--side-text)',
   },
   stickyHeaderMobile: {
-    ...glass,
     position: 'sticky' as const,
     top: 0,
     zIndex: 20,
@@ -281,72 +283,75 @@ const s: Record<string, CSSProperties> = {
     alignItems: 'stretch' as const,
     gap: 12,
     padding: '12px 16px',
-    borderLeft: 'none',
-    borderRight: 'none',
-    borderTop: 'none',
+    background: 'linear-gradient(165deg, var(--side-bg), var(--side-bg-2))',
+    borderBottom: '1px solid var(--side-border)',
+    color: 'var(--side-text)',
   },
   shell: { flex: 1, display: 'flex', justifyContent: 'center', padding: '28px 20px 48px' },
   shellMobile: { padding: '18px 12px 32px' },
   container: { width: '100%', maxWidth: 980, display: 'flex', flexDirection: 'column', gap: 20 },
 
   brandBlock: { display: 'flex', alignItems: 'center', gap: 14 },
-  logo: { height: 44, objectFit: 'contain' as const, filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.6))', flexShrink: 0 },
-  footerLogo: { height: 36, objectFit: 'contain' as const, opacity: 0.85, display: 'block', margin: '0 auto 6px' },
-  title: { margin: 0, fontSize: 40, fontWeight: 800, letterSpacing: -0.5, textShadow: '0 2px 16px rgba(0,0,0,0.85)' },
-  titleMobile: { fontSize: 27 },
-  subtitle: { margin: '6px 0 0', color: '#e2e8f0', fontSize: 14, fontWeight: 600, textShadow: '0 1px 8px rgba(0,0,0,0.8)' },
+  logo: { height: 44, objectFit: 'contain' as const, flexShrink: 0 },
+  footerLogo: { height: 36, objectFit: 'contain' as const, opacity: 0.9, display: 'block', margin: '0 auto 6px' },
+  title: { margin: 0, fontSize: 30, fontWeight: 800, letterSpacing: -0.6, color: '#fff' },
+  titleMobile: { fontSize: 24 },
+  subtitle: { margin: '4px 0 0', color: 'var(--side-muted)', fontSize: 13.5, fontWeight: 600 },
   controls: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' },
   controlsMobile: { flexDirection: 'column', alignItems: 'stretch', width: '100%' },
   search: {
-    ...glass,
-    borderRadius: 10,
-    padding: '11px 14px',
-    color: 'var(--text)',
+    background: 'rgba(255,255,255,0.07)',
+    border: '1px solid rgba(255,255,255,0.16)',
+    borderRadius: 8,
+    padding: '10px 14px',
+    color: '#fff',
     fontSize: 14,
-    minWidth: 220,
+    minWidth: 240,
     colorScheme: 'dark',
   },
   searchMobile: { minWidth: 0, width: '100%' },
 
   error: {
-    ...glass,
-    color: '#fca5a5',
-    borderColor: 'rgba(220,38,38,0.5)',
-    borderRadius: 12,
+    background: 'var(--danger-soft)',
+    color: 'var(--danger)',
+    border: '1px solid #f1c5c5',
+    borderRadius: 10,
     padding: '14px 18px',
+    fontWeight: 600,
   },
 
   loader: {
-    ...glass,
-    borderRadius: 14,
+    ...surface,
+    borderRadius: 12,
     padding: '40px 20px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     gap: 14,
     color: 'var(--muted)',
+    boxShadow: 'var(--shadow-sm)',
   },
   spinner: {
     width: 30,
     height: 30,
     borderRadius: '50%',
-    border: '3px solid rgba(255,255,255,0.2)',
+    border: '3px solid var(--border)',
     borderTopColor: 'var(--primary)',
     animation: 'spin 0.8s linear infinite',
   },
-  empty: { ...glass, borderRadius: 14, padding: '40px 20px', textAlign: 'center', color: 'var(--muted)' },
+  empty: { ...surface, borderRadius: 12, padding: '40px 20px', textAlign: 'center', color: 'var(--muted)', boxShadow: 'var(--shadow-sm)' },
 
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 },
   card: {
-    ...glass,
-    borderRadius: 14,
-    padding: '18px 20px',
+    ...surface,
+    borderRadius: 12,
+    padding: '18px 22px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 16,
     flexWrap: 'wrap',
-    boxShadow: '0 14px 40px rgba(0,0,0,0.3)',
+    boxShadow: 'var(--shadow-sm)',
   },
   cardMobile: { flexDirection: 'column', alignItems: 'stretch', gap: 14, padding: '16px' },
   cardLeft: { display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 },
@@ -356,13 +361,13 @@ const s: Record<string, CSSProperties> = {
     fontWeight: 800,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
-    borderRadius: 999,
+    borderRadius: 6,
     padding: '2px 10px',
     border: '1px solid',
   },
-  kindDep: { color: '#93c5fd', background: 'rgba(37,99,235,0.16)', borderColor: 'rgba(37,99,235,0.45)' },
-  kindArr: { color: '#c4b5fd', background: 'rgba(139,92,246,0.16)', borderColor: 'rgba(139,92,246,0.45)' },
-  flightNumber: { fontSize: 24, fontWeight: 800, letterSpacing: 0.5 },
+  kindDep: { color: '#1e4ed8', background: '#eef2fd', borderColor: '#c9d6f5' },
+  kindArr: { color: '#6d28d9', background: '#f5f1fd', borderColor: '#ddd0f5' },
+  flightNumber: { fontSize: 24, fontWeight: 800, letterSpacing: 0.3, color: 'var(--text)' },
   route: { color: 'var(--muted)', fontSize: 15, fontWeight: 600 },
 
   cardRight: { display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' },
@@ -371,11 +376,11 @@ const s: Record<string, CSSProperties> = {
     justifyContent: 'space-between',
     gap: 12,
     paddingTop: 12,
-    borderTop: '1px solid var(--glass-border)',
+    borderTop: '1px solid var(--border)',
   },
   timeBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end' },
-  timeLabel: { color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 },
-  time: { fontSize: 26, fontWeight: 800, lineHeight: 1.1 },
+  timeLabel: { color: 'var(--faint)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 },
+  time: { fontSize: 26, fontWeight: 800, lineHeight: 1.1, color: 'var(--text)', fontVariantNumeric: 'tabular-nums' },
   badges: { display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' },
   statusBadge: {
     display: 'inline-flex',
@@ -384,45 +389,44 @@ const s: Record<string, CSSProperties> = {
     fontSize: 13,
     fontWeight: 700,
     borderRadius: 999,
-    padding: '5px 12px',
+    padding: '4px 12px',
     border: '1px solid',
   },
   dot: { width: 8, height: 8, borderRadius: '50%' },
   delayBadge: {
     fontSize: 12,
     fontWeight: 700,
-    color: '#fca5a5',
-    background: 'rgba(220,38,38,0.14)',
-    border: '1px solid rgba(220,38,38,0.4)',
+    color: 'var(--danger)',
+    background: 'var(--danger-soft)',
+    border: '1px solid #f1c5c5',
     borderRadius: 999,
     padding: '3px 10px',
   },
 
-  footer: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 12 },
+  footer: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 20, borderTop: '1px solid var(--border)' },
   footerNav: { display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center' },
   footerLink: { color: 'var(--muted)', fontSize: 13, fontWeight: 600 },
-  footerText: { color: 'var(--muted)', fontSize: 12, textAlign: 'center', margin: 0 },
+  footerText: { color: 'var(--faint)', fontSize: 12, textAlign: 'center', margin: 0 },
 
   servicesWrap: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 },
-  servicesTitle: { margin: '4px 0', fontSize: 18, fontWeight: 800, letterSpacing: -0.2, textShadow: '0 1px 10px rgba(0,0,0,0.8)' },
+  servicesTitle: { margin: '4px 0', fontSize: 18, fontWeight: 800, letterSpacing: -0.3, color: 'var(--text)' },
   siteBanner: {
-    ...glass,
     display: 'flex',
     alignItems: 'center',
     gap: 14,
-    borderRadius: 14,
+    borderRadius: 12,
     padding: '16px 18px',
-    color: 'var(--text)',
-    background: 'linear-gradient(135deg, rgba(37,99,235,0.22), rgba(13,20,38,0.8))',
-    borderColor: 'rgba(37,99,235,0.4)',
-    boxShadow: '0 14px 40px rgba(0,0,0,0.3)',
+    color: '#fff',
+    background: 'linear-gradient(135deg, #13233f, #0c1322)',
+    border: '1px solid var(--side-border)',
+    boxShadow: 'var(--shadow-md)',
   },
   siteIcon: {
     display: 'grid',
     placeItems: 'center',
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 10,
     background: '#ffffff',
     flexShrink: 0,
     overflow: 'hidden',
@@ -430,18 +434,19 @@ const s: Record<string, CSSProperties> = {
   siteLogo: { width: 32, height: 32, objectFit: 'contain' },
   siteTexts: { display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 },
   siteName: { fontSize: 15, fontWeight: 700 },
-  siteUrl: { fontSize: 13, color: 'var(--muted)', fontWeight: 500 },
+  siteUrl: { fontSize: 13, color: '#8e99ad', fontWeight: 500 },
 
   linksGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 },
   linkCard: {
-    ...glass,
+    ...surface,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    borderRadius: 12,
+    borderRadius: 10,
     padding: '14px 16px',
     color: 'var(--text)',
+    boxShadow: 'var(--shadow-sm)',
   },
   linkTexts: { display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 },
   linkTitle: { fontSize: 14.5, fontWeight: 700 },

@@ -59,7 +59,7 @@ const s: Record<string, CSSProperties> = {
     ...glass,
     borderRadius: 14,
     padding: '24px 26px',
-    boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
+    boxShadow: 'var(--shadow-sm)',
     display: 'flex',
     flexDirection: 'column',
     gap: 12,

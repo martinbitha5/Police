@@ -498,6 +498,10 @@ function DisputePanel({
             value={row.is_confirmed ? 'Chargé (étiquette scannée)' : 'En attente'}
           />
           <Detail
+            label="Compartiment soute"
+            value={row.soute === 'avant' ? 'Soute avant' : row.soute === 'arriere' ? 'Soute arrière' : '—'}
+          />
+          <Detail
             label="Bagages déclarés"
             value={row.passenger ? String(row.passenger.declared_baggage_count) : '—'}
           />

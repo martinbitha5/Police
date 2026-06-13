@@ -14,7 +14,7 @@ import { colors, radius, spacing } from '@/theme';
 export default function CheckIn() {
   const { flightId } = useLocalSearchParams<{ flightId: string }>();
   const { profile } = useAuth();
-  const { getFlight, statsFor } = useFlights();
+  const { getFlight, statsFor, refreshStatsFor } = useFlights();
   const flight = flightId ? getFlight(flightId) : undefined;
   const count = flightId ? statsFor(flightId).pax : 0;
   const [last, setLast] = useState<BoardingScanResponse['passenger'] | null>(null);
@@ -36,6 +36,7 @@ export default function CheckIn() {
       setMessage(null);
       setScanState('success');
       feedbackSuccess();
+      void refreshStatsFor(flightId);
     } catch (e) {
       setMessage({ text: (e as Error).message, ok: false });
       setScanState('error');
