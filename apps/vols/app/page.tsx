@@ -6,11 +6,12 @@ import { formatRoute, flightNumbersMatch, FLIGHT_STATUS_LABEL, type FlightStatus
 import type { PublicFlight, FlightsResponse } from '@/types';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
-const STATUS_STYLE: Record<FlightStatus, { color: string; bg: string; border: string }> = {
-  scheduled: { color: '#5c6470', bg: '#f3f4f6', border: '#d3d8de' },
-  boarding: { color: '#15803d', bg: '#ecfdf3', border: '#bbe0c8' },
-  closed: { color: '#b91c1c', bg: '#fef2f2', border: '#f1c5c5' },
-  cancelled: { color: '#b45309', bg: '#fffbeb', border: '#f0d9a8' },
+/** Statut vol : un point coloré + texte neutre — pas de pastille. */
+const STATUS_DOT: Record<FlightStatus, string> = {
+  scheduled: '#8b939e',
+  boarding: '#15803d',
+  closed: '#b91c1c',
+  cancelled: '#b45309',
 };
 
 function todayISO(): string {
@@ -24,6 +25,31 @@ function timeOf(ts: string | null): string {
   if (!ts) return '—';
   return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
+
+// Enregistrement : ouvre 3 h avant le départ, clôture 45 min avant.
+// (Valeurs standard aéroport — modifiables ici si la règle change.)
+const CHECKIN_OPENS_BEFORE_MS = 3 * 60 * 60 * 1000;
+const CHECKIN_CLOSES_BEFORE_MS = 45 * 60 * 1000;
+
+type CheckInPhase = 'before' | 'open' | 'closed' | 'departed';
+
+/** Compte à rebours : « 2 h 13 » au-delà d'une heure, « 42:07 » (mm:ss) en dessous. */
+function formatCountdown(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = total % 60;
+  if (h > 0) return `${h} h ${String(m).padStart(2, '0')}`;
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+
+/** Seule la couleur du point de statut varie — le reste est typographique. */
+const CHECKIN_DOT: Record<CheckInPhase, string> = {
+  before: '#94a3b8',
+  open: '#15803d',
+  closed: '#b45309',
+  departed: '#c3c9d1',
+};
 
 export default function VolsPage() {
   const [date, setDate] = useState(todayISO());
@@ -216,8 +242,82 @@ function ExternalIcon() {
   );
 }
 
+/**
+ * Ligne d'information enregistrement pour un vol au départ — pied de carte sobre.
+ * L'enregistrement ouvre 3 h avant le départ et clôture 45 min avant.
+ * Ticke chaque seconde ; seule la ponctuation typographique porte le statut.
+ */
+function CheckInBadge({ departureTime }: { departureTime: string }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const dep = new Date(departureTime).getTime();
+  if (Number.isNaN(dep)) return null;
+
+  const openAt = dep - CHECKIN_OPENS_BEFORE_MS;
+  const closeAt = dep - CHECKIN_CLOSES_BEFORE_MS;
+
+  let phase: CheckInPhase;
+  if (now < openAt) phase = 'before';
+  else if (now < closeAt) phase = 'open';
+  else if (now < dep) phase = 'closed';
+  else phase = 'departed';
+
+  const fmtTime = (ms: number) => new Date(ms).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+  let title: string;
+  let caption: string;
+  let countPrefix: string | null = null;
+  let countValue: string | null = null;
+
+  switch (phase) {
+    case 'before':
+      title = 'Enregistrement';
+      caption = `Ouverture à ${fmtTime(openAt)}`;
+      countPrefix = 'ouvre dans';
+      countValue = formatCountdown(openAt - now);
+      break;
+    case 'open':
+      title = 'Enregistrement ouvert';
+      caption = `Clôture à ${fmtTime(closeAt)}`;
+      countPrefix = 'clôture dans';
+      countValue = formatCountdown(closeAt - now);
+      break;
+    case 'closed':
+      title = 'Enregistrement clôturé';
+      caption = 'Embarquement en cours';
+      break;
+    default:
+      title = 'Enregistrement terminé';
+      caption = 'Vol parti';
+  }
+
+  return (
+    <div style={s.checkin}>
+      <div style={s.checkinLeft}>
+        <span
+          className={phase === 'open' ? 'ci-dot-live' : undefined}
+          style={{ ...s.checkinDot, background: CHECKIN_DOT[phase] }}
+        />
+        <span style={s.checkinTitle}>{title}</span>
+        <span style={s.checkinSep} aria-hidden />
+        <span style={s.checkinCaption}>{caption}</span>
+      </div>
+
+      {countValue ? (
+        <div style={s.checkinCount}>
+          <span style={s.checkinCountPrefix}>{countPrefix}</span>
+          <span style={s.checkinCountValue}>{countValue}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function FlightCard({ flight, hub, isMobile }: { flight: PublicFlight; hub: string; isMobile: boolean }) {
-  const st = STATUS_STYLE[flight.status];
   const isDeparture = flight.origin === hub;
   const kind = isDeparture ? 'Départ' : 'Arrivée';
   const mainTime = isDeparture ? flight.departure_time : flight.arrival_time;
@@ -230,25 +330,28 @@ function FlightCard({ flight, hub, isMobile }: { flight: PublicFlight; hub: stri
 
   return (
     <li className="fl-card" style={isMobile ? { ...s.card, ...s.cardMobile } : s.card}>
-      <div style={s.cardLeft}>
-        <span style={{ ...s.kindTag, ...(isDeparture ? s.kindDep : s.kindArr) }}>{kind}</span>
-        <div style={s.flightNumber}>{flight.flight_number}</div>
-        <div style={s.route}>{formatRoute(flight)}</div>
-      </div>
-
-      <div style={isMobile ? { ...s.cardRight, ...s.cardRightMobile } : s.cardRight}>
-        <div style={isMobile ? { ...s.timeBlock, alignItems: 'flex-start' } : s.timeBlock}>
-          <span style={s.timeLabel}>{isDeparture ? 'Départ' : 'Arrivée'}</span>
+      <div style={s.cardMain}>
+        <div style={s.timeBlock}>
           <span style={s.time}>{timeOf(mainTime)}</span>
+          <span style={s.kindLabel}>{kind}</span>
         </div>
-        <div style={isMobile ? { ...s.badges, alignItems: 'flex-end' } : s.badges}>
-          <span style={{ ...s.statusBadge, color: st.color, background: st.bg, borderColor: st.border }}>
-            <span style={{ ...s.dot, background: st.color }} />
+        <span style={s.vSep} aria-hidden />
+        <div style={s.cardInfo}>
+          <div style={s.flightNumber}>{flight.flight_number}</div>
+          <div style={s.route}>{formatRoute(flight)}</div>
+        </div>
+        <div style={isMobile ? { ...s.statusBlock, ...s.statusBlockMobile } : s.statusBlock}>
+          <span style={s.statusText}>
+            <span style={{ ...s.dot, background: STATUS_DOT[flight.status] }} />
             {FLIGHT_STATUS_LABEL[flight.status]}
           </span>
-          {delayed ? <span style={s.delayBadge}>Retardé</span> : null}
+          {delayed ? <span style={s.delayText}>Retardé</span> : null}
         </div>
       </div>
+
+      {isDeparture && mainTime && flight.status !== 'cancelled' ? (
+        <CheckInBadge departureTime={mainTime} />
+      ) : null}
     </li>
   );
 }
@@ -345,63 +448,73 @@ const s: Record<string, CSSProperties> = {
   card: {
     ...surface,
     borderRadius: 12,
-    padding: '18px 22px',
+    padding: '16px 22px',
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 16,
-    flexWrap: 'wrap',
+    flexDirection: 'column',
     boxShadow: 'var(--shadow-sm)',
   },
-  cardMobile: { flexDirection: 'column', alignItems: 'stretch', gap: 14, padding: '16px' },
-  cardLeft: { display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 },
-  kindTag: {
-    alignSelf: 'flex-start',
-    fontSize: 11,
+  cardMobile: { padding: '14px 16px' },
+  cardMain: { display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' },
+  timeBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 76 },
+  time: {
+    fontSize: 26,
     fontWeight: 800,
+    lineHeight: 1.1,
+    color: 'var(--text)',
+    fontVariantNumeric: 'tabular-nums',
+    letterSpacing: -0.4,
+  },
+  kindLabel: {
+    color: 'var(--faint)',
+    fontSize: 11,
+    fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
-    borderRadius: 6,
-    padding: '2px 10px',
-    border: '1px solid',
+    marginTop: 2,
   },
-  kindDep: { color: '#1e4ed8', background: '#eef2fd', borderColor: '#c9d6f5' },
-  kindArr: { color: '#6d28d9', background: '#f5f1fd', borderColor: '#ddd0f5' },
-  flightNumber: { fontSize: 24, fontWeight: 800, letterSpacing: 0.3, color: 'var(--text)' },
-  route: { color: 'var(--muted)', fontSize: 15, fontWeight: 600 },
-
-  cardRight: { display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' },
-  cardRightMobile: {
+  vSep: { width: 1, alignSelf: 'stretch', background: 'var(--border)', flexShrink: 0 },
+  cardInfo: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 },
+  flightNumber: { fontSize: 18, fontWeight: 800, letterSpacing: 0.2, color: 'var(--text)' },
+  route: { color: 'var(--muted)', fontSize: 14, fontWeight: 500 },
+  statusBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0 },
+  statusBlockMobile: {
     width: '100%',
-    justifyContent: 'space-between',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
     gap: 12,
+    marginTop: 8,
+  },
+  statusText: { display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 600, color: 'var(--text)' },
+  dot: { width: 8, height: 8, borderRadius: '50%' },
+  checkin: {
+    width: '100%',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    columnGap: 12,
+    rowGap: 5,
+    flexWrap: 'wrap',
+    marginTop: 8,
     paddingTop: 12,
     borderTop: '1px solid var(--border)',
   },
-  timeBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end' },
-  timeLabel: { color: 'var(--faint)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 },
-  time: { fontSize: 26, fontWeight: 800, lineHeight: 1.1, color: 'var(--text)', fontVariantNumeric: 'tabular-nums' },
-  badges: { display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' },
-  statusBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 7,
-    fontSize: 13,
+  checkinLeft: { display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flexWrap: 'wrap' },
+  checkinDot: { width: 7, height: 7, borderRadius: '50%', flexShrink: 0 },
+  checkinTitle: { fontSize: 13.5, fontWeight: 700, color: 'var(--text)', letterSpacing: -0.1 },
+  checkinSep: { width: 1, height: 12, background: 'var(--border-strong)', flexShrink: 0 },
+  checkinCaption: { fontSize: 13, fontWeight: 500, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' },
+  checkinCount: { display: 'flex', alignItems: 'baseline', gap: 6, flexShrink: 0 },
+  checkinCountPrefix: { fontSize: 12.5, fontWeight: 500, color: 'var(--muted)' },
+  checkinCountValue: {
+    fontSize: 15,
     fontWeight: 700,
-    borderRadius: 999,
-    padding: '4px 12px',
-    border: '1px solid',
+    color: 'var(--text)',
+    fontVariantNumeric: 'tabular-nums',
+    letterSpacing: 0.2,
   },
-  dot: { width: 8, height: 8, borderRadius: '50%' },
-  delayBadge: {
-    fontSize: 12,
-    fontWeight: 700,
-    color: 'var(--danger)',
-    background: 'var(--danger-soft)',
-    border: '1px solid #f1c5c5',
-    borderRadius: 999,
-    padding: '3px 10px',
-  },
+  delayText: { fontSize: 12.5, fontWeight: 700, color: 'var(--danger)' },
 
   footer: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 20, borderTop: '1px solid var(--border)' },
   footerNav: { display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center' },

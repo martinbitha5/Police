@@ -99,17 +99,38 @@ select option {
   }
 }
 
+/* Point « live » de l'enregistrement ouvert */
+@keyframes ci-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--ci-dot, rgba(21, 128, 61, 0.5));
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(21, 128, 61, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(21, 128, 61, 0);
+  }
+}
+.ci-dot-live {
+  animation: ci-pulse 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ci-dot-live {
+    animation: none;
+  }
+}
+
 /* Cartes de vol et liens services — survol */
 .fl-card {
   transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
 }
 .fl-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: #c9d6f5;
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
 }
 
 .fl-link:hover {
-  border-color: #c9d6f5;
+  border-color: var(--border-strong);
   box-shadow: var(--shadow-md);
 }
