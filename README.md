@@ -56,8 +56,8 @@ vient du comptoir d'enregistrement, et le système la voit en temps réel.
 
 ## Statut
 
-Les portails publics voyageurs sont **en ligne** ; le cœur embarquement
-(application mobile agents + supervision) est en cours de mise en service terrain.
+**En production.** L'application mobile des agents tourne en service sur le terrain,
+et les portails publics voyageurs sont en ligne.
 
 ---
 
