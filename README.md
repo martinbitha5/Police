@@ -1,164 +1,67 @@
-# Boarding Pass Scanner System
+# Police Bagage
 
-Système de gestion d'embarquement et anti-fraude bagages pour aéroport.
-Les agents terrain scannent les boarding pass (BCBP IATA) et les étiquettes bagage
-sur PDA Zebra Android ; le système intercepte les colis non déclarés **avant** qu'ils
-partent en soute et alerte le superviseur en temps réel.
+**Système d'embarquement et de lutte anti-fraude bagages pour aéroport.**
 
-Voir [CLAUDE.md](./CLAUDE.md) pour la spécification fonctionnelle complète.
+Le système relie chaque bagage à un passager réellement enregistré et intercepte
+les colis non déclarés **avant** qu'ils partent en soute — avec alerte du
+superviseur en temps réel.
 
----
-
-## 🏗️ Architecture (monorepo Turborepo)
-
-```
-apps/
-  mobile/   → React Native + Expo (agents Zebra Android)
-  web/      → Next.js dashboard superviseur/admin
-packages/
-  api/          → Fastify backend (logique anti-fraude)
-  bcbp-parser/  → Parser boarding pass IATA + étiquettes bagage
-  shared/       → Types TypeScript partagés
-supabase/
-  migrations/   → 4 migrations SQL (schéma, trigger, RLS, realtime)
-  seed.sql      → codes compagnies
-  config.toml   → config Supabase local
-```
-
-| Couche | Techno |
-|---|---|
-| Mobile | React Native 0.76 + Expo SDK 52 + Expo Router 4 |
-| Web | Next.js 15 (App Router) + @supabase/ssr |
-| Backend | Node + Fastify 5 |
-| DB / Auth / Realtime / Storage | Supabase (PostgreSQL) |
-| Parser BCBP | librairie npm `bcbp` v6 |
-| Parser étiquette | fonction custom (`parseBaggageTag`) |
-
-> ⚠️ **Aucune dépendance LLM / Claude API.** Le BCBP est un standard IATA, parsé par `bcbp`.
+Conçu pour l'Aéroport International de Kinshasa (FIH), sur les vols Air Congo / Ethiopian.
 
 ---
 
-## ✅ Prérequis
+## Le problème
 
-- **Node.js ≥ 20** (testé sur 24.x)
-- **npm 11** (gestionnaire du monorepo)
-- **Docker Desktop** + **Supabase CLI** — pour lancer la base en local
-  ([install](https://supabase.com/docs/guides/cli))
-- **Expo Go** ou un device/émulateur Android — pour l'app mobile
+Au comptoir d'enregistrement, une étiquette bagage peut être émise sur un passager
+qui n'a déclaré aucun bagage. Le colis — non déclaré, non contrôlé — part alors en
+soute. C'est une faille de sûreté et une porte ouverte à la fraude.
 
----
+## La solution
 
-## 🚀 Démarrage
+À la porte d'embarquement, deux contrôles se croisent :
 
-### 1. Installer les dépendances
+1. **Enregistrement** — l'agent scanne le boarding pass du passager. Le système lit
+   le nombre de bagages réellement déclarés.
+2. **Bagages** — l'agent scanne chaque étiquette sur le tapis. Le système vérifie
+   qu'elle correspond à un passager enregistré, avec un quota de bagages disponible.
 
-```bash
-npm install
-```
+Toute étiquette qui ne colle pas — passager inconnu, zéro bagage déclaré, quota
+dépassé — est **rejetée** et déclenche une **alerte immédiate** au superviseur, qui
+envoie intercepter le colis sur le tapis.
 
-### 2. Lancer Supabase en local
-
-Depuis la racine (lit `supabase/config.toml`, applique les migrations + le seed) :
-
-```bash
-supabase start          # démarre Postgres + Auth + Realtime via Docker
-supabase db reset       # applique les 4 migrations puis seed.sql
-```
-
-`supabase start` affiche les clés à reporter dans les `.env` :
-
-```
-API URL: http://127.0.0.1:54321
-anon key: eyJ...           → NEXT_PUBLIC_SUPABASE_ANON_KEY / EXPO_PUBLIC_SUPABASE_ANON_KEY
-service_role key: eyJ...   → SUPABASE_SERVICE_ROLE_KEY (backend + admin uniquement)
-```
-
-### 3. Configurer les variables d'environnement
-
-Copier chaque `.env.example` en `.env` et y coller les clés ci-dessus :
-
-| Fichier | Variables |
-|---|---|
-| `packages/api/.env` | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `PORT` |
-| `apps/web/.env` | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_HUB`, `SUPABASE_SERVICE_ROLE_KEY` |
-| `apps/mobile/.env` | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_API_URL` |
-
-> 🔐 La `service_role key` ne doit **jamais** être exposée côté client : elle n'est lue
-> que par le backend Fastify et par les routes serveur Next.js (`admin.createUser`).
-
-### 4. Créer le premier compte admin
-
-Aucune UI publique d'inscription (par conception). Créer l'admin initial via SQL ou via
-`supabase.auth.admin.createUser`. Le trigger `handle_new_user` remplit alors `profiles`
-à partir de `user_metadata` (`full_name`, `role`, `gate`). Une fois cet admin connecté au
-dashboard web, il peut créer agents et superviseurs via **/admin**.
-
-### 5. Lancer les services
-
-```bash
-# API anti-fraude (port 3001)
-npm run dev -w @police/api
-
-# Dashboard web (port 3000)
-npm run dev -w @police/web
-
-# App mobile (Expo)
-npm run dev -w @police/mobile
-```
-
-Ou tout en parallèle via Turborepo :
-
-```bash
-npm run dev
-```
+L'agent bagages n'est jamais fautif : il scanne ce qui arrive sur le tapis. La fraude
+vient du comptoir d'enregistrement, et le système la voit en temps réel.
 
 ---
 
-## 🧪 Vérifications
+## Les applications
 
-```bash
-npm run typecheck       # tsc --noEmit sur tous les packages
-npm run test            # vitest (11 tests parser + 8 tests anti-fraude)
-npm run build           # build complet
-```
-
-Les tests anti-fraude (`packages/api/src/fraud.test.ts`) couvrent les **5 règles de rejet**
-non négociables ; le parser (`packages/bcbp-parser`) couvre BCBP v6 + étiquettes 10 chiffres.
-
----
-
-## 🔐 Rôles
-
-| Rôle | Plateforme | Permissions |
+| Application | Pour qui | Rôle |
 |---|---|---|
-| `admin` | Web | Créer/gérer comptes agents & superviseurs |
-| `supervisor` | Web | Dashboard temps réel, alertes fraude, rapports |
-| `agent` | Mobile | Scan boarding pass + étiquettes bagage |
-
-Les accès sont appliqués par **RLS Postgres** (`supabase/migrations/...rls_policies.sql`),
-pas seulement côté UI.
+| **Mobile** (PDA Zebra) | Agents terrain | Scan des boarding pass et des étiquettes bagage |
+| **Dashboard web** | Superviseurs & admins | Suivi temps réel, alertes fraude, rapports, gestion des comptes |
+| **Tableau des vols** | Voyageurs (public) | Vols du jour, statuts et ouverture de l'enregistrement en direct |
 
 ---
 
-## 🚨 Logique anti-fraude
+## En un coup d'œil
 
-Cœur pur et testable : [`packages/api/src/fraud.ts`](./packages/api/src/fraud.ts)
-(`evaluateBaggageScan`). Les 5 règles de rejet (passager non enregistré, 0 bagage déclaré,
-quota dépassé, doublon, mauvais vol) sont décrites dans [CLAUDE.md](./CLAUDE.md) et **ne
-doivent jamais être contournées** — toute exception passe par le superviseur manuellement.
+- Interception des bagages non déclarés **avant la soute**
+- Alertes fraude **en temps réel** au poste superviseur
+- **5 règles de contrôle** strictes et non contournables
+- Rôles cloisonnés : agent, superviseur, admin
+- Rapports de journée exportables
 
 ---
 
-## ⚠️ État actuel & limites connues
+## Statut
 
-- **Tout est typé et testé** (typecheck + 19 tests verts), mais **rien n'a encore été
-  exécuté en runtime** : pas de Supabase/Docker lancé, ni device Zebra branché à ce stade.
-  Les migrations SQL, l'app mobile et le dashboard n'ont donc jamais tourné réellement.
-- **Liaison bagage ↔ passager** : une étiquette physique 10 chiffres ne porte **pas** de PNR.
-  Le modèle implémenté pré-enregistre les bagages depuis les tags du BCBP au scan
-  d'embarquement et fait la correspondance par `serial_number + flight_id + date`.
-  **Hypothèse non validée** avec une vraie étiquette + un vrai boarding pass ET (Ethiopian /
-  Air Congo, code 071). À vérifier sur le terrain.
-- **Rapport** : export **CSV** (UTF-8 BOM, séparateur `;`, ouvrable Excel) — pas encore
-  PDF/Excel natif.
-- **Web** épinglé à **React 18.3** (contrainte de cohérence avec React Native), pas React 19.
+Les portails publics voyageurs sont **en ligne** ; le cœur embarquement
+(application mobile agents + supervision) est en cours de mise en service terrain.
+
+---
+
+## Pour les développeurs
+
+- Installation, commandes et architecture technique → [DEVELOPMENT.md](./DEVELOPMENT.md)
+- Spécification fonctionnelle complète → [CLAUDE.md](./CLAUDE.md)
