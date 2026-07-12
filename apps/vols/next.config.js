@@ -10,7 +10,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/:path((?!_next/static|_next/image|favicon\\.ico).*)',
+        source: '/:path((?!_next/static|_next/image|favicon\\.ico|api/).*)',
         headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
       },
     ];
