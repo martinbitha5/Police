@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { CLAIM_CATEGORY_LABEL, type ClaimCategory, type BaggageClaimResult } from '@police/shared';
 import { createAdminClient } from '@/supabase/admin';
+import { rateLimit, clientIp } from '@/lib/rateLimit';
 
 const TAG_RE = /^\d{10}$/;
 const MAX_MESSAGE = 2000;
@@ -22,6 +23,11 @@ interface DisputeRow {
 }
 
 export async function POST(request: NextRequest) {
+  // Anti-spam : plafonne les envois de réclamation par IP.
+  if (!rateLimit(`claim:${clientIp(request)}`, 8, 60_000)) {
+    return reject('Trop de réclamations envoyées. Réessayez dans une minute.', 429);
+  }
+
   let body: { tagNumber?: unknown; category?: unknown; message?: unknown; contact?: unknown };
   try {
     body = await request.json();

@@ -20,6 +20,20 @@ import { IconSearch, IconBag, IconAlert, IconCheck } from '@/components/icons';
 
 const TAG_RE = /^\d{10}$/;
 
+// Statut bagage / réclamation : un point coloré comme seule touche de couleur,
+// le libellé reste en texte neutre (pas de pastille pastel).
+const STATUS_DOT: Record<string, string> = {
+  rush: '#b45309',
+  loaded: '#15803d',
+  registered: '#1e4ed8',
+  pending: '#8b939e',
+};
+const CLAIM_DOT: Record<string, string> = {
+  open: '#b91c1c',
+  investigating: '#b45309',
+  resolved: '#15803d',
+};
+
 export default function TrackingPage() {
   const { t }    = useLang();
   const isMobile = useIsMobile();
@@ -206,7 +220,7 @@ function PassengerCard({ pax, tagFilter }: { pax: TrackedPassenger; tagFilter?: 
               : ''}
           </div>
         </div>
-        <div style={{ ...s.summary, color: allLoaded ? 'var(--success)' : 'var(--warning)' }}>
+        <div style={{ ...s.summary, color: allLoaded ? 'var(--success)' : 'var(--text)' }}>
           {pax.confirmedBaggageCount}/{pax.declaredBaggageCount}
           <span style={s.summaryLabel}>{t.home.summaryLoaded}</span>
         </div>
@@ -259,14 +273,6 @@ function BagRow({
         : bag.status === 'registered'
           ? t.home.badgeRegistered
           : t.home.badgePending;
-  const statusStyle =
-    bag.status === 'rush'
-      ? s.badgeRush
-      : bag.status === 'loaded'
-        ? s.badgeLoaded
-        : bag.status === 'registered'
-          ? s.badgeRegistered
-          : s.badgePending;
   const claimLabel =
     claimStatus === 'resolved'
       ? t.claim.statusResolved
@@ -275,15 +281,17 @@ function BagRow({
         : claimStatus === 'open'
           ? t.claim.statusOpen
           : null;
-  const claimStyle =
-    claimStatus === 'resolved' ? s.claimBadgeResolved : s.claimBadgeOpen;
+  const claimColor = claimStatus ? CLAIM_DOT[claimStatus] : undefined;
   return (
     <li style={s.bagRow}>
       <span style={s.tag}><IconBag size={15} /> {bag.tagNumber}</span>
-      <span style={{ ...s.badge, ...statusStyle }}>{statusLabel}</span>
+      <span style={s.statusText}>
+        <span style={{ ...s.dot, background: STATUS_DOT[bag.status] }} />
+        {statusLabel}
+      </span>
       {claimLabel ? (
-        <span style={{ ...s.badge, ...claimStyle }}>
-          {claimStatus === 'resolved' ? <IconCheck size={12} /> : <IconAlert size={12} />} {claimLabel}
+        <span style={{ ...s.claimText, color: claimColor }}>
+          {claimStatus === 'resolved' ? <IconCheck size={13} /> : <IconAlert size={13} />} {claimLabel}
         </span>
       ) : null}
       {bag.scannedAt ? (
@@ -403,7 +411,7 @@ function ClaimForm({
 const s: Record<string, CSSProperties> = {
   title: { margin: '20px 0 8px', fontSize: 38, fontWeight: 800, letterSpacing: -0.8, color: 'var(--text)' },
 
-  panel: { ...glass, borderRadius: 14, padding: 26, boxShadow: 'var(--shadow-md)', display: 'flex', flexDirection: 'column', gap: 18 },
+  panel: { ...glass, borderRadius: 14, padding: 26, boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column', gap: 18 },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 18 },
   field: { display: 'flex', flexDirection: 'column', gap: 8 },
   fieldLabel: { fontSize: 14, fontWeight: 600, color: 'var(--text)' },
@@ -418,7 +426,7 @@ const s: Record<string, CSSProperties> = {
 
   actionRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 },
   muted: { color: 'var(--muted)', fontSize: 13 },
-  cta: { background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 9, padding: '13px 28px', fontWeight: 700, fontSize: 15, boxShadow: '0 6px 18px rgba(30,78,216,0.35)' },
+  cta: { background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 9, padding: '13px 28px', fontWeight: 700, fontSize: 15 },
   helper: { margin: 0, color: 'var(--muted)', fontSize: 13 },
 
   loader: { ...glass, borderRadius: 12, padding: '36px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, boxShadow: 'var(--shadow-sm)' },
@@ -428,47 +436,28 @@ const s: Record<string, CSSProperties> = {
   error: { background: 'var(--danger-soft)', color: 'var(--danger)', border: '1px solid #f1c5c5', borderRadius: 10, padding: '14px 18px', margin: 0, fontWeight: 600 },
   notFound: { ...glass, display: 'flex', alignItems: 'center', gap: 12, borderRadius: 12, padding: '18px 20px', color: 'var(--muted)', boxShadow: 'var(--shadow-sm)' },
 
-  resultCard: { ...glass, borderRadius: 12, padding: 22, boxShadow: 'var(--shadow-md)' },
+  resultCard: { ...glass, borderRadius: 12, padding: 22, boxShadow: 'var(--shadow-sm)' },
   resultHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 14 },
   paxName: { fontSize: 20, fontWeight: 700, color: 'var(--text)' },
   paxMeta: { color: 'var(--muted)', fontSize: 13, marginTop: 3 },
   summary: { fontSize: 28, fontWeight: 800, lineHeight: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontVariantNumeric: 'tabular-nums' },
   summaryLabel: { fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
-  bagList: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 },
-  bagRow: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px' },
-  tag: { display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 15, color: 'var(--text)' },
-  badge: { fontSize: 13, fontWeight: 600, borderRadius: 999, padding: '3px 12px' },
-  badgeLoaded: { background: 'var(--success-soft)', color: 'var(--success)', border: '1px solid #bbe0c8' },
-  badgePending: { background: '#f3f4f6', color: 'var(--muted)', border: '1px solid var(--border-strong)' },
-  badgeRegistered: { background: 'var(--primary-soft)', color: 'var(--primary)', border: '1px solid #c9d6f5' },
-  badgeRush: { background: 'var(--warning-soft)', color: 'var(--warning)', border: '1px solid #f0d9a8' },
-  claimBadgeOpen: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 5,
-    background: 'var(--danger-soft)',
-    color: 'var(--danger)',
-    border: '1px solid #f1c5c5',
-  },
-  claimBadgeResolved: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 5,
-    background: 'var(--primary-soft)',
-    color: 'var(--primary)',
-    border: '1px solid #c9d6f5',
-  },
-  scannedAt: { marginLeft: 'auto', color: 'var(--faint)', fontSize: 12 },
+  bagList: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column' },
+  bagRow: { display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', borderTop: '1px solid var(--border)', padding: '12px 2px' },
+  tag: { display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 15, color: 'var(--text)', minWidth: 128 },
+  dot: { width: 8, height: 8, borderRadius: '50%', flexShrink: 0 },
+  statusText: { display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 600, color: 'var(--text)' },
+  claimText: { display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600 },
+  scannedAt: { marginLeft: 'auto', color: 'var(--faint)', fontSize: 12, fontVariantNumeric: 'tabular-nums' },
   reportBtn: {
     marginLeft: 'auto',
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    background: 'var(--surface)',
-    border: '1px solid var(--border-strong)',
+    background: 'none',
+    border: 'none',
     color: 'var(--muted)',
-    borderRadius: 999,
-    padding: '5px 12px',
+    padding: '4px 2px',
     fontSize: 13,
     fontWeight: 600,
   },

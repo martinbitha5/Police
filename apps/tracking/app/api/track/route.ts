@@ -10,6 +10,7 @@ import type {
   DisputeStatus,
 } from '@police/shared';
 import { createAdminClient } from '@/supabase/admin';
+import { rateLimit, clientIp } from '@/lib/rateLimit';
 
 const TAG_RE = /^\d{10}$/;
 const NOT_FOUND = (message: string): BaggageTrackingResult => ({ status: 'not_found', message });
@@ -57,6 +58,14 @@ interface LegRow {
 }
 
 export async function POST(request: NextRequest) {
+  // Anti-abus : plafonne les recherches par IP (énumération de PNR).
+  if (!rateLimit(`track:${clientIp(request)}`, 30, 60_000)) {
+    return NextResponse.json(
+      { error: 'Trop de recherches en peu de temps. Réessayez dans un instant.' },
+      { status: 429 },
+    );
+  }
+
   let body: { query?: unknown; flightNumber?: unknown; date?: unknown };
   try {
     body = await request.json();
