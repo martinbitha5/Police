@@ -1,22 +1,26 @@
 import type { CSSProperties } from 'react';
 
-// Surface blanche nette — l'ancien nom "glass" est conservé pour compatibilité.
+// Panneau en verre dépoli translucide — spatial UI (teinté navy + flou du fond).
 export const glass: CSSProperties = {
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
+  background: 'var(--glass)',
+  border: '1px solid var(--glass-border)',
+  backdropFilter: 'var(--glass-blur)',
+  WebkitBackdropFilter: 'var(--glass-blur)',
 };
 
 // Styles partagés par toutes les pages (shell, header, breadcrumb, footer, contenu légal).
 export const shared: Record<string, CSSProperties> = {
-  shell: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' },
+  shell: { minHeight: '100vh', display: 'flex', flexDirection: 'column' },
 
   header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '16px 32px',
-    background: 'linear-gradient(165deg, var(--side-bg), var(--side-bg-2))',
-    borderBottom: '1px solid var(--side-border)',
+    background: 'rgba(9, 14, 26, 0.6)',
+    backdropFilter: 'var(--glass-blur)',
+    WebkitBackdropFilter: 'var(--glass-blur)',
+    borderBottom: '1px solid var(--glass-border)',
     color: 'var(--side-text)',
   },
   brand: { display: 'flex', alignItems: 'center', gap: 10 },
@@ -77,10 +81,12 @@ export const shared: Record<string, CSSProperties> = {
   sectionHeading: { margin: 0, fontSize: 19, fontWeight: 700, color: 'var(--text)' },
   paragraph: { margin: 0, color: 'var(--muted)', fontSize: 15, lineHeight: 1.65 },
 
-  // Footer — marine foncée, cohérent avec le header
+  // Footer — verre translucide, cohérent avec le header
   footer: {
-    background: 'var(--side-bg)',
-    borderTop: '1px solid var(--side-border)',
+    background: 'rgba(9, 14, 26, 0.6)',
+    backdropFilter: 'var(--glass-blur)',
+    WebkitBackdropFilter: 'var(--glass-blur)',
+    borderTop: '1px solid var(--glass-border)',
     padding: '44px 32px 28px',
     color: 'var(--side-muted)',
   },

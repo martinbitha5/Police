@@ -23,15 +23,15 @@ const TAG_RE = /^\d{10}$/;
 // Statut bagage / réclamation : un point coloré comme seule touche de couleur,
 // le libellé reste en texte neutre (pas de pastille pastel).
 const STATUS_DOT: Record<string, string> = {
-  rush: '#b45309',
-  loaded: '#15803d',
-  registered: '#1e4ed8',
-  pending: '#8b939e',
+  rush: '#fbbf24',
+  loaded: '#4ade80',
+  registered: '#4f7df9',
+  pending: '#94a3b8',
 };
 const CLAIM_DOT: Record<string, string> = {
-  open: '#b91c1c',
-  investigating: '#b45309',
-  resolved: '#15803d',
+  open: '#f87171',
+  investigating: '#fbbf24',
+  resolved: '#4ade80',
 };
 
 export default function TrackingPage() {
@@ -433,7 +433,7 @@ const s: Record<string, CSSProperties> = {
   loaderText: { margin: 0, color: 'var(--muted)', fontSize: 15, fontWeight: 500 },
   spinner: { width: 38, height: 38, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite', display: 'inline-block' },
 
-  error: { background: 'var(--danger-soft)', color: 'var(--danger)', border: '1px solid #f1c5c5', borderRadius: 10, padding: '14px 18px', margin: 0, fontWeight: 600 },
+  error: { background: 'var(--danger-soft)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 10, padding: '14px 18px', margin: 0, fontWeight: 600 },
   notFound: { ...glass, display: 'flex', alignItems: 'center', gap: 12, borderRadius: 12, padding: '18px 20px', color: 'var(--muted)', boxShadow: 'var(--shadow-sm)' },
 
   resultCard: { ...glass, borderRadius: 12, padding: 22, boxShadow: 'var(--shadow-sm)' },
@@ -478,7 +478,7 @@ const s: Record<string, CSSProperties> = {
   claimErr: {
     color: 'var(--danger)',
     background: 'var(--danger-soft)',
-    border: '1px solid #f1c5c5',
+    border: '1px solid rgba(248,113,113,0.35)',
     borderRadius: 8,
     padding: '8px 12px',
     fontSize: 13,
@@ -507,7 +507,7 @@ const s: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: 10,
     background: 'var(--success-soft)',
-    border: '1px solid #bbe0c8',
+    border: '1px solid rgba(74,222,128,0.32)',
     color: 'var(--success)',
     borderRadius: 10,
     padding: '14px 16px',

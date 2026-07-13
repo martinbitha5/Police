@@ -1,40 +1,40 @@
 :root {
-  /* Palette claire — suivi bagages public, identité Police Bagage */
-  --bg: #f4f5f7;
-  --surface: #ffffff;
-  --surface-alt: #f9fafb;
-  --border: #e3e6ea;
-  --border-strong: #d3d8de;
-  --text: #15181d;
-  --muted: #5c6470;
-  --faint: #8b939e;
+  /* Spatial UI — suivi bagages public, panneaux en verre dépoli sur fond ambiant */
+  --bg: #060a13;
+  --surface: rgba(13, 21, 40, 0.42);
+  --surface-alt: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.17);
+  --text: #eef2f9;
+  --muted: #a3adbf;
+  --faint: #778093;
 
-  --primary: #1e4ed8;
-  --primary-hover: #1a44bd;
-  --primary-soft: #eef2fd;
-  --success: #15803d;
-  --success-soft: #ecfdf3;
-  --danger: #b91c1c;
-  --danger-soft: #fef2f2;
-  --warning: #b45309;
-  --warning-soft: #fffbeb;
+  --primary: #4f7df9;
+  --primary-hover: #6b91fa;
+  --primary-soft: rgba(79, 125, 249, 0.15);
+  --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.12);
 
-  /* Marine profonde — header et footer */
-  --side-bg: #0c1322;
-  --side-bg-2: #13233f;
-  --side-border: #1d2940;
+  /* Marine profonde — header et footer (translucides) */
+  --side-bg: #0a1120;
+  --side-bg-2: #101b31;
+  --side-border: rgba(255, 255, 255, 0.08);
   --side-text: #e7ebf2;
   --side-muted: #8e99ad;
 
-  /* Compatibilité : anciens tokens "glass" remappés sur le thème clair */
-  --glass: #ffffff;
-  --glass-strong: #ffffff;
-  --glass-border: #e3e6ea;
-  --glass-blur: none;
+  /* Verre dépoli — panneaux flottants (teinté navy pour lisibilité) */
+  --glass: rgba(13, 21, 40, 0.42);
+  --glass-strong: rgba(13, 21, 40, 0.58);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-blur: blur(28px) saturate(160%);
 
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-md: 0 1px 3px rgba(16, 24, 40, 0.07), 0 4px 12px rgba(16, 24, 40, 0.05);
-  --shadow-lg: 0 8px 24px rgba(16, 24, 40, 0.12);
+  --shadow-sm: 0 2px 10px rgba(2, 6, 16, 0.35);
+  --shadow-md: 0 8px 30px rgba(2, 6, 16, 0.45);
+  --shadow-lg: 0 16px 50px rgba(2, 6, 16, 0.55);
 }
 
 * { box-sizing: border-box; }
@@ -49,8 +49,21 @@ body {
   font-size: 14px;
   line-height: 1.5;
   min-height: 100vh;
-  background: var(--bg);
+  background: transparent;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Ambiance spatiale : photo du tarmac floutée/assombrie, fixe derrière toute
+   l'interface — c'est elle que les panneaux en verre floutent (profondeur). */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -48px;
+  z-index: -1;
+  background:
+    linear-gradient(160deg, rgba(6, 10, 19, 0.6), rgba(9, 15, 30, 0.44) 55%, rgba(5, 9, 18, 0.64)),
+    url('/IMG_9478.jpeg') center 60% / cover no-repeat;
+  filter: blur(32px) saturate(1.3);
 }
 
 @keyframes spin {
@@ -74,4 +87,4 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(30, 78, 216, 0.13);
 }
 input::placeholder, textarea::placeholder { color: var(--faint); }
-select option { background: #ffffff; color: var(--text); }
+select option { background: #0d1626; color: var(--text); }
