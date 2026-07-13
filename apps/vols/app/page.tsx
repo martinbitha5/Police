@@ -6,12 +6,13 @@ import { formatRoute, flightNumbersMatch, FLIGHT_STATUS_LABEL, type FlightStatus
 import type { PublicFlight, FlightsResponse } from '@/types';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
-/** Statut vol : un point coloré + texte neutre — pas de pastille. */
+/** Statut vol : un point coloré + texte neutre — pas de pastille.
+    Teintes éclaircies pour le fond sombre du spatial UI. */
 const STATUS_DOT: Record<FlightStatus, string> = {
-  scheduled: '#8b939e',
-  boarding: '#15803d',
-  closed: '#b91c1c',
-  cancelled: '#b45309',
+  scheduled: '#94a3b8',
+  boarding: '#4ade80',
+  closed: '#f87171',
+  cancelled: '#fbbf24',
 };
 
 function todayISO(): string {
@@ -46,8 +47,8 @@ function formatCountdown(ms: number): string {
 /** Seule la couleur du point de statut varie — le reste est typographique. */
 const CHECKIN_DOT: Record<CheckInPhase, string> = {
   before: '#94a3b8',
-  open: '#15803d',
-  closed: '#b45309',
+  open: '#4ade80',
+  closed: '#fbbf24',
   departed: '#c3c9d1',
 };
 
@@ -356,14 +357,27 @@ function FlightCard({ flight, hub, isMobile }: { flight: PublicFlight; hub: stri
   );
 }
 
+// Panneau en verre dépoli — teinté navy + flou du fond (spatial UI).
 const surface: CSSProperties = {
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
+  background: 'var(--glass)',
+  border: '1px solid var(--glass-border)',
+  backdropFilter: 'var(--glass-blur)',
+  WebkitBackdropFilter: 'var(--glass-blur)',
+};
+
+// En-tête translucide flottant, flou du fond photo derrière.
+const headerGlass: CSSProperties = {
+  background: 'rgba(9, 14, 26, 0.6)',
+  backdropFilter: 'var(--glass-blur)',
+  WebkitBackdropFilter: 'var(--glass-blur)',
+  borderBottom: '1px solid var(--glass-border)',
+  color: 'var(--side-text)',
 };
 
 const s: Record<string, CSSProperties> = {
-  pageWrap: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' },
+  pageWrap: { minHeight: '100vh', display: 'flex', flexDirection: 'column' },
   stickyHeader: {
+    ...headerGlass,
     position: 'sticky' as const,
     top: 0,
     zIndex: 20,
@@ -373,11 +387,9 @@ const s: Record<string, CSSProperties> = {
     flexWrap: 'wrap' as const,
     gap: 14,
     padding: '14px 32px',
-    background: 'linear-gradient(165deg, var(--side-bg), var(--side-bg-2))',
-    borderBottom: '1px solid var(--side-border)',
-    color: 'var(--side-text)',
   },
   stickyHeaderMobile: {
+    ...headerGlass,
     position: 'sticky' as const,
     top: 0,
     zIndex: 20,
@@ -386,9 +398,6 @@ const s: Record<string, CSSProperties> = {
     alignItems: 'stretch' as const,
     gap: 12,
     padding: '12px 16px',
-    background: 'linear-gradient(165deg, var(--side-bg), var(--side-bg-2))',
-    borderBottom: '1px solid var(--side-border)',
-    color: 'var(--side-text)',
   },
   shell: { flex: 1, display: 'flex', justifyContent: 'center', padding: '28px 20px 48px' },
   shellMobile: { padding: '18px 12px 32px' },
@@ -417,7 +426,7 @@ const s: Record<string, CSSProperties> = {
   error: {
     background: 'var(--danger-soft)',
     color: 'var(--danger)',
-    border: '1px solid #f1c5c5',
+    border: '1px solid rgba(248,113,113,0.35)',
     borderRadius: 10,
     padding: '14px 18px',
     fontWeight: 600,
