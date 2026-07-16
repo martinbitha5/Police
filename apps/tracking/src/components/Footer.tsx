@@ -38,7 +38,7 @@ export function Footer() {
           <ul style={s.footerList}>
             {navLinks.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} style={s.footerLink}>
+                <Link href={l.href} className="footer-link" style={s.footerLink}>
                   {l.label}
                 </Link>
               </li>
@@ -51,7 +51,7 @@ export function Footer() {
           <ul style={s.footerList}>
             {legalLinks.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} style={s.footerLink}>
+                <Link href={l.href} className="footer-link" style={s.footerLink}>
                   {l.label}
                 </Link>
               </li>
@@ -73,7 +73,7 @@ export function Footer() {
           <ul style={s.footerList}>
             {FIH_LINKS.map((l) => (
               <li key={l.href}>
-                <a href={l.href} style={f.fihLink} target="_blank" rel="noopener noreferrer">
+                <a href={l.href} className="footer-link" style={f.fihLink} target="_blank" rel="noopener noreferrer">
                   {l.label} ↗
                 </a>
               </li>
@@ -84,7 +84,7 @@ export function Footer() {
 
       {/* Bannière site officiel */}
       <div style={s.footerBottom}>
-        <a style={f.fihBanner} href="https://fih-rva.com" target="_blank" rel="noopener noreferrer">
+        <a className="footer-link" style={f.fihBanner} href="https://fih-rva.com" target="_blank" rel="noopener noreferrer">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/fih-logo.png" alt="RVA" width={22} height={22} style={{ objectFit: 'contain', background: '#fff', borderRadius: 6, padding: 2 }} />
           <span>Site officiel de l'Aéroport International de Kinshasa — <strong>fih-rva.com</strong></span>
@@ -106,12 +106,12 @@ const FIH_LINKS = [
 ];
 
 const f: Record<string, CSSProperties> = {
-  fihLink: { color: 'var(--side-muted)', fontSize: 14, fontWeight: 500 },
+  fihLink: { color: 'var(--content-secondary)', fontSize: 14, fontWeight: 500 },
   fihBanner: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 10,
-    color: 'var(--side-muted)',
+    color: 'var(--content-secondary)',
     fontSize: 13,
     fontWeight: 500,
   },

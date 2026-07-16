@@ -16,7 +16,7 @@ interface LegalPageProps {
   sections: LegalSection[];
 }
 
-/** Page de contenu légal autonome (conditions, confidentialité, cookies). */
+/** Page de contenu légal autonome (conditions, confidentialité, cookies) — thème clair Wise. */
 export function LegalPage({ title, intro, updated, sections }: LegalPageProps) {
   const isMobile = useIsMobile();
   return (
@@ -44,9 +44,9 @@ export function LegalPage({ title, intro, updated, sections }: LegalPageProps) {
         </div>
 
         <nav style={s.footerNav}>
-          <Link href="/conditions" style={s.footerLink}>Conditions d’utilisation</Link>
-          <Link href="/confidentialite" style={s.footerLink}>Confidentialité</Link>
-          <Link href="/cookies" style={s.footerLink}>Cookies</Link>
+          <Link href="/conditions" className="fl-footer-link" style={s.footerLink}>Conditions d’utilisation</Link>
+          <Link href="/confidentialite" className="fl-footer-link" style={s.footerLink}>Confidentialité</Link>
+          <Link href="/cookies" className="fl-footer-link" style={s.footerLink}>Cookies</Link>
         </nav>
         <p style={s.copyright}>© 2026 ATS Handling · Police Bagage</p>
       </div>
@@ -55,28 +55,34 @@ export function LegalPage({ title, intro, updated, sections }: LegalPageProps) {
 }
 
 const s: Record<string, CSSProperties> = {
-  shell: { minHeight: '100vh', display: 'flex', justifyContent: 'center', padding: '32px 20px 48px', background: 'var(--bg)' },
-  shellMobile: { padding: '18px 12px 32px' },
-  container: { width: '100%', maxWidth: 820, display: 'flex', flexDirection: 'column', gap: 14 },
-  back: { color: 'var(--primary)', fontSize: 14, fontWeight: 700, alignSelf: 'flex-start' },
-  title: { margin: '6px 0 0', fontSize: 32, fontWeight: 800, letterSpacing: -0.6, color: 'var(--text)' },
-  titleMobile: { fontSize: 24 },
-  intro: { margin: 0, color: 'var(--muted)', fontSize: 15, lineHeight: 1.6 },
-  updated: { margin: 0, color: 'var(--faint)', fontSize: 13, fontWeight: 600 },
+  shell: { minHeight: '100vh', display: 'flex', justifyContent: 'center', padding: '40px 20px 56px', background: 'var(--bg-screen)' },
+  shellMobile: { padding: '20px 16px 36px' },
+  container: { width: '100%', maxWidth: 'var(--container-text)', display: 'flex', flexDirection: 'column', gap: 14 },
+  back: {
+    color: 'var(--content-link)',
+    fontSize: 14,
+    fontWeight: 600,
+    alignSelf: 'flex-start',
+    textDecoration: 'underline',
+    textUnderlineOffset: '0.3em',
+  },
+  title: { margin: '10px 0 0', fontSize: 34, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--content-primary)' },
+  titleMobile: { fontSize: 26 },
+  intro: { margin: 0, color: 'var(--content-secondary)', fontSize: 16, lineHeight: 1.5 },
+  updated: { margin: 0, color: 'var(--content-tertiary)', fontSize: 13, fontWeight: 500 },
   card: {
-    background: 'var(--surface)',
-    border: '1px solid var(--border)',
-    borderRadius: 12,
+    background: 'var(--bg-elevated)',
+    border: '1px solid var(--border-neutral)',
+    borderRadius: 16,
     padding: 28,
     display: 'flex',
     flexDirection: 'column',
-    gap: 22,
-    boxShadow: 'var(--shadow-sm)',
+    gap: 24,
   },
   section: { display: 'flex', flexDirection: 'column', gap: 8 },
-  heading: { margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text)' },
-  paragraph: { margin: 0, color: 'var(--muted)', fontSize: 14.5, lineHeight: 1.65 },
+  heading: { margin: 0, fontSize: 18, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--content-primary)' },
+  paragraph: { margin: 0, color: 'var(--content-secondary)', fontSize: 15, lineHeight: 1.6 },
   footerNav: { display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center', marginTop: 12 },
-  footerLink: { color: 'var(--muted)', fontSize: 13, fontWeight: 600 },
-  copyright: { color: 'var(--faint)', fontSize: 12, textAlign: 'center', margin: '4px 0 0' },
+  footerLink: { color: 'var(--content-secondary)', fontSize: 13, fontWeight: 500 },
+  copyright: { color: 'var(--content-tertiary)', fontSize: 12, textAlign: 'center', margin: '4px 0 0' },
 };

@@ -1,93 +1,109 @@
 import type { CSSProperties } from 'react';
 
-// Tokens de style partagés par l'app litige — thème clair professionnel.
+// Tokens de style partagés par l'app litige — design system "Wise" (thème clair).
 // Les noms "glass" sont conservés pour compatibilité : ils rendent
-// désormais des surfaces blanches nettes (plus aucun flou).
+// des surfaces blanches plates (aucun flou, aucune ombre).
 export const glass: CSSProperties = {
-  background: 'var(--surface)',
+  background: 'var(--bg-elevated)',
   borderWidth: 1,
   borderStyle: 'solid',
-  borderColor: 'var(--border)',
+  borderColor: 'var(--border-neutral)',
 };
 
 export const glassStrong: CSSProperties = { ...glass };
 
+// Carte blanche UI : radius 16, bordure fine, pas d'ombre par défaut.
 export const card: CSSProperties = {
   ...glass,
-  borderRadius: 10,
+  borderRadius: 16,
   padding: 20,
-  boxShadow: 'var(--shadow-sm)',
 };
 
+// Bouton primaire : pilule verte, texte vert forêt.
 export const btnPrimary: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
+  justifyContent: 'center',
   gap: 8,
-  background: 'var(--primary)',
-  color: '#fff',
-  border: '1px solid var(--primary)',
-  borderRadius: 8,
-  padding: '9px 16px',
+  background: 'var(--interactive-accent)',
+  color: 'var(--interactive-control)',
+  border: 'none',
+  borderRadius: 9999,
+  padding: '10px 20px',
   fontWeight: 600,
-  fontSize: 14,
+  fontSize: 15,
   textDecoration: 'none',
   whiteSpace: 'nowrap',
 };
 
+// Bouton secondaire : pilule transparente, bordure vert forêt.
 export const btnGhost: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
+  justifyContent: 'center',
   gap: 8,
-  background: 'var(--surface)',
-  color: 'var(--text)',
-  border: '1px solid var(--border-strong)',
-  borderRadius: 8,
-  padding: '9px 16px',
+  background: 'transparent',
+  color: 'var(--interactive-primary)',
+  border: '1px solid var(--interactive-primary)',
+  borderRadius: 9999,
+  padding: '10px 20px',
   fontWeight: 600,
-  fontSize: 14,
+  fontSize: 15,
   textDecoration: 'none',
   whiteSpace: 'nowrap',
-  boxShadow: 'var(--shadow-sm)',
 };
 
 export const input: CSSProperties = {
-  background: 'var(--surface)',
-  border: '1px solid var(--border-strong)',
-  borderRadius: 8,
+  background: 'var(--bg-elevated)',
+  border: '1px solid var(--border-neutral)',
+  borderRadius: 10,
   padding: '10px 12px',
-  color: 'var(--text)',
+  color: 'var(--content-primary)',
   fontSize: 14,
   colorScheme: 'light',
   width: '100%',
 };
 
-export const label: CSSProperties = { fontSize: 13, color: 'var(--muted)', fontWeight: 600 };
+export const label: CSSProperties = { fontSize: 13, color: 'var(--content-secondary)', fontWeight: 600 };
 
 export const sectionHeading: CSSProperties = {
-  fontSize: 12,
-  textTransform: 'uppercase',
-  letterSpacing: 0.8,
-  color: 'var(--muted)',
+  fontSize: 13,
+  letterSpacing: '-0.01em',
+  color: 'var(--content-secondary)',
   margin: '8px 0 14px',
-  fontWeight: 700,
+  fontWeight: 600,
 };
 
+// Pastille pilule — à combiner avec badgeTone/DISPUTE_BADGE pour les couleurs.
 export const badge: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: 6,
-  borderWidth: 1,
-  borderStyle: 'solid',
-  borderColor: 'var(--border)',
-  borderRadius: 6,
-  padding: '2px 9px',
+  border: 'none',
+  borderRadius: 9999,
+  padding: '3px 11px',
   fontSize: 12,
   fontWeight: 600,
 };
 
-// Couleurs par statut de litige — tons sémantiques lisibles sur fond clair.
+// Tons de pastilles (fond + texte), contraste AA sur fond clair.
+export const badgeTone = {
+  positive: { background: 'var(--positive-bg)', color: 'var(--positive)' } as CSSProperties,
+  warning: { background: 'var(--warning-bg)', color: 'var(--warning-content)' } as CSSProperties,
+  negative: { background: 'var(--negative-bg)', color: 'var(--negative)' } as CSSProperties,
+  neutral: { background: 'var(--bg-neutral)', color: 'var(--brand-forest)' } as CSSProperties,
+};
+
+// Pastilles par statut de litige : ouvert = jaune, en cours = neutre, résolu = vert.
+export const DISPUTE_BADGE: Record<string, CSSProperties> = {
+  open: badgeTone.warning,
+  investigating: badgeTone.neutral,
+  resolved: badgeTone.positive,
+};
+
+// Couleurs par statut de litige (texte seul) — conservé pour compatibilité.
 export const DISPUTE_COLOR: Record<string, string> = {
-  open: '#b91c1c',
-  investigating: '#b45309',
-  resolved: '#15803d',
+  open: '#4A3B1C',
+  investigating: '#163300',
+  resolved: '#054D28',
 };

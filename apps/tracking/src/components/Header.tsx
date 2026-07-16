@@ -47,7 +47,13 @@ export function Header() {
             {links.map((l) => {
               const active = l.href === '/' ? pathname === '/' : pathname.startsWith(l.href);
               return (
-                <Link key={l.href} href={l.href} style={active ? m.drawerActive : m.drawerLink} onClick={() => setOpen(false)}>
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={active ? undefined : 'nav-pill'}
+                  style={active ? m.drawerActive : m.drawerLink}
+                  onClick={() => setOpen(false)}
+                >
                   {l.label}
                 </Link>
               );
@@ -59,7 +65,7 @@ export function Header() {
   }
 
   return (
-    <header style={{ ...s.header, position: 'sticky', top: 0, zIndex: 20 }}>
+    <header style={s.header}>
       <Link href="/" style={s.brand}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/air.png" alt="Air Congo" height={32} style={{ objectFit: 'contain', flexShrink: 0 }} />
@@ -69,7 +75,7 @@ export function Header() {
         {links.map((l) => {
           const active = l.href === '/' ? pathname === '/' : pathname.startsWith(l.href);
           return (
-            <Link key={l.href} href={l.href} style={active ? s.navActive : s.navLink}>
+            <Link key={l.href} href={l.href} className={active ? undefined : 'nav-pill'} style={active ? s.navActive : s.navLink}>
               {l.label}
             </Link>
           );
@@ -86,7 +92,7 @@ export function Header() {
 }
 
 function BurgerIcon({ open }: { open: boolean }) {
-  const bar: CSSProperties = { width: 22, height: 2.5, borderRadius: 2, background: '#ffffff', transition: 'all 0.2s' };
+  const bar: CSSProperties = { width: 22, height: 2.5, borderRadius: 2, background: 'var(--content-primary)', transition: 'all 0.2s' };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
       <span style={{ ...bar, transform: open ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
@@ -101,32 +107,41 @@ const m: Record<string, CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '14px 16px',
-    background: 'rgba(9, 14, 26, 0.72)',
-    backdropFilter: 'var(--glass-blur)',
-    WebkitBackdropFilter: 'var(--glass-blur)',
-    borderBottom: '1px solid var(--glass-border)',
-    color: 'var(--side-text)',
+    height: 64,
+    padding: '0 16px',
+    background: 'var(--bg-screen)',
+    borderBottom: '1px solid var(--border-neutral)',
+    color: 'var(--content-primary)',
     position: 'sticky',
     top: 0,
-    zIndex: 20,
+    zIndex: 1050,
   },
-  headerRight: { display: 'flex', alignItems: 'center', gap: 12 },
-  burger: { background: 'transparent', border: 'none', color: '#fff', padding: 4, display: 'grid', placeItems: 'center' },
+  headerRight: { display: 'flex', alignItems: 'center', gap: 10 },
+  burger: { background: 'transparent', border: 'none', color: 'var(--content-primary)', padding: 4, display: 'grid', placeItems: 'center' },
   drawer: {
-    background: 'rgba(10, 16, 30, 0.92)',
-    backdropFilter: 'var(--glass-blur)',
-    WebkitBackdropFilter: 'var(--glass-blur)',
-    borderBottom: '1px solid var(--glass-border)',
-    boxShadow: 'var(--shadow-lg)',
+    background: 'var(--bg-screen)',
+    borderBottom: '1px solid var(--border-neutral)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 2,
+    gap: 4,
     padding: '12px 16px',
     position: 'sticky',
-    top: 56,
-    zIndex: 19,
+    top: 64,
+    zIndex: 1049,
   },
-  drawerLink: { padding: '12px 8px', fontSize: 15, fontWeight: 600, color: 'var(--muted)', borderRadius: 8 },
-  drawerActive: { padding: '12px 8px', fontSize: 15, fontWeight: 700, color: 'var(--primary)', borderRadius: 8 },
+  drawerLink: {
+    padding: '12px 16px',
+    fontSize: 15,
+    fontWeight: 500,
+    color: 'var(--content-primary)',
+    borderRadius: 'var(--radius-full)',
+  },
+  drawerActive: {
+    padding: '12px 16px',
+    fontSize: 15,
+    fontWeight: 600,
+    color: 'var(--interactive-primary)',
+    background: 'var(--bg-neutral)',
+    borderRadius: 'var(--radius-full)',
+  },
 };

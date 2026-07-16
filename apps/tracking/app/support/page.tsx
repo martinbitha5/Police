@@ -14,7 +14,7 @@ export default function SupportPage() {
     <div style={shared.shell}>
       <Header />
       <Breadcrumb current={t.breadcrumb.support} />
-      <main style={shared.main}>
+      <main style={{ ...shared.main, ...shared.mainText }}>
         <h1 style={shared.contentTitle}>{t.support.title}</h1>
         <p style={shared.contentIntro}>{t.support.intro}</p>
 
@@ -57,24 +57,42 @@ export default function SupportPage() {
 const s: Record<string, CSSProperties> = {
   contactCard: {
     ...glass,
-    borderRadius: 14,
+    borderRadius: 'var(--radius-md)',
     padding: '24px 26px',
-    boxShadow: 'var(--shadow-sm)',
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
   },
-  contactList: { listStyle: 'none', margin: '6px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 12 },
+  contactList: { listStyle: 'none', margin: '6px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 14 },
   contactItem: { display: 'flex', alignItems: 'center', gap: 12, fontSize: 16 },
-  contactIcon: { display: 'inline-flex', color: 'var(--primary)' },
-  contactValue: { color: 'var(--text)' },
+  // Icônes posées dans des cercles teintés — recette Wise
+  contactIcon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    flexShrink: 0,
+    borderRadius: 'var(--radius-full)',
+    background: 'var(--bg-neutral)',
+    color: 'var(--interactive-primary)',
+    boxShadow: 'inset 0 0 0 1px var(--border-neutral)',
+  },
+  contactValue: { color: 'var(--content-primary)' },
 
   faqList: { display: 'flex', flexDirection: 'column', gap: 12 },
   faqItem: {
     ...glass,
-    borderRadius: 12,
+    borderRadius: 'var(--radius-md)',
     padding: '16px 20px',
   },
-  faqQ: { fontSize: 16, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', listStyle: 'none' },
-  faqA: { margin: '12px 0 0', color: 'var(--muted)', fontSize: 15, lineHeight: 1.6 },
+  faqQ: {
+    fontSize: 16,
+    fontWeight: 600,
+    letterSpacing: '-0.02em',
+    color: 'var(--content-primary)',
+    cursor: 'pointer',
+    listStyle: 'none',
+  },
+  faqA: { margin: '12px 0 0', color: 'var(--content-secondary)', fontSize: 15, lineHeight: 1.6 },
 };

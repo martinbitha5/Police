@@ -1,5 +1,9 @@
 import type { ReactNode } from 'react';
+import { Inter, Archivo_Black } from 'next/font/google';
 import './globals.css';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const archivo = Archivo_Black({ weight: '400', subsets: ['latin'], variable: '--font-archivo', display: 'swap' });
 
 export const metadata = {
   title: 'Vols du jour — Aéroport',
@@ -15,7 +19,7 @@ const CHUNK_RECOVERY = `(function(){function c(m){return /ChunkLoadError|Loading
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={`${inter.variable} ${archivo.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY }} />
         <link rel="preload" href="/air.png" as="image" />

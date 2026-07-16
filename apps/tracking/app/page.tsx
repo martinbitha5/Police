@@ -15,24 +15,27 @@ import { useLang } from '@/i18n/LanguageProvider';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { glass, shared } from '@/components/theme';
+import { glass, tile, shared } from '@/components/theme';
 import { IconSearch, IconBag, IconAlert, IconCheck } from '@/components/icons';
 
 const TAG_RE = /^\d{10}$/;
 
-// Statut bagage / réclamation : un point coloré comme seule touche de couleur,
-// le libellé reste en texte neutre (pas de pastille pastel).
-const STATUS_DOT: Record<string, string> = {
-  rush: '#fbbf24',
-  loaded: '#4ade80',
-  registered: '#4f7df9',
-  pending: '#94a3b8',
+// Statut bagage : pastilles pilule Wise — trouvé/livré en vert, en cours en
+// jaune, problème en rouge, attente en neutre.
+const STATUS_PILL: Record<string, { bg: string; fg: string }> = {
+  rush: { bg: 'var(--negative-bg)', fg: 'var(--negative)' },
+  loaded: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
+  registered: { bg: 'var(--warning-bg)', fg: 'var(--warning-content)' },
+  pending: { bg: 'var(--bg-neutral)', fg: 'var(--content-secondary)' },
 };
-const CLAIM_DOT: Record<string, string> = {
-  open: '#f87171',
-  investigating: '#fbbf24',
-  resolved: '#4ade80',
+const CLAIM_PILL: Record<string, { bg: string; fg: string }> = {
+  open: { bg: 'var(--negative-bg)', fg: 'var(--negative)' },
+  investigating: { bg: 'var(--warning-bg)', fg: 'var(--warning-content)' },
+  resolved: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
 };
+
+// Étapes du parcours bagage — timeline claire, points vert forêt.
+const STEP_ORDER = ['pending', 'registered', 'loaded'] as const;
 
 export default function TrackingPage() {
   const { t }    = useLang();
@@ -89,7 +92,11 @@ export default function TrackingPage() {
       <Breadcrumb current={t.breadcrumb.tracking} />
 
       <main style={isMobile ? { ...shared.main, ...shared.mainMobile } : shared.main}>
-        <h1 style={isMobile ? { ...s.title, fontSize: 30 } : s.title}>{t.home.title}</h1>
+        {/* Héros Wise : H1 display énorme + sous-titre sobre */}
+        <div style={s.hero}>
+          <h1 style={isMobile ? { ...s.title, fontSize: 'clamp(2.25rem, 9vw, 3rem)' } : s.title}>{t.home.title}</h1>
+          <p style={s.subtitle}>{t.home.hint}</p>
+        </div>
 
         <form onSubmit={onSubmit} style={s.panel}>
           <div style={isMobile ? { ...s.grid, gridTemplateColumns: '1fr' } : s.grid}>
@@ -126,15 +133,13 @@ export default function TrackingPage() {
           </div>
 
           <div style={s.actionRow}>
-            <span style={s.muted}>{t.home.hint}</span>
-            <button style={s.cta} type="submit" disabled={busy}>
+            <p style={s.helper}>
+              <span style={{ color: 'var(--negative)' }}>*</span> {t.home.helperRequired}
+            </p>
+            <button className="btn-primary" style={s.cta} type="submit" disabled={busy}>
               {busy ? t.home.submitting : t.home.submit}
             </button>
           </div>
-
-          <p style={s.helper}>
-            <span style={{ color: 'var(--danger)' }}>*</span> {t.home.helperRequired}
-          </p>
         </form>
 
         {error ? <p style={s.error}>{error}</p> : null}
@@ -148,7 +153,7 @@ export default function TrackingPage() {
 
         {!busy && result?.status === 'not_found' ? (
           <div style={s.notFound}>
-            <span style={{ display: 'inline-flex', color: 'var(--muted)' }}><IconSearch size={22} /></span>
+            <span style={s.iconCircle}><IconSearch size={20} /></span>
             <p style={{ margin: 0 }}>{result.message || t.home.notFound}</p>
           </div>
         ) : null}
@@ -172,7 +177,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
     <label style={s.field}>
       <span style={s.fieldLabel}>
         {label}
-        {required ? <span style={{ color: 'var(--danger)' }}> *</span> : null}
+        {required ? <span style={{ color: 'var(--negative)' }}> *</span> : null}
       </span>
       {children}
     </label>
@@ -186,10 +191,10 @@ function HelpCard() {
       <h2 style={s.helpTitle}>{t.help.title}</h2>
       <p style={s.helpText}>{t.help.text}</p>
       <div style={s.helpBtns}>
-        <Link href="/support" style={s.helpBtnPrimary}>
+        <Link href="/support" className="btn-primary">
           {t.help.contact}
         </Link>
-        <Link href="/support" style={s.helpBtnGhost}>
+        <Link href="/support" className="link-underline" style={{ alignSelf: 'center' }}>
           {t.help.faq}
         </Link>
       </div>
@@ -220,7 +225,7 @@ function PassengerCard({ pax, tagFilter }: { pax: TrackedPassenger; tagFilter?: 
               : ''}
           </div>
         </div>
-        <div style={{ ...s.summary, color: allLoaded ? 'var(--success)' : 'var(--text)' }}>
+        <div style={{ ...s.summary, color: allLoaded ? 'var(--positive)' : 'var(--content-primary)' }}>
           {pax.confirmedBaggageCount}/{pax.declaredBaggageCount}
           <span style={s.summaryLabel}>{t.home.summaryLoaded}</span>
         </div>
@@ -253,6 +258,30 @@ function PassengerCard({ pax, tagFilter }: { pax: TrackedPassenger; tagFilter?: 
   );
 }
 
+// Timeline d'étapes : points vert forêt reliés, remplis jusqu'à l'étape atteinte.
+function StepDots({ status }: { status: TrackedBag['status'] }) {
+  const idx = STEP_ORDER.indexOf(status as (typeof STEP_ORDER)[number]);
+  if (idx < 0) return null; // « rush » sort du parcours nominal
+  return (
+    <span style={s.steps} aria-hidden="true">
+      {STEP_ORDER.map((st, i) => (
+        <Fragment key={st}>
+          {i > 0 ? (
+            <span style={{ ...s.stepBar, background: i <= idx ? 'var(--interactive-primary)' : 'var(--border-neutral)' }} />
+          ) : null}
+          <span
+            style={{
+              ...s.stepDot,
+              background: i <= idx ? 'var(--interactive-primary)' : 'var(--bg-elevated)',
+              boxShadow: i <= idx ? 'none' : 'inset 0 0 0 1.5px var(--border-neutral)',
+            }}
+          />
+        </Fragment>
+      ))}
+    </span>
+  );
+}
+
 function BagRow({
   bag,
   claimStatus,
@@ -281,16 +310,15 @@ function BagRow({
         : claimStatus === 'open'
           ? t.claim.statusOpen
           : null;
-  const claimColor = claimStatus ? CLAIM_DOT[claimStatus] : undefined;
+  const statusPill = STATUS_PILL[bag.status] ?? STATUS_PILL.pending;
+  const claimPill = claimStatus ? CLAIM_PILL[claimStatus] : null;
   return (
     <li style={s.bagRow}>
       <span style={s.tag}><IconBag size={15} /> {bag.tagNumber}</span>
-      <span style={s.statusText}>
-        <span style={{ ...s.dot, background: STATUS_DOT[bag.status] }} />
-        {statusLabel}
-      </span>
-      {claimLabel ? (
-        <span style={{ ...s.claimText, color: claimColor }}>
+      <span style={{ ...s.pill, background: statusPill.bg, color: statusPill.fg }}>{statusLabel}</span>
+      <StepDots status={bag.status} />
+      {claimLabel && claimPill ? (
+        <span style={{ ...s.pill, background: claimPill.bg, color: claimPill.fg }}>
           {claimStatus === 'resolved' ? <IconCheck size={13} /> : <IconAlert size={13} />} {claimLabel}
         </span>
       ) : null}
@@ -298,7 +326,7 @@ function BagRow({
         <span style={s.scannedAt}>{new Date(bag.scannedAt).toLocaleString('fr-FR')}</span>
       ) : null}
       {claimStatus === 'resolved' ? null : (
-        <button type="button" style={s.reportBtn} onClick={onToggle}>
+        <button type="button" className="btn-secondary" style={s.reportBtn} onClick={onToggle}>
           <IconAlert size={14} /> {open ? t.claim.cancel : t.claim.open}
         </button>
       )}
@@ -397,10 +425,10 @@ function ClaimForm({
       {err ? <div style={s.claimErr}>{err}</div> : null}
 
       <div style={s.claimActions}>
-        <button type="button" style={s.claimCancel} onClick={onDone} disabled={busy}>
+        <button type="button" className="btn-secondary" style={s.claimCancel} onClick={onDone} disabled={busy}>
           {t.claim.cancel}
         </button>
-        <button type="button" style={s.claimSubmit} onClick={submit} disabled={busy}>
+        <button type="button" className="btn-primary" style={s.claimSubmit} onClick={submit} disabled={busy}>
           {busy ? t.claim.submitting : t.claim.submit}
         </button>
       </div>
@@ -409,116 +437,199 @@ function ClaimForm({
 }
 
 const s: Record<string, CSSProperties> = {
-  title: { margin: '20px 0 8px', fontSize: 38, fontWeight: 800, letterSpacing: -0.8, color: 'var(--text)' },
+  hero: { display: 'flex', flexDirection: 'column', gap: 14, margin: '28px 0 10px', maxWidth: 860 },
+  title: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontWeight: 400,
+    fontSize: 'clamp(2.625rem, 5vw + 1rem, 5rem)',
+    lineHeight: 'var(--lh-display)',
+    letterSpacing: 0,
+    color: 'var(--content-primary)',
+  },
+  subtitle: { margin: 0, fontSize: 18, lineHeight: 1.5, color: 'var(--content-secondary)', maxWidth: 640 },
 
-  panel: { ...glass, borderRadius: 14, padding: 26, boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column', gap: 18 },
+  panel: {
+    ...glass,
+    borderRadius: 'var(--radius-md)',
+    padding: 26,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 18,
+  },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 18 },
   field: { display: 'flex', flexDirection: 'column', gap: 8 },
-  fieldLabel: { fontSize: 14, fontWeight: 600, color: 'var(--text)' },
+  fieldLabel: { fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--content-primary)' },
   input: {
-    background: 'var(--surface)',
-    border: '1px solid var(--border-strong)',
-    borderRadius: 8,
-    padding: '11px 14px',
-    color: 'var(--text)',
-    fontSize: 15,
+    background: 'var(--bg-elevated)',
+    border: '1px solid var(--border-neutral)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '13px 16px',
+    color: 'var(--content-primary)',
+    fontSize: 16,
   },
 
   actionRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 },
-  muted: { color: 'var(--muted)', fontSize: 13 },
-  cta: { background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 9, padding: '13px 28px', fontWeight: 700, fontSize: 15 },
-  helper: { margin: 0, color: 'var(--muted)', fontSize: 13 },
+  helper: { margin: 0, color: 'var(--content-secondary)', fontSize: 13, flex: '1 1 260px' },
+  cta: { minWidth: 200 },
 
-  loader: { ...glass, borderRadius: 12, padding: '36px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, boxShadow: 'var(--shadow-sm)' },
-  loaderText: { margin: 0, color: 'var(--muted)', fontSize: 15, fontWeight: 500 },
-  spinner: { width: 38, height: 38, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite', display: 'inline-block' },
+  loader: {
+    ...glass,
+    borderRadius: 'var(--radius-md)',
+    padding: '36px 20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 14,
+  },
+  loaderText: { margin: 0, color: 'var(--content-secondary)', fontSize: 15, fontWeight: 500 },
+  spinner: {
+    width: 38,
+    height: 38,
+    borderRadius: '50%',
+    border: '3px solid var(--bg-neutral)',
+    borderTopColor: 'var(--interactive-primary)',
+    animation: 'spin 0.8s linear infinite',
+    display: 'inline-block',
+  },
 
-  error: { background: 'var(--danger-soft)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 10, padding: '14px 18px', margin: 0, fontWeight: 600 },
-  notFound: { ...glass, display: 'flex', alignItems: 'center', gap: 12, borderRadius: 12, padding: '18px 20px', color: 'var(--muted)', boxShadow: 'var(--shadow-sm)' },
+  error: {
+    background: 'var(--negative-bg)',
+    color: 'var(--negative)',
+    border: 'none',
+    borderRadius: 'var(--radius-md)',
+    padding: '14px 18px',
+    margin: 0,
+    fontWeight: 600,
+  },
+  notFound: {
+    ...glass,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    borderRadius: 'var(--radius-md)',
+    padding: '18px 20px',
+    color: 'var(--content-secondary)',
+  },
+  iconCircle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    flexShrink: 0,
+    borderRadius: 'var(--radius-full)',
+    background: 'var(--bg-neutral)',
+    color: 'var(--interactive-primary)',
+    boxShadow: 'inset 0 0 0 1px var(--border-neutral)',
+  },
 
-  resultCard: { ...glass, borderRadius: 12, padding: 22, boxShadow: 'var(--shadow-sm)' },
+  resultCard: { ...glass, borderRadius: 'var(--radius-md)', padding: 24 },
   resultHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 14 },
-  paxName: { fontSize: 20, fontWeight: 700, color: 'var(--text)' },
-  paxMeta: { color: 'var(--muted)', fontSize: 13, marginTop: 3 },
-  summary: { fontSize: 28, fontWeight: 800, lineHeight: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontVariantNumeric: 'tabular-nums' },
-  summaryLabel: { fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
+  paxName: { fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--content-primary)' },
+  paxMeta: { color: 'var(--content-secondary)', fontSize: 13, marginTop: 3 },
+  summary: {
+    fontSize: 28,
+    fontWeight: 700,
+    lineHeight: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    fontVariantNumeric: 'tabular-nums',
+  },
+  summaryLabel: {
+    fontSize: 11,
+    fontWeight: 600,
+    color: 'var(--content-secondary)',
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   bagList: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column' },
-  bagRow: { display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', borderTop: '1px solid var(--border)', padding: '12px 2px' },
-  tag: { display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 15, color: 'var(--text)', minWidth: 128 },
-  dot: { width: 8, height: 8, borderRadius: '50%', flexShrink: 0 },
-  statusText: { display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 600, color: 'var(--text)' },
-  claimText: { display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 600 },
-  scannedAt: { marginLeft: 'auto', color: 'var(--faint)', fontSize: 12, fontVariantNumeric: 'tabular-nums' },
-  reportBtn: {
-    marginLeft: 'auto',
+  bagRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    flexWrap: 'wrap',
+    borderTop: '1px solid var(--border-neutral)',
+    padding: '14px 2px',
+  },
+  tag: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    background: 'none',
-    border: 'none',
-    color: 'var(--muted)',
-    padding: '4px 2px',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontSize: 15,
+    color: 'var(--content-primary)',
+    minWidth: 128,
+  },
+
+  // Pastille pilule de statut (bagage et réclamation)
+  pill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 'var(--radius-full)',
+    padding: '4px 12px',
     fontSize: 13,
     fontWeight: 600,
   },
+
+  // Timeline d'étapes — points reliés, vert forêt
+  steps: { display: 'inline-flex', alignItems: 'center' },
+  stepDot: { width: 10, height: 10, borderRadius: '50%', flexShrink: 0 },
+  stepBar: { width: 22, height: 2, flexShrink: 0 },
+
+  scannedAt: { marginLeft: 'auto', color: 'var(--content-tertiary)', fontSize: 12, fontVariantNumeric: 'tabular-nums' },
+  reportBtn: { marginLeft: 'auto', fontSize: 13, padding: '6px 14px' },
 
   claimWrap: { listStyle: 'none', margin: 0, padding: 0 },
   claimForm: {
     display: 'flex',
     flexDirection: 'column',
     gap: 8,
-    background: 'var(--surface)',
-    border: '1px solid var(--border)',
-    borderRadius: 12,
-    padding: 18,
-    boxShadow: 'var(--shadow-sm)',
+    background: 'var(--bg-neutral)',
+    border: 'none',
+    borderRadius: 'var(--radius-lg)',
+    padding: 20,
   },
-  claimTitle: { fontSize: 15, fontWeight: 700, marginBottom: 2, color: 'var(--text)' },
-  claimLabel: { fontSize: 13, fontWeight: 600, color: 'var(--text)', marginTop: 4 },
+  claimTitle: { fontSize: 15, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 2, color: 'var(--content-primary)' },
+  claimLabel: { fontSize: 13, fontWeight: 600, color: 'var(--content-primary)', marginTop: 4 },
   claimErr: {
-    color: 'var(--danger)',
-    background: 'var(--danger-soft)',
-    border: '1px solid rgba(248,113,113,0.35)',
-    borderRadius: 8,
-    padding: '8px 12px',
+    color: 'var(--negative)',
+    background: 'var(--negative-bg)',
+    border: 'none',
+    borderRadius: 'var(--radius-full)',
+    padding: '8px 14px',
     fontSize: 13,
+    fontWeight: 600,
   },
   claimActions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 6 },
-  claimCancel: {
-    background: 'var(--surface)',
-    color: 'var(--text)',
-    border: '1px solid var(--border-strong)',
-    borderRadius: 8,
-    padding: '9px 16px',
-    fontWeight: 600,
-    fontSize: 14,
-  },
-  claimSubmit: {
-    background: 'var(--primary)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 8,
-    padding: '9px 18px',
-    fontWeight: 700,
-    fontSize: 14,
-  },
+  claimCancel: { fontSize: 14, padding: '9px 18px' },
+  claimSubmit: { fontSize: 14, padding: '10px 20px' },
   claimDone: {
     display: 'flex',
     alignItems: 'center',
     gap: 10,
-    background: 'var(--success-soft)',
-    border: '1px solid rgba(74,222,128,0.32)',
-    color: 'var(--success)',
-    borderRadius: 10,
-    padding: '14px 16px',
+    background: 'var(--positive-bg)',
+    border: 'none',
+    color: 'var(--positive)',
+    borderRadius: 'var(--radius-full)',
+    padding: '14px 18px',
     fontSize: 14,
     fontWeight: 600,
   },
 
-  helpCard: { ...glass, borderRadius: 12, padding: 26, marginTop: 6, boxShadow: 'var(--shadow-sm)' },
-  helpTitle: { margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: 'var(--text)' },
-  helpText: { margin: '0 0 16px', color: 'var(--muted)', lineHeight: 1.6, maxWidth: 720 },
-  helpBtns: { display: 'flex', gap: 12, flexWrap: 'wrap' },
-  helpBtnPrimary: { background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '11px 20px', fontWeight: 600 },
-  helpBtnGhost: { background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border-strong)', borderRadius: 8, padding: '11px 20px', fontWeight: 600 },
+  // Carte d'aide : tuile teintée Wise, radius large
+  helpCard: { ...tile, borderRadius: 'var(--radius-lg)', padding: '32px 24px', marginTop: 6 },
+  helpTitle: {
+    margin: '0 0 8px',
+    fontSize: 22,
+    fontWeight: 600,
+    letterSpacing: '-0.03em',
+    lineHeight: 1.1,
+    color: 'var(--content-primary)',
+  },
+  helpText: { margin: '0 0 18px', color: 'var(--content-secondary)', lineHeight: 1.5, maxWidth: 640 },
+  helpBtns: { display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' },
 };

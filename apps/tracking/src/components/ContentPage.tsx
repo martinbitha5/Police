@@ -21,7 +21,7 @@ export function ContentPage({ crumb, title, intro, sections, updatedLabel, updat
     <div style={s.shell}>
       <Header />
       <Breadcrumb current={crumb} />
-      <main style={s.main}>
+      <main style={{ ...s.main, ...s.mainText }}>
         <h1 style={s.contentTitle}>{title}</h1>
         <p style={s.contentIntro}>{intro}</p>
         {updatedLabel && updatedDate ? (

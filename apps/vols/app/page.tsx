@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
@@ -6,13 +6,13 @@ import { formatRoute, flightNumbersMatch, FLIGHT_STATUS_LABEL, type FlightStatus
 import type { PublicFlight, FlightsResponse } from '@/types';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
-/** Statut vol : un point coloré + texte neutre — pas de pastille.
-    Teintes éclaircies pour le fond sombre du spatial UI. */
-const STATUS_DOT: Record<FlightStatus, string> = {
-  scheduled: '#94a3b8',
-  boarding: '#4ade80',
-  closed: '#f87171',
-  cancelled: '#fbbf24',
+/** Statut vol : pastille pilule colorée (design Wise) — fond doux + texte foncé,
+    lisible de loin sur fond blanc. À l'heure/embarquement = vert, porte fermée = jaune, annulé = rouge. */
+const STATUS_PILL: Record<FlightStatus, { bg: string; fg: string }> = {
+  scheduled: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
+  boarding: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
+  closed: { bg: 'var(--warning-bg)', fg: 'var(--warning-content)' },
+  cancelled: { bg: 'var(--negative-bg)', fg: 'var(--negative)' },
 };
 
 function todayISO(): string {
@@ -46,10 +46,10 @@ function formatCountdown(ms: number): string {
 
 /** Seule la couleur du point de statut varie — le reste est typographique. */
 const CHECKIN_DOT: Record<CheckInPhase, string> = {
-  before: '#94a3b8',
-  open: '#4ade80',
-  closed: '#fbbf24',
-  departed: '#c3c9d1',
+  before: '#6A6C6A',
+  open: '#054D28',
+  closed: '#4A3B1C',
+  departed: '#A8AAA8',
 };
 
 export default function VolsPage() {
@@ -68,7 +68,7 @@ export default function VolsPage() {
       const res = await fetch(`/api/flights?date=${d}`, { cache: 'no-store' });
       const data = (await res.json()) as FlightsResponse & { error?: string };
       if (!res.ok) {
-        setError(data.error ?? 'Erreur de chargement.');
+        setError(data.error ?? 'Impossible de charger les vols. Réessayez.');
       } else {
         setFlights(data.flights);
         setHub(data.hub);
@@ -124,14 +124,14 @@ export default function VolsPage() {
             <h1 style={isMobile ? { ...s.title, ...s.titleMobile } : s.title}>Vols du jour</h1>
             <p style={s.subtitle}>
               {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)} · Aéroport {hub}
-              {updatedAt ? ` · maj ${updatedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''}
+              {updatedAt ? ` · mis à jour à ${updatedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''}
             </p>
           </div>
         </div>
         <div style={isMobile ? { ...s.controls, ...s.controlsMobile } : s.controls}>
           <input
             style={isMobile ? { ...s.search, ...s.searchMobile } : s.search}
-            placeholder="Rechercher un vol (ex. ET0062)"
+            placeholder="Recherchez votre vol (ex. ET0062)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -170,9 +170,9 @@ export default function VolsPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/air.png" alt="Air Congo" style={s.footerLogo} />
             <nav style={s.footerNav}>
-              <Link href="/conditions" style={s.footerLink}>Conditions d'utilisation</Link>
-              <Link href="/confidentialite" style={s.footerLink}>Confidentialité</Link>
-              <Link href="/cookies" style={s.footerLink}>Cookies</Link>
+              <Link href="/conditions" className="fl-footer-link" style={s.footerLink}>Conditions d'utilisation</Link>
+              <Link href="/confidentialite" className="fl-footer-link" style={s.footerLink}>Confidentialité</Link>
+              <Link href="/cookies" className="fl-footer-link" style={s.footerLink}>Cookies</Link>
             </nav>
             <p style={s.footerText}>Informations fournies à titre indicatif · Police Bagage · ATS Handling</p>
           </footer>
@@ -185,19 +185,19 @@ export default function VolsPage() {
 const AIRPORT_SITE = 'https://fih-rva.com';
 
 const AIRPORT_LINKS: { href: string; title: string; desc: string }[] = [
-  { href: '/vols/departs', title: 'Départs & arrivées', desc: 'Horaires temps réel sur le portail officiel' },
-  { href: '/guide', title: 'Guide du voyageur', desc: 'Visa, vaccination fièvre jaune, douanes' },
-  { href: '/guide/securite-bagages', title: 'Sécurité bagages', desc: 'Règles, objets interdits, franchise' },
-  { href: '/stationnement-transport', title: 'Stationnement & transport', desc: 'Parking, taxis agréés, navettes' },
-  { href: '/boutiques-restaurants', title: 'Boutiques & restaurants', desc: 'Change, duty free, salons VIP' },
-  { href: '/contact', title: 'Contact', desc: "Joindre l'aéroport (RVA)" },
+  { href: '/vols/departs', title: 'Départs & arrivées', desc: 'Suivez les horaires en temps réel sur le portail officiel' },
+  { href: '/guide', title: 'Guide du voyageur', desc: 'Préparez visa, vaccination fièvre jaune et douanes' },
+  { href: '/guide/securite-bagages', title: 'Sécurité bagages', desc: 'Vérifiez les règles, objets interdits et franchises' },
+  { href: '/stationnement-transport', title: 'Stationnement & transport', desc: 'Trouvez parking, taxis agréés et navettes' },
+  { href: '/boutiques-restaurants', title: 'Boutiques & restaurants', desc: 'Repérez change, duty free et salons VIP' },
+  { href: '/contact', title: 'Contact', desc: "Joignez l'aéroport (RVA) directement" },
 ];
 
 /** Liens vers le portail officiel de l'Aéroport International de Kinshasa (FIH). */
 function AirportServices() {
   return (
     <section style={s.servicesWrap}>
-      <h2 style={s.servicesTitle}>Services de l'aéroport</h2>
+      <h2 style={s.servicesTitle}>Préparez votre passage à l'aéroport</h2>
 
       <a style={s.siteBanner} href={AIRPORT_SITE} target="_blank" rel="noopener noreferrer">
         <span style={s.siteIcon}>
@@ -205,7 +205,7 @@ function AirportServices() {
           <img src="/fih-logo.png" alt="Logo RVA — Aéroport de Kinshasa" width={32} height={32} style={s.siteLogo} />
         </span>
         <span style={s.siteTexts}>
-          <span style={s.siteName}>Site officiel de l'Aéroport International de Kinshasa (FIH)</span>
+          <span style={s.siteName}>Consultez le site officiel de l'Aéroport International de Kinshasa (FIH)</span>
           <span style={s.siteUrl}>fih-rva.com · Régie des Voies Aériennes</span>
         </span>
         <ExternalIcon />
@@ -277,13 +277,13 @@ function CheckInBadge({ departureTime }: { departureTime: string }) {
   switch (phase) {
     case 'before':
       title = 'Enregistrement';
-      caption = `Ouverture à ${fmtTime(openAt)}`;
+      caption = `Ouvre à ${fmtTime(openAt)}`;
       countPrefix = 'ouvre dans';
       countValue = formatCountdown(openAt - now);
       break;
     case 'open':
       title = 'Enregistrement ouvert';
-      caption = `Clôture à ${fmtTime(closeAt)}`;
+      caption = `Présentez-vous avant ${fmtTime(closeAt)}`;
       countPrefix = 'clôture dans';
       countValue = formatCountdown(closeAt - now);
       break;
@@ -329,6 +329,8 @@ function FlightCard({ flight, hub, isMobile }: { flight: PublicFlight; hub: stri
     (flight.status === 'scheduled' || flight.status === 'boarding') &&
     new Date(mainTime).getTime() < Date.now();
 
+  const pill = STATUS_PILL[flight.status];
+
   return (
     <li className="fl-card" style={isMobile ? { ...s.card, ...s.cardMobile } : s.card}>
       <div style={s.cardMain}>
@@ -342,11 +344,10 @@ function FlightCard({ flight, hub, isMobile }: { flight: PublicFlight; hub: stri
           <div style={s.route}>{formatRoute(flight)}</div>
         </div>
         <div style={isMobile ? { ...s.statusBlock, ...s.statusBlockMobile } : s.statusBlock}>
-          <span style={s.statusText}>
-            <span style={{ ...s.dot, background: STATUS_DOT[flight.status] }} />
+          <span style={{ ...s.statusPill, background: pill.bg, color: pill.fg }}>
             {FLIGHT_STATUS_LABEL[flight.status]}
           </span>
-          {delayed ? <span style={s.delayText}>Retardé</span> : null}
+          {delayed ? <span style={{ ...s.statusPill, ...s.delayPill }}>Retardé</span> : null}
         </div>
       </div>
 
@@ -357,42 +358,46 @@ function FlightCard({ flight, hub, isMobile }: { flight: PublicFlight; hub: stri
   );
 }
 
-// Panneau en verre dépoli — teinté navy + flou du fond (spatial UI).
-const surface: CSSProperties = {
-  background: 'var(--glass)',
-  border: '1px solid var(--glass-border)',
-  backdropFilter: 'var(--glass-blur)',
-  WebkitBackdropFilter: 'var(--glass-blur)',
+// Carte blanche (design Wise) : fond blanc, radius 16, bordure fine — jamais d'ombre par défaut.
+const whiteCard: CSSProperties = {
+  background: 'var(--bg-elevated)',
+  border: '1px solid var(--border-neutral)',
+  borderRadius: 16,
 };
 
-// En-tête translucide flottant, flou du fond photo derrière.
-const headerGlass: CSSProperties = {
-  background: 'rgba(9, 14, 26, 0.6)',
-  backdropFilter: 'var(--glass-blur)',
-  WebkitBackdropFilter: 'var(--glass-blur)',
-  borderBottom: '1px solid var(--glass-border)',
-  color: 'var(--side-text)',
+// Tuile teintée (design Wise) : fond vert très pâle, radius 24 — ni bordure, ni ombre, ni flou.
+const tintedTile: CSSProperties = {
+  background: 'var(--bg-neutral)',
+  borderRadius: 24,
+};
+
+// En-tête clair sticky : fond blanc, simple filet inférieur.
+const headerLight: CSSProperties = {
+  background: 'var(--bg-screen)',
+  borderBottom: '1px solid var(--border-neutral)',
+  color: 'var(--content-primary)',
 };
 
 const s: Record<string, CSSProperties> = {
-  pageWrap: { minHeight: '100vh', display: 'flex', flexDirection: 'column' },
+  pageWrap: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-screen)' },
   stickyHeader: {
-    ...headerGlass,
+    ...headerLight,
     position: 'sticky' as const,
     top: 0,
-    zIndex: 20,
+    zIndex: 1050,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap' as const,
     gap: 14,
     padding: '14px 32px',
+    minHeight: 76,
   },
   stickyHeaderMobile: {
-    ...headerGlass,
+    ...headerLight,
     position: 'sticky' as const,
     top: 0,
-    zIndex: 20,
+    zIndex: 1050,
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'stretch' as const,
@@ -406,96 +411,108 @@ const s: Record<string, CSSProperties> = {
   brandBlock: { display: 'flex', alignItems: 'center', gap: 14 },
   logo: { height: 44, objectFit: 'contain' as const, flexShrink: 0 },
   footerLogo: { height: 36, objectFit: 'contain' as const, opacity: 0.9, display: 'block', margin: '0 auto 6px' },
-  title: { margin: 0, fontSize: 30, fontWeight: 800, letterSpacing: -0.6, color: '#fff' },
+  title: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontSize: 30,
+    fontWeight: 400,
+    lineHeight: 0.95,
+    letterSpacing: 0,
+    color: 'var(--content-primary)',
+  },
   titleMobile: { fontSize: 24 },
-  subtitle: { margin: '4px 0 0', color: 'var(--side-muted)', fontSize: 13.5, fontWeight: 600 },
+  subtitle: { margin: '4px 0 0', color: 'var(--content-secondary)', fontSize: 13.5, fontWeight: 500 },
   controls: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' },
   controlsMobile: { flexDirection: 'column', alignItems: 'stretch', width: '100%' },
   search: {
-    background: 'rgba(255,255,255,0.07)',
-    border: '1px solid rgba(255,255,255,0.16)',
-    borderRadius: 8,
-    padding: '10px 14px',
-    color: '#fff',
-    fontSize: 14,
-    minWidth: 240,
-    colorScheme: 'dark',
+    background: 'var(--bg-elevated)',
+    border: '1px solid var(--border-neutral)',
+    borderRadius: 9999,
+    padding: '12px 20px',
+    color: 'var(--content-primary)',
+    fontSize: 15,
+    minWidth: 260,
   },
   searchMobile: { minWidth: 0, width: '100%' },
 
   error: {
-    background: 'var(--danger-soft)',
-    color: 'var(--danger)',
-    border: '1px solid rgba(248,113,113,0.35)',
-    borderRadius: 10,
-    padding: '14px 18px',
+    background: 'var(--negative-bg)',
+    color: 'var(--negative)',
+    borderRadius: 16,
+    padding: '14px 20px',
     fontWeight: 600,
   },
 
   loader: {
-    ...surface,
-    borderRadius: 12,
+    ...tintedTile,
     padding: '40px 20px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     gap: 14,
-    color: 'var(--muted)',
-    boxShadow: 'var(--shadow-sm)',
+    color: 'var(--content-secondary)',
+    fontSize: 15,
   },
   spinner: {
     width: 30,
     height: 30,
     borderRadius: '50%',
-    border: '3px solid var(--border)',
-    borderTopColor: 'var(--primary)',
+    border: '3px solid var(--border-neutral)',
+    borderTopColor: 'var(--interactive-primary)',
     animation: 'spin 0.8s linear infinite',
   },
-  empty: { ...surface, borderRadius: 12, padding: '40px 20px', textAlign: 'center', color: 'var(--muted)', boxShadow: 'var(--shadow-sm)' },
+  empty: { ...tintedTile, padding: '40px 20px', textAlign: 'center', color: 'var(--content-secondary)', fontSize: 15 },
 
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 },
   card: {
-    ...surface,
-    borderRadius: 12,
-    padding: '16px 22px',
+    ...whiteCard,
+    padding: '18px 24px',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: 'var(--shadow-sm)',
   },
-  cardMobile: { padding: '14px 16px' },
+  cardMobile: { padding: '16px 16px' },
   cardMain: { display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' },
-  timeBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 76 },
+  timeBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 80 },
   time: {
-    fontSize: 26,
-    fontWeight: 800,
+    fontSize: 28,
+    fontWeight: 600,
     lineHeight: 1.1,
-    color: 'var(--text)',
+    color: '#0E0F0C',
     fontVariantNumeric: 'tabular-nums',
-    letterSpacing: -0.4,
+    letterSpacing: '-0.03em',
   },
   kindLabel: {
-    color: 'var(--faint)',
+    color: 'var(--content-tertiary)',
     fontSize: 11,
-    fontWeight: 700,
+    fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
     marginTop: 2,
   },
-  vSep: { width: 1, alignSelf: 'stretch', background: 'var(--border)', flexShrink: 0 },
+  vSep: { width: 1, alignSelf: 'stretch', background: 'var(--border-neutral)', flexShrink: 0 },
   cardInfo: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 },
-  flightNumber: { fontSize: 18, fontWeight: 800, letterSpacing: 0.2, color: 'var(--text)' },
-  route: { color: 'var(--muted)', fontSize: 14, fontWeight: 500 },
-  statusBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0 },
+  flightNumber: { fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: '#0E0F0C' },
+  route: { color: 'var(--content-secondary)', fontSize: 14.5, fontWeight: 500 },
+  statusBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 },
   statusBlockMobile: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     marginTop: 8,
   },
-  statusText: { display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 600, color: 'var(--text)' },
-  dot: { width: 8, height: 8, borderRadius: '50%' },
+  statusPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '6px 14px',
+    borderRadius: 9999,
+    fontSize: 14,
+    fontWeight: 600,
+    lineHeight: 1.25,
+    whiteSpace: 'nowrap',
+  },
+  delayPill: { background: 'var(--warning-bg)', color: 'var(--warning-content)' },
   checkin: {
     width: '100%',
     flexShrink: 0,
@@ -505,72 +522,74 @@ const s: Record<string, CSSProperties> = {
     columnGap: 12,
     rowGap: 5,
     flexWrap: 'wrap',
-    marginTop: 8,
+    marginTop: 10,
     paddingTop: 12,
-    borderTop: '1px solid var(--border)',
+    borderTop: '1px solid var(--border-neutral)',
   },
   checkinLeft: { display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flexWrap: 'wrap' },
   checkinDot: { width: 7, height: 7, borderRadius: '50%', flexShrink: 0 },
-  checkinTitle: { fontSize: 13.5, fontWeight: 700, color: 'var(--text)', letterSpacing: -0.1 },
-  checkinSep: { width: 1, height: 12, background: 'var(--border-strong)', flexShrink: 0 },
-  checkinCaption: { fontSize: 13, fontWeight: 500, color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' },
+  checkinTitle: { fontSize: 13.5, fontWeight: 600, color: 'var(--content-primary)', letterSpacing: '-0.01em' },
+  checkinSep: { width: 1, height: 12, background: 'var(--border-neutral)', flexShrink: 0 },
+  checkinCaption: { fontSize: 13, fontWeight: 500, color: 'var(--content-secondary)', fontVariantNumeric: 'tabular-nums' },
   checkinCount: { display: 'flex', alignItems: 'baseline', gap: 6, flexShrink: 0 },
-  checkinCountPrefix: { fontSize: 12.5, fontWeight: 500, color: 'var(--muted)' },
+  checkinCountPrefix: { fontSize: 12.5, fontWeight: 500, color: 'var(--content-secondary)' },
   checkinCountValue: {
     fontSize: 15,
-    fontWeight: 700,
-    color: 'var(--text)',
+    fontWeight: 600,
+    color: 'var(--content-primary)',
     fontVariantNumeric: 'tabular-nums',
     letterSpacing: 0.2,
   },
-  delayText: { fontSize: 12.5, fontWeight: 700, color: 'var(--danger)' },
 
-  footer: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 20, borderTop: '1px solid var(--border)' },
+  footer: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 20, borderTop: '1px solid var(--border-neutral)' },
   footerNav: { display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center' },
-  footerLink: { color: 'var(--muted)', fontSize: 13, fontWeight: 600 },
-  footerText: { color: 'var(--faint)', fontSize: 12, textAlign: 'center', margin: 0 },
+  footerLink: { color: 'var(--content-secondary)', fontSize: 13, fontWeight: 500 },
+  footerText: { color: 'var(--content-tertiary)', fontSize: 12, textAlign: 'center', margin: 0 },
 
-  servicesWrap: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 },
-  servicesTitle: { margin: '4px 0', fontSize: 18, fontWeight: 800, letterSpacing: -0.3, color: 'var(--text)' },
+  servicesWrap: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 },
+  servicesTitle: {
+    margin: '4px 0',
+    fontSize: 22,
+    fontWeight: 600,
+    letterSpacing: '-0.03em',
+    lineHeight: 1.1,
+    color: 'var(--content-primary)',
+  },
   siteBanner: {
     display: 'flex',
     alignItems: 'center',
     gap: 14,
-    borderRadius: 12,
-    padding: '16px 18px',
-    color: '#fff',
-    background: 'linear-gradient(135deg, #13233f, #0c1322)',
-    border: '1px solid var(--side-border)',
-    boxShadow: 'var(--shadow-md)',
+    borderRadius: 24,
+    padding: '18px 22px',
+    color: 'var(--brand-forest)',
+    background: 'var(--brand-green)',
   },
   siteIcon: {
     display: 'grid',
     placeItems: 'center',
-    width: 44,
-    height: 44,
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    borderRadius: 9999,
     background: '#ffffff',
     flexShrink: 0,
     overflow: 'hidden',
   },
   siteLogo: { width: 32, height: 32, objectFit: 'contain' },
   siteTexts: { display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 },
-  siteName: { fontSize: 15, fontWeight: 700 },
-  siteUrl: { fontSize: 13, color: '#8e99ad', fontWeight: 500 },
+  siteName: { fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em' },
+  siteUrl: { fontSize: 13, color: 'rgba(22, 51, 0, 0.75)', fontWeight: 500 },
 
   linksGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 },
   linkCard: {
-    ...surface,
+    ...whiteCard,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    borderRadius: 10,
-    padding: '14px 16px',
-    color: 'var(--text)',
-    boxShadow: 'var(--shadow-sm)',
+    padding: '16px 18px',
+    color: 'var(--content-primary)',
   },
   linkTexts: { display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 },
-  linkTitle: { fontSize: 14.5, fontWeight: 700 },
-  linkDesc: { fontSize: 12.5, color: 'var(--muted)', fontWeight: 500 },
+  linkTitle: { fontSize: 14.5, fontWeight: 600, letterSpacing: '-0.01em' },
+  linkDesc: { fontSize: 12.5, color: 'var(--content-secondary)', fontWeight: 500 },
 };
