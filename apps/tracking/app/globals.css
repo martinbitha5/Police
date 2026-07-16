@@ -182,3 +182,40 @@ select option { background: var(--bg-elevated); color: var(--content-primary); }
 
 /* Carte blanche cliquable : ombre légère uniquement au survol */
 .card-clickable:hover { box-shadow: var(--shadow-card); }
+
+/* Empêche toute image/logo de déborder de son conteneur */
+img { max-width: 100%; }
+
+/* Les mots longs (e-mails, URLs, PNR) se coupent au lieu de déborder */
+p, a, span, h1, h2, h3, li, summary { overflow-wrap: break-word; }
+
+/* ===== Ajustements responsives mobile (≤ 640px) — présentation seule ===== */
+@media (max-width: 640px) {
+  /* Conteneurs de page : padding réduit, largeur fluide */
+  .page-main { padding: 16px 16px 56px !important; gap: 16px !important; }
+
+  /* Cartes de contenu (légal, à propos, support, contact) */
+  .content-card { padding: 20px 16px !important; }
+
+  /* Carte de résultat de suivi */
+  .result-card { padding: 18px 16px !important; }
+
+  /* Ligne de bagage : le bouton signaler passe pleine largeur sous la ligne */
+  .bag-row .btn-secondary {
+    margin-left: 0 !important;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Actions de réclamation : boutons empilés pleine largeur */
+  .claim-actions { flex-direction: column-reverse; align-items: stretch; }
+  .claim-actions .btn-primary,
+  .claim-actions .btn-secondary { width: 100%; }
+
+  /* Fil d'Ariane : padding latéral réduit */
+  .breadcrumb { padding-left: 16px !important; padding-right: 16px !important; }
+
+  /* Pied de page : padding réduit, bannière qui se replie sans déborder */
+  .site-footer { padding: 48px 16px 32px !important; }
+  .site-footer a { flex-wrap: wrap; }
+}

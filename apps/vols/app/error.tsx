@@ -46,6 +46,6 @@ const card: React.CSSProperties = {
 };
 const title: React.CSSProperties = { margin: '0 0 8px', fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' };
 const text: React.CSSProperties = { margin: '0 0 18px', color: 'var(--content-secondary, #454745)', fontSize: 14, lineHeight: 1.5 };
-const row: React.CSSProperties = { display: 'flex', gap: 10, justifyContent: 'center' };
+const row: React.CSSProperties = { display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' };
 const btnPrimary: React.CSSProperties = { background: 'var(--interactive-accent, #9FE870)', color: 'var(--interactive-control, #163300)', border: 'none', borderRadius: 9999, padding: '12px 24px', fontWeight: 600, cursor: 'pointer' };
 const btnGhost: React.CSSProperties = { background: 'transparent', color: 'var(--interactive-primary, #163300)', borderWidth: 1, borderStyle: 'solid', borderColor: 'var(--interactive-primary, #163300)', borderRadius: 9999, padding: '12px 24px', fontWeight: 600, cursor: 'pointer' };

@@ -7,7 +7,7 @@ import { shared as s } from './theme';
 export function Breadcrumb({ current }: { current: string }) {
   const { t } = useLang();
   return (
-    <div style={s.breadcrumb}>
+    <div className="breadcrumb" style={s.breadcrumb}>
       <Link href="/" style={s.crumbLink}>
         {t.breadcrumb.home}
       </Link>

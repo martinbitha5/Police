@@ -21,7 +21,7 @@ export function ContentPage({ crumb, title, intro, sections, updatedLabel, updat
     <div style={s.shell}>
       <Header />
       <Breadcrumb current={crumb} />
-      <main style={{ ...s.main, ...s.mainText }}>
+      <main className="page-main text-main" style={{ ...s.main, ...s.mainText }}>
         <h1 style={s.contentTitle}>{title}</h1>
         <p style={s.contentIntro}>{intro}</p>
         {updatedLabel && updatedDate ? (
@@ -30,7 +30,7 @@ export function ContentPage({ crumb, title, intro, sections, updatedLabel, updat
           </p>
         ) : null}
 
-        <div style={s.contentCard}>
+        <div className="content-card" style={s.contentCard}>
           {sections.map((sec) => (
             <section key={sec.heading} style={s.section}>
               <h2 style={s.sectionHeading}>{sec.heading}</h2>

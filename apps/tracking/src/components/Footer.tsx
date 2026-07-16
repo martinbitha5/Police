@@ -22,7 +22,7 @@ export function Footer() {
   ];
 
   return (
-    <footer style={s.footer}>
+    <footer className="site-footer" style={s.footer}>
       <div style={s.footerInner}>
         <div>
           <div style={{ ...s.brand, flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>

@@ -164,7 +164,7 @@ export default function VolsPage() {
             </ul>
           )}
 
-          <AirportServices />
+          <AirportServices isMobile={isMobile} />
 
           <footer style={s.footer}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -194,12 +194,17 @@ const AIRPORT_LINKS: { href: string; title: string; desc: string }[] = [
 ];
 
 /** Liens vers le portail officiel de l'Aéroport International de Kinshasa (FIH). */
-function AirportServices() {
+function AirportServices({ isMobile }: { isMobile: boolean }) {
   return (
     <section style={s.servicesWrap}>
       <h2 style={s.servicesTitle}>Préparez votre passage à l'aéroport</h2>
 
-      <a style={s.siteBanner} href={AIRPORT_SITE} target="_blank" rel="noopener noreferrer">
+      <a
+        style={isMobile ? { ...s.siteBanner, ...s.siteBannerMobile } : s.siteBanner}
+        href={AIRPORT_SITE}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         <span style={s.siteIcon}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/fih-logo.png" alt="Logo RVA, Aéroport de Kinshasa" width={32} height={32} style={s.siteLogo} />
@@ -211,7 +216,7 @@ function AirportServices() {
         <ExternalIcon />
       </a>
 
-      <div style={s.linksGrid}>
+      <div style={isMobile ? { ...s.linksGrid, ...s.linksGridMobile } : s.linksGrid}>
         {AIRPORT_LINKS.map((l) => (
           <a
             key={l.href}
@@ -491,8 +496,8 @@ const s: Record<string, CSSProperties> = {
   },
   vSep: { width: 1, alignSelf: 'stretch', background: 'var(--border-neutral)', flexShrink: 0 },
   cardInfo: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 },
-  flightNumber: { fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: '#0E0F0C' },
-  route: { color: 'var(--content-secondary)', fontSize: 14.5, fontWeight: 500 },
+  flightNumber: { fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: '#0E0F0C', overflowWrap: 'break-word' },
+  route: { color: 'var(--content-secondary)', fontSize: 14.5, fontWeight: 500, overflowWrap: 'break-word' },
   statusBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 },
   statusBlockMobile: {
     width: '100%',
@@ -564,6 +569,7 @@ const s: Record<string, CSSProperties> = {
     color: 'var(--brand-forest)',
     background: 'var(--brand-green)',
   },
+  siteBannerMobile: { padding: '16px 16px', gap: 12 },
   siteIcon: {
     display: 'grid',
     placeItems: 'center',
@@ -576,10 +582,11 @@ const s: Record<string, CSSProperties> = {
   },
   siteLogo: { width: 32, height: 32, objectFit: 'contain' },
   siteTexts: { display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 },
-  siteName: { fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em' },
-  siteUrl: { fontSize: 13, color: 'rgba(22, 51, 0, 0.75)', fontWeight: 500 },
+  siteName: { fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', overflowWrap: 'break-word' },
+  siteUrl: { fontSize: 13, color: 'rgba(22, 51, 0, 0.75)', fontWeight: 500, overflowWrap: 'break-word' },
 
   linksGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 },
+  linksGridMobile: { gridTemplateColumns: '1fr' },
   linkCard: {
     ...whiteCard,
     display: 'flex',

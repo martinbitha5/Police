@@ -23,7 +23,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           <p style={{ color: '#454745', fontSize: 14, lineHeight: 1.5, margin: '0 0 18px' }}>
             Rechargez la page pour réessayer.
           </p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => reset()} style={{ background: '#9FE870', color: '#163300', border: 'none', borderRadius: 9999, padding: '12px 24px', fontWeight: 600, cursor: 'pointer' }}>
               Réessayer
             </button>

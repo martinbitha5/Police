@@ -404,6 +404,7 @@ function DisputePanel({
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }) {
+  const isMobile = useIsMobile();
   const fromPassenger = !!dispute?.from_passenger;
   const [reason, setReason] = useState(dispute?.reason ?? '');
   const [notes, setNotes] = useState(dispute?.notes ?? '');
@@ -465,8 +466,8 @@ function DisputePanel({
   }
 
   return (
-    <div style={s.overlay} onClick={onClose}>
-      <div style={s.panel} onClick={(e) => e.stopPropagation()}>
+    <div style={isMobile ? { ...s.overlay, ...s.overlayMobile } : s.overlay} onClick={onClose}>
+      <div style={isMobile ? { ...s.panel, ...s.panelMobile } : s.panel} onClick={(e) => e.stopPropagation()}>
         <div style={s.panelHead}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <IconBag size={20} />
@@ -486,7 +487,7 @@ function DisputePanel({
           </button>
         </div>
 
-        <div style={s.detailGrid}>
+        <div style={isMobile ? { ...s.detailGrid, ...s.detailGridMobile } : s.detailGrid}>
           <Detail icon={<IconUser size={15} />} label="Passager" value={row.passenger?.full_name ?? 'N/A'} />
           <Detail label="PNR" value={row.passenger?.pnr ?? 'N/A'} mono />
           <Detail label="Vol" value={row.flight?.flight_number ?? 'N/A'} />
@@ -699,8 +700,10 @@ const s: Record<string, CSSProperties> = {
     padding: 24,
     zIndex: 50,
   },
+  overlayMobile: { padding: 12, alignItems: 'end' },
   panel: {
     width: 'min(680px, 100%)',
+    maxWidth: '100%',
     maxHeight: '90vh',
     overflowY: 'auto',
     background: 'var(--bg-elevated)',
@@ -711,6 +714,7 @@ const s: Record<string, CSSProperties> = {
     flexDirection: 'column',
     gap: 18,
   },
+  panelMobile: { padding: 18, borderRadius: 20, gap: 14 },
   panelHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   iconBtn: {
     background: 'transparent',
@@ -730,5 +734,6 @@ const s: Record<string, CSSProperties> = {
     borderRadius: 16,
     border: 'none',
   },
+  detailGridMobile: { gridTemplateColumns: '1fr', gap: 12, padding: 16 },
   formCol: { display: 'flex', flexDirection: 'column', gap: 14 },
 };

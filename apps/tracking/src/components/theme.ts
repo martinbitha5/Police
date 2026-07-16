@@ -97,11 +97,12 @@ export const shared: Record<string, CSSProperties> = {
   // Pages de contenu (À propos, légal)
   contentTitle: {
     margin: '20px 0 8px',
-    fontSize: 36,
+    fontSize: 'clamp(1.75rem, 6vw, 2.25rem)',
     fontWeight: 600,
     letterSpacing: 'var(--ls-heading)',
     lineHeight: 'var(--lh-title)',
     color: 'var(--content-primary)',
+    overflowWrap: 'break-word',
   },
   contentIntro: {
     margin: '0 0 8px',

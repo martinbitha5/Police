@@ -98,7 +98,7 @@ export default function TrackingPage() {
           <p style={s.subtitle}>{t.home.hint}</p>
         </div>
 
-        <form onSubmit={onSubmit} style={s.panel}>
+        <form onSubmit={onSubmit} style={isMobile ? { ...s.panel, padding: 18 } : s.panel}>
           <div style={isMobile ? { ...s.grid, gridTemplateColumns: '1fr' } : s.grid}>
             <Field label={t.home.fieldPnr} required>
               <input
@@ -136,7 +136,12 @@ export default function TrackingPage() {
             <p style={s.helper}>
               <span style={{ color: 'var(--negative)' }}>*</span> {t.home.helperRequired}
             </p>
-            <button className="btn-primary" style={s.cta} type="submit" disabled={busy}>
+            <button
+              className="btn-primary"
+              style={isMobile ? { ...s.cta, width: '100%', minWidth: 0 } : s.cta}
+              type="submit"
+              disabled={busy}
+            >
               {busy ? t.home.submitting : t.home.submit}
             </button>
           </div>
@@ -211,7 +216,7 @@ function PassengerCard({ pax, tagFilter }: { pax: TrackedPassenger; tagFilter?: 
   const visibleBags = tagFilter ? pax.bags.filter((b) => b.tagNumber === tagFilter) : pax.bags;
   const allLoaded = pax.declaredBaggageCount > 0 && pax.confirmedBaggageCount >= pax.declaredBaggageCount;
   return (
-    <section style={s.resultCard}>
+    <section className="result-card" style={s.resultCard}>
       <div style={s.resultHead}>
         <div>
           <div style={s.paxName}>{pax.passengerName}</div>
@@ -313,7 +318,7 @@ function BagRow({
   const statusPill = STATUS_PILL[bag.status] ?? STATUS_PILL.pending;
   const claimPill = claimStatus ? CLAIM_PILL[claimStatus] : null;
   return (
-    <li style={s.bagRow}>
+    <li className="bag-row" style={s.bagRow}>
       <span style={s.tag}><IconBag size={15} /> {bag.tagNumber}</span>
       <span style={{ ...s.pill, background: statusPill.bg, color: statusPill.fg }}>{statusLabel}</span>
       <StepDots status={bag.status} />
@@ -424,7 +429,7 @@ function ClaimForm({
 
       {err ? <div style={s.claimErr}>{err}</div> : null}
 
-      <div style={s.claimActions}>
+      <div className="claim-actions" style={s.claimActions}>
         <button type="button" className="btn-secondary" style={s.claimCancel} onClick={onDone} disabled={busy}>
           {t.claim.cancel}
         </button>

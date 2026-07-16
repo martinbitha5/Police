@@ -14,11 +14,11 @@ export default function SupportPage() {
     <div style={shared.shell}>
       <Header />
       <Breadcrumb current={t.breadcrumb.support} />
-      <main style={{ ...shared.main, ...shared.mainText }}>
+      <main className="page-main text-main" style={{ ...shared.main, ...shared.mainText }}>
         <h1 style={shared.contentTitle}>{t.support.title}</h1>
         <p style={shared.contentIntro}>{t.support.intro}</p>
 
-        <section style={s.contactCard}>
+        <section className="content-card" style={s.contactCard}>
           <h2 style={shared.sectionHeading}>{t.support.contactTitle}</h2>
           <p style={shared.paragraph}>{t.support.contactText}</p>
           <ul style={s.contactList}>

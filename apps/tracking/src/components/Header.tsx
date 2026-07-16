@@ -24,12 +24,12 @@ export function Header() {
     return (
       <>
         <header style={m.header}>
-          <Link href="/" style={s.brand} onClick={() => setOpen(false)}>
+          <Link href="/" style={{ ...s.brand, minWidth: 0, flexShrink: 1 }} onClick={() => setOpen(false)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/air.png" alt="Air Congo" height={30} style={{ objectFit: 'contain', flexShrink: 0 }} />
-            <span style={s.brandText}>{t.brand}</span>
+            <span style={{ ...s.brandText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.brand}</span>
           </Link>
-          <div style={m.headerRight}>
+          <div style={{ ...m.headerRight, flexShrink: 0 }}>
             <span style={s.langWrap}>
               <span style={s.globe}><IconGlobe size={14} /></span>
               <button type="button" onClick={() => setLang('fr')} style={{ ...s.langBtn, ...(lang === 'fr' ? s.langActive : {}) }}>FR</button>

@@ -30,7 +30,7 @@ export function LegalPage({ title, intro, updated, sections }: LegalPageProps) {
         <p style={s.intro}>{intro}</p>
         {updated ? <p style={s.updated}>Dernière mise à jour : {updated}</p> : null}
 
-        <div style={s.card}>
+        <div style={isMobile ? { ...s.card, ...s.cardMobile } : s.card}>
           {sections.map((sec) => (
             <section key={sec.heading} style={s.section}>
               <h2 style={s.heading}>{sec.heading}</h2>
@@ -79,9 +79,10 @@ const s: Record<string, CSSProperties> = {
     flexDirection: 'column',
     gap: 24,
   },
+  cardMobile: { padding: 18, gap: 20 },
   section: { display: 'flex', flexDirection: 'column', gap: 8 },
   heading: { margin: 0, fontSize: 18, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--content-primary)' },
-  paragraph: { margin: 0, color: 'var(--content-secondary)', fontSize: 15, lineHeight: 1.6 },
+  paragraph: { margin: 0, color: 'var(--content-secondary)', fontSize: 15, lineHeight: 1.6, overflowWrap: 'break-word' },
   footerNav: { display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center', marginTop: 12 },
   footerLink: { color: 'var(--content-secondary)', fontSize: 13, fontWeight: 500 },
   copyright: { color: 'var(--content-tertiary)', fontSize: 12, textAlign: 'center', margin: '4px 0 0' },
