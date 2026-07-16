@@ -1,7 +1,7 @@
 import { LegalPage } from '@/components/LegalPage';
 
 export const metadata = {
-  title: 'Politique de confidentialité — Vols du jour',
+  title: 'Politique de confidentialité · Vols du jour',
 };
 
 export default function ConfidentialitePage() {

@@ -1,7 +1,7 @@
 import { LegalPage } from '@/components/LegalPage';
 
 export const metadata = {
-  title: 'Politique cookies — Vols du jour',
+  title: 'Politique cookies · Vols du jour',
 };
 
 export default function CookiesPage() {

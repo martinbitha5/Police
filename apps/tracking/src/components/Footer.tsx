@@ -87,7 +87,7 @@ export function Footer() {
         <a className="footer-link" style={f.fihBanner} href="https://fih-rva.com" target="_blank" rel="noopener noreferrer">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/fih-logo.png" alt="RVA" width={22} height={22} style={{ objectFit: 'contain', background: '#fff', borderRadius: 6, padding: 2 }} />
-          <span>Site officiel de l'Aéroport International de Kinshasa — <strong>fih-rva.com</strong></span>
+          <span>Site officiel de l'Aéroport International de Kinshasa : <strong>fih-rva.com</strong></span>
           <span style={{ opacity: 0.7 }}>↗</span>
         </a>
         <span style={{ marginTop: 10, display: 'block' }}>© {year} {t.brand}. {t.footer.rights}</span>

@@ -4,7 +4,7 @@ import type { CSSProperties, ReactNode } from 'react';
 const HUB = process.env.NEXT_PUBLIC_HUB ?? 'FIH';
 
 export const metadata = {
-  title: 'Litige Bagage — Supervision',
+  title: 'Litige Bagage · Supervision',
   description: 'Déclarez, suivez et résolvez vos litiges bagage.',
 };
 
@@ -22,7 +22,7 @@ const CAPABILITIES: { icon: ReactNode; title: string; desc: string }[] = [
   {
     icon: <IconSearch />,
     title: 'Enquêtez et résolvez',
-    desc: 'Qualifiez chaque dossier : motif, notes internes et historique horodaté. Ouvert, en cours ou résolu — tout est tracé.',
+    desc: 'Qualifiez chaque dossier : motif, notes internes et historique horodaté. Ouvert, en cours ou résolu, tout est tracé.',
   },
   {
     icon: <IconChart />,
@@ -60,7 +60,7 @@ export default function Landing() {
       <section className="lp-hero">
         <div className="lp-hero-inner">
           <div>
-            <div className="lp-kicker">Espace superviseur — litiges bagage</div>
+            <div className="lp-kicker">Espace superviseur · litiges bagage</div>
             <h1 className="lp-title">Chaque bagage suivi. Chaque litige résolu.</h1>
             <p className="lp-tagline">
               Le portail pour déclarer, suivre et résoudre vos litiges et réclamations bagage
@@ -100,7 +100,7 @@ export default function Landing() {
         <div className="lp-band-inner">
           <h2 className="lp-band-title">Aucun bagage ne reste sans suite.</h2>
           <p className="lp-band-text">
-            Du signalement à la résolution, chaque litige est tracé, documenté et clôturé —
+            Du signalement à la résolution, chaque litige est tracé, documenté et clôturé,
             pour le passager comme pour l’exploitation.
           </p>
           <Link href="/login" className="lp-band-btn">Ouvrir un dossier</Link>

@@ -1,7 +1,7 @@
 import { LegalPage } from '@/components/LegalPage';
 
 export const metadata = {
-  title: 'Conditions d’utilisation — Vols du jour',
+  title: 'Conditions d’utilisation · Vols du jour',
 };
 
 export default function ConditionsPage() {

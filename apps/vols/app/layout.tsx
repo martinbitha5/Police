@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'sw
 const archivo = Archivo_Black({ weight: '400', subsets: ['latin'], variable: '--font-archivo', display: 'swap' });
 
 export const metadata = {
-  title: 'Vols du jour — Aéroport',
+  title: 'Vols du jour · Aéroport',
   description: 'Consultez les vols du jour et leur statut en temps réel : programmé, embarquement, fermé ou annulé.',
 };
 

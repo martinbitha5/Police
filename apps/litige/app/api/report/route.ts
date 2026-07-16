@@ -163,18 +163,18 @@ export async function GET(request: NextRequest) {
   } else {
     disputes.forEach((d, i) => {
       const flight = d.flight ?? (d.flight_id ? flightById.get(d.flight_id) : null) ?? null;
-      const route = flight ? `${flight.flight_number} · ${formatRoute(flight)}` : '—';
+      const route = flight ? `${flight.flight_number} · ${formatRoute(flight)}` : 'N/A';
       dataRow(
         [
           new Date(d.created_at).toLocaleString('fr-FR'),
-          d.tag_number ?? '—',
-          d.passenger?.full_name ?? '—',
-          d.passenger?.pnr ?? '—',
+          d.tag_number ?? 'N/A',
+          d.passenger?.full_name ?? 'N/A',
+          d.passenger?.pnr ?? 'N/A',
           route,
           DISPUTE_STATUS_LABEL[d.status],
-          d.reason ?? '—',
+          d.reason ?? 'N/A',
           d.from_passenger ? 'Passager' : 'Superviseur',
-          d.resolved_at ? new Date(d.resolved_at).toLocaleString('fr-FR') : '—',
+          d.resolved_at ? new Date(d.resolved_at).toLocaleString('fr-FR') : 'N/A',
         ],
         { danger: d.status !== 'resolved', zebra: i % 2 === 1 && d.status === 'resolved' },
       );

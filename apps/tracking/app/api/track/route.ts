@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
       return [ordered[0]!.origin, ...ordered.map((l) => l.destination)].join(' → ');
     }
     const flight = flightById.get(pax.flight_id);
-    return flight ? formatRoute(flight) : '—';
+    return flight ? formatRoute(flight) : 'N/A';
   }
 
   // ── Regroupe les bagages par passager ───────────────────────────────────
@@ -206,9 +206,9 @@ export async function POST(request: NextRequest) {
     passengers.push({
       passengerName: pax.full_name,
       pnr: pax.pnr,
-      flightNumber: flight?.flight_number ?? '—',
+      flightNumber: flight?.flight_number ?? 'N/A',
       route: routeFor(pax),
-      flightDate: flight?.date ?? '—',
+      flightDate: flight?.date ?? 'N/A',
       flightStatus: (flight?.status ?? 'scheduled') as FlightStatus,
       departureTime: flight?.departure_time ?? null,
       declaredBaggageCount: pax.declared_baggage_count,

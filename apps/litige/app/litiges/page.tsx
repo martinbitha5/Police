@@ -227,10 +227,10 @@ function LitigeView() {
                     )}
                   </div>
                   <div style={s.bagCardRoute}>
-                    {r.flight?.flight_number ?? '—'} · {r.flight ? formatRoute(r.flight) : '—'}
+                    {r.flight?.flight_number ?? 'N/A'} · {r.flight ? formatRoute(r.flight) : 'N/A'}
                   </div>
                   <div style={s.bagCardPax}>
-                    {r.passenger?.full_name ?? '—'} · PNR {r.passenger?.pnr ?? '—'} · Série {r.serial_number ?? '—'}
+                    {r.passenger?.full_name ?? 'N/A'} · PNR {r.passenger?.pnr ?? 'N/A'} · Série {r.serial_number ?? 'N/A'}
                   </div>
                   {d ? (
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
@@ -282,7 +282,7 @@ function LitigeView() {
                     return (
                       <tr key={r.id} style={s.tr} onClick={() => setSelected(r)}>
                         <td style={s.tdMono}>{r.tag_number}</td>
-                        <td style={s.tdMono}>{r.serial_number ?? '—'}</td>
+                        <td style={s.tdMono}>{r.serial_number ?? 'N/A'}</td>
                         <td style={s.td}>
                           {r.is_confirmed ? (
                             <span style={{ ...badge, ...badgeTone.positive }}>Chargé</span>
@@ -290,10 +290,10 @@ function LitigeView() {
                             <span style={{ ...badge, ...badgeTone.neutral }}>En attente</span>
                           )}
                         </td>
-                        <td style={s.td}>{r.flight?.flight_number ?? '—'}</td>
-                        <td style={s.td}>{r.flight ? formatRoute(r.flight) : '—'}</td>
-                        <td style={s.tdMono}>{r.passenger?.pnr ?? '—'}</td>
-                        <td style={s.td}>{r.passenger?.full_name ?? '—'}</td>
+                        <td style={s.td}>{r.flight?.flight_number ?? 'N/A'}</td>
+                        <td style={s.td}>{r.flight ? formatRoute(r.flight) : 'N/A'}</td>
+                        <td style={s.tdMono}>{r.passenger?.pnr ?? 'N/A'}</td>
+                        <td style={s.td}>{r.passenger?.full_name ?? 'N/A'}</td>
                         <td style={s.td}>
                           {d ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -305,7 +305,7 @@ function LitigeView() {
                               ) : null}
                             </span>
                           ) : (
-                            <span style={{ color: 'var(--content-secondary)' }}>—</span>
+                            <span style={{ color: 'var(--content-secondary)' }}>Aucun</span>
                           )}
                         </td>
                       </tr>
@@ -339,7 +339,7 @@ function LitigeView() {
 const AIRPORT_LINKS = [
   { href: 'https://fih-rva.com/guide/securite-bagages', label: 'Sécurité bagages', desc: 'Règles et objets interdits' },
   { href: 'https://fih-rva.com/guide', label: 'Guide voyageur', desc: 'Visa, vaccins, douanes' },
-  { href: 'https://fih-rva.com/contact', label: 'Contact aéroport', desc: 'RVA — Régie des Voies Aériennes' },
+  { href: 'https://fih-rva.com/contact', label: 'Contact aéroport', desc: 'RVA · Régie des Voies Aériennes' },
 ];
 
 function AirportLinks() {
@@ -349,7 +349,7 @@ function AirportLinks() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <span style={al.logoWrap}><img src="/fih-logo.png" alt="RVA" width={28} height={28} style={{ objectFit: 'contain' }} /></span>
         <span style={al.mainTexts}>
-          <span style={al.mainName}>Site officiel — Aéroport International de Kinshasa (FIH)</span>
+          <span style={al.mainName}>Site officiel · Aéroport International de Kinshasa (FIH)</span>
           <span style={al.mainUrl}>fih-rva.com · Régie des Voies Aériennes</span>
         </span>
         <ExternalIcon />
@@ -426,7 +426,7 @@ function DisputePanel({
       if (fromPassenger) {
         if (supervisorNotes.trim()) {
           const stamp = new Date().toLocaleString('fr-FR');
-          const block = `[Note superviseur — ${stamp}]\n${supervisorNotes.trim()}`;
+          const block = `[Note superviseur · ${stamp}]\n${supervisorNotes.trim()}`;
           updatePayload.notes = dispute.notes ? `${dispute.notes}\n\n${block}` : block;
         }
       } else {
@@ -487,23 +487,23 @@ function DisputePanel({
         </div>
 
         <div style={s.detailGrid}>
-          <Detail icon={<IconUser size={15} />} label="Passager" value={row.passenger?.full_name ?? '—'} />
-          <Detail label="PNR" value={row.passenger?.pnr ?? '—'} mono />
-          <Detail label="Vol" value={row.flight?.flight_number ?? '—'} />
-          <Detail label="Route" value={row.flight ? formatRoute(row.flight) : '—'} />
-          <Detail label="Date vol" value={row.flight?.date ?? '—'} />
-          <Detail label="Série" value={row.serial_number ?? '—'} mono />
+          <Detail icon={<IconUser size={15} />} label="Passager" value={row.passenger?.full_name ?? 'N/A'} />
+          <Detail label="PNR" value={row.passenger?.pnr ?? 'N/A'} mono />
+          <Detail label="Vol" value={row.flight?.flight_number ?? 'N/A'} />
+          <Detail label="Route" value={row.flight ? formatRoute(row.flight) : 'N/A'} />
+          <Detail label="Date vol" value={row.flight?.date ?? 'N/A'} />
+          <Detail label="Série" value={row.serial_number ?? 'N/A'} mono />
           <Detail
             label="Chargement"
             value={row.is_confirmed ? 'Chargé (étiquette scannée)' : 'En attente'}
           />
           <Detail
             label="Compartiment soute"
-            value={row.soute === 'avant' ? 'Soute avant' : row.soute === 'arriere' ? 'Soute arrière' : '—'}
+            value={row.soute === 'avant' ? 'Soute avant' : row.soute === 'arriere' ? 'Soute arrière' : 'N/A'}
           />
           <Detail
             label="Bagages déclarés"
-            value={row.passenger ? String(row.passenger.declared_baggage_count) : '—'}
+            value={row.passenger ? String(row.passenger.declared_baggage_count) : 'N/A'}
           />
         </div>
 
@@ -523,13 +523,13 @@ function DisputePanel({
               <div>
                 <label style={label}>Motif (signalé par le passager)</label>
                 <div style={{ ...input, marginTop: 6, background: 'var(--surface-alt)', color: 'var(--muted)', cursor: 'default', userSelect: 'text' }}>
-                  {reason || '—'}
+                  {reason || 'N/A'}
                 </div>
               </div>
               <div>
                 <label style={label}>Signalement passager</label>
                 <pre style={{ ...input, marginTop: 6, minHeight: 90, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', fontSize: 13, background: 'var(--surface-alt)', color: 'var(--muted)', cursor: 'default', overflowX: 'auto', margin: 0 }}>
-                  {notes || '—'}
+                  {notes || 'N/A'}
                 </pre>
               </div>
               <div>

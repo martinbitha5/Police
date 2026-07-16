@@ -23,7 +23,7 @@ function todayISO(): string {
 }
 
 function timeOf(ts: string | null): string {
-  if (!ts) return '—';
+  if (!ts) return 'N/A';
   return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
@@ -202,7 +202,7 @@ function AirportServices() {
       <a style={s.siteBanner} href={AIRPORT_SITE} target="_blank" rel="noopener noreferrer">
         <span style={s.siteIcon}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/fih-logo.png" alt="Logo RVA — Aéroport de Kinshasa" width={32} height={32} style={s.siteLogo} />
+          <img src="/fih-logo.png" alt="Logo RVA, Aéroport de Kinshasa" width={32} height={32} style={s.siteLogo} />
         </span>
         <span style={s.siteTexts}>
           <span style={s.siteName}>Consultez le site officiel de l'Aéroport International de Kinshasa (FIH)</span>

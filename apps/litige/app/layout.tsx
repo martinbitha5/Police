@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-int
 const archivo = Archivo_Black({ weight: '400', subsets: ['latin'], display: 'swap', variable: '--font-archivo' });
 
 export const metadata = {
-  title: 'Litige Bagage — Superviseur',
+  title: 'Litige Bagage · Superviseur',
   description: 'Suivi et résolution des litiges bagage',
 };
 

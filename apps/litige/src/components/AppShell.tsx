@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div style={m.drawerUser}>
                 <div style={m.drawerAvatar}>{(profile?.full_name ?? '?').charAt(0).toUpperCase()}</div>
                 <div>
-                  <div style={m.drawerName}>{profile?.full_name ?? '—'}</div>
+                  <div style={m.drawerName}>{profile?.full_name ?? 'N/A'}</div>
                   <div style={m.drawerRole}>{profile?.role ?? ''}</div>
                 </div>
               </div>
@@ -129,7 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div style={d.userRow}>
               <div style={d.avatar}>{(profile?.full_name ?? '?').charAt(0).toUpperCase()}</div>
               <div style={{ overflow: 'hidden' }}>
-                <div style={d.userName}>{profile?.full_name ?? '—'}</div>
+                <div style={d.userName}>{profile?.full_name ?? 'N/A'}</div>
                 <div style={d.userRole}>{profile?.role ?? ''}</div>
               </div>
             </div>

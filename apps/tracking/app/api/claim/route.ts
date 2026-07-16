@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   // Bloc de réclamation horodaté, ajouté aux notes du dossier.
   const stamp = new Date().toLocaleString('fr-FR');
   const contactLine = contact ? `Contact : ${contact}\n` : '';
-  const claimBlock = `[Réclamation passager — ${stamp}]\n${contactLine}Type : ${categoryLabel}\n${message}`;
+  const claimBlock = `[Réclamation passager du ${stamp}]\n${contactLine}Type : ${categoryLabel}\n${message}`;
 
   // Un litige existe déjà sur ce bagage ? On le rouvre et on y ajoute la réclamation.
   const { data: existing, error: existErr } = await supabase

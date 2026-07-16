@@ -221,12 +221,12 @@ export const translations: Record<Lang, Dictionary> = {
     support: {
       title: 'Support',
       intro:
-        'Posez votre question, obtenez une réponse claire. Consultez la FAQ ci-dessous ou contactez-nous directement — sans file d’attente.',
+        'Posez votre question, obtenez une réponse claire. Consultez la FAQ ci-dessous ou contactez-nous directement, sans file d’attente.',
       contactTitle: 'Contactez-nous',
       contactText: 'Notre équipe vous répond tous les jours, du lundi au dimanche.',
       email: 'support@police-tracking.cd',
       phone: '+243 000 000 000',
-      hours: 'Tous les jours, 06h00 – 22h00',
+      hours: 'Tous les jours, de 06h00 à 22h00',
       faqTitle: 'Questions fréquentes',
       faq: [
         {
@@ -243,7 +243,7 @@ export const translations: Record<Lang, Dictionary> = {
         },
         {
           q: 'Que signifie « Enregistré » ?',
-          a: 'L’étiquette physique de votre bagage a été scannée et validée à la zone de tri. Le bagage est contrôlé et confirmé — il va être chargé en soute.',
+          a: 'L’étiquette physique de votre bagage a été scannée et validée à la zone de tri. Le bagage est contrôlé et confirmé : il va être chargé en soute.',
         },
         {
           q: 'Que signifie « Chargé en soute » ?',
@@ -280,7 +280,7 @@ export const translations: Record<Lang, Dictionary> = {
       ],
     },
     footer: {
-      tagline: 'Suivez votre bagage à chaque instant — le service officiel de l’aéroport.',
+      tagline: 'Suivez votre bagage à chaque instant, le service officiel de l’aéroport.',
       navTitle: 'Navigation',
       legalTitle: 'Légal',
       contactTitle: 'Contact',
@@ -458,7 +458,7 @@ export const translations: Record<Lang, Dictionary> = {
     },
     help: {
       title: 'Need help?',
-      text: 'Ask your question, get a clear answer. Our team replies every day — no queues.',
+      text: 'Ask your question, get a clear answer. Our team replies every day, no queues.',
       contact: 'Contact support',
       faq: 'View FAQ',
     },
@@ -493,12 +493,12 @@ export const translations: Record<Lang, Dictionary> = {
     support: {
       title: 'Support',
       intro:
-        'Ask your question, get a clear answer. Check the FAQ below or contact us directly — no queues.',
+        'Ask your question, get a clear answer. Check the FAQ below or contact us directly, no queues.',
       contactTitle: 'Contact us',
       contactText: 'Our team replies every day, Monday to Sunday.',
       email: 'support@police-tracking.cd',
       phone: '+243 000 000 000',
-      hours: 'Every day, 6:00 AM – 10:00 PM',
+      hours: 'Every day, 6:00 AM to 10:00 PM',
       faqTitle: 'Frequently asked questions',
       faq: [
         {
@@ -534,7 +534,7 @@ export const translations: Record<Lang, Dictionary> = {
           a: 'A supervisor immediately receives an alert with your report and processes the claim from their dashboard. The status changes from "Issue reported" to "Being processed", then to "Claim resolved" once handled. You can recheck the tracking at any time to see progress.',
         },
         {
-          q: 'My bag is damaged on arrival — what should I do?',
+          q: 'My bag is damaged on arrival, what should I do?',
           a: 'Before leaving the airport, submit a claim using the report form (category "Damaged baggage"). Provide a precise description and, if possible, your tag number. Our team will open a case and contact you.',
         },
         {
@@ -552,7 +552,7 @@ export const translations: Record<Lang, Dictionary> = {
       ],
     },
     footer: {
-      tagline: 'Track your baggage, every step of the way — the airport’s official service.',
+      tagline: 'Track your baggage, every step of the way, the airport’s official service.',
       navTitle: 'Navigation',
       legalTitle: 'Legal',
       contactTitle: 'Contact',
