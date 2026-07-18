@@ -28,7 +28,35 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** Compte les passagers + bagages + embarqués d'un vol en une passe (4 requêtes head/count). */
+/** Ligne renvoyée par la RPC flight_stats_for_date. */
+interface StatsRow {
+  flight_id: string;
+  pax: number;
+  bag_total: number;
+  bag_ok: number;
+  boarded: number;
+}
+
+/**
+ * Stats de TOUS les vols du jour en UNE seule requête (RPC agrégée), au lieu de
+ * 4 requêtes count par vol. Clé de la scalabilité multi-agents.
+ */
+async function fetchAllStats(date: string): Promise<Record<string, FlightStats>> {
+  const { data, error } = await supabase.rpc('flight_stats_for_date', { d: date });
+  if (error || !data) return {};
+  const out: Record<string, FlightStats> = {};
+  for (const r of data as StatsRow[]) {
+    out[r.flight_id] = {
+      pax: Number(r.pax) || 0,
+      bagTotal: Number(r.bag_total) || 0,
+      bagOk: Number(r.bag_ok) || 0,
+      boarded: Number(r.boarded) || 0,
+    };
+  }
+  return out;
+}
+
+/** Stats d'un seul vol (rafraîchissement ciblé après un scan). */
 async function fetchStats(flightId: string): Promise<FlightStats> {
   const [{ count: p }, { count: bt }, { count: bo }, { count: brd }] = await Promise.all([
     supabase.from('passengers').select('id', { count: 'exact', head: true }).eq('flight_id', flightId),
@@ -39,12 +67,21 @@ async function fetchStats(flightId: string): Promise<FlightStats> {
   return { pax: p ?? 0, bagTotal: bt ?? 0, bagOk: bo ?? 0, boarded: brd ?? 0 };
 }
 
+/** Événement realtime minimal (postgres_changes). */
+interface ChangePayload {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  new: Record<string, unknown> | null;
+  old: Record<string, unknown> | null;
+}
+
+const clamp0 = (n: number) => (n < 0 ? 0 : n);
+
 export function FlightsProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [stats, setStats] = useState<Record<string, FlightStats>>({});
   const [loading, setLoading] = useState(true);
-  // Identifiants des vols connus, pour recharger les stats d'un seul vol depuis le realtime.
+  // Identifiants des vols connus, pour ne réagir qu'aux événements pertinents.
   const flightIds = useRef<Set<string>>(new Set());
 
   const refreshStats = useCallback(async (id: string) => {
@@ -63,9 +100,8 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
     setFlights(list);
     flightIds.current = new Set(list.map((f) => f.id));
     setLoading(false);
-    // Précharge toutes les stats en parallèle pour un affichage instantané.
-    const entries = await Promise.all(list.map(async (f) => [f.id, await fetchStats(f.id)] as const));
-    setStats(Object.fromEntries(entries));
+    // Toutes les stats du jour en UNE requête (au lieu de 4 × nombre de vols).
+    setStats(await fetchAllStats(today()));
   }, [session]);
 
   // Charge à la connexion, vide à la déconnexion.
@@ -81,28 +117,77 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [session, refresh]);
 
-  // Realtime : ne recharge que les stats du vol concerné (évite un N+1 global).
+  // Realtime : comptage INCRÉMENTAL local (delta), sans jamais re-interroger la
+  // base. Un événement = une mise à jour d'état O(1) — supprime l'amplification
+  // O(N²) où chaque agent refetchait à chaque scan de n'importe quel agent.
   useEffect(() => {
     if (!session) return;
-    const onChange = (payload: { new?: Record<string, unknown>; old?: Record<string, unknown> }) => {
-      const id = (payload.new?.flight_id ?? payload.old?.flight_id) as string | undefined;
-      if (id && flightIds.current.has(id)) void refreshStats(id);
+
+    const applyDelta = (table: 'passengers' | 'baggage', payload: ChangePayload) => {
+      const nw = payload.new;
+      const od = payload.old;
+      const fid = (nw?.flight_id ?? od?.flight_id) as string | undefined;
+      if (!fid || !flightIds.current.has(fid)) return;
+
+      setStats((prev) => {
+        const cur = prev[fid] ?? EMPTY_STATS;
+        let { pax, bagTotal, bagOk, boarded } = cur;
+
+        if (table === 'passengers') {
+          if (payload.eventType === 'INSERT') {
+            pax += 1;
+            if (nw?.boarded === true) boarded += 1;
+          } else if (payload.eventType === 'DELETE') {
+            pax -= 1;
+            if (od?.boarded === true) boarded -= 1;
+          } else {
+            if (od?.boarded !== true && nw?.boarded === true) boarded += 1;
+            else if (od?.boarded === true && nw?.boarded !== true) boarded -= 1;
+          }
+        } else {
+          if (payload.eventType === 'INSERT') {
+            bagTotal += 1;
+            if (nw?.is_confirmed === true) bagOk += 1;
+          } else if (payload.eventType === 'DELETE') {
+            bagTotal -= 1;
+            if (od?.is_confirmed === true) bagOk -= 1;
+          } else {
+            if (od?.is_confirmed !== true && nw?.is_confirmed === true) bagOk += 1;
+            else if (od?.is_confirmed === true && nw?.is_confirmed !== true) bagOk -= 1;
+          }
+        }
+
+        return {
+          ...prev,
+          [fid]: { pax: clamp0(pax), bagTotal: clamp0(bagTotal), bagOk: clamp0(bagOk), boarded: clamp0(boarded) },
+        };
+      });
     };
+
     const channel = supabase
       .channel('flights-store')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'passengers' }, onChange)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'baggage' }, onChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'passengers' }, (p) =>
+        applyDelta('passengers', p as unknown as ChangePayload),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'baggage' }, (p) =>
+        applyDelta('baggage', p as unknown as ChangePayload),
+      )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'flights' }, (payload) => {
         const updated = payload.new as Flight;
         if (updated?.id && flightIds.current.has(updated.id)) {
           setFlights((prev) => prev.map((f) => (f.id === updated.id ? updated : f)));
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        // À la (re)connexion du canal, on réconcilie avec des compteurs
+        // autoritatifs (rattrape les événements manqués pendant une coupure).
+        if (status === 'SUBSCRIBED') void refresh();
+      });
+
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session, refreshStats]);
+  }, [session, refresh]);
 
   const getFlight = useCallback((id: string) => flights.find((f) => f.id === id), [flights]);
   const statsFor = useCallback((id: string) => stats[id] ?? EMPTY_STATS, [stats]);
