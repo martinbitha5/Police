@@ -254,6 +254,8 @@ tbody tr:hover {
 .lp-nav-pill {
   display: inline-flex;
   align-items: center;
+  /* Sans ceci, « Hub FIH » se cassait sur 2-3 lignes dans l'en-tête mobile. */
+  white-space: nowrap;
   background: transparent;
   color: var(--content-primary);
   border-radius: var(--radius-full);
@@ -263,6 +265,17 @@ tbody tr:hover {
 }
 .lp-nav-pill:hover {
   background: var(--bg-neutral);
+}
+
+/* Sous 640px, marque + hub + bouton dépassent (389px pour 375 disponibles).
+   Le hub est l'info la moins critique : on la masque pour garder la marque et
+   le bouton d'action sur une seule ligne.
+   ⚠️ Doit rester APRÈS la règle de base : à spécificité égale, c'est l'ordre
+   qui tranche — une media query n'augmente pas la spécificité. */
+@media (max-width: 640px) {
+  .lp-nav-pill {
+    display: none;
+  }
 }
 
 .lp-login-btn {
@@ -276,6 +289,7 @@ tbody tr:hover {
   padding: 10px 20px;
   font-weight: 600;
   font-size: 15px;
+  white-space: nowrap;
 }
 .lp-login-btn:hover {
   background: var(--interactive-accent-hover);
@@ -667,8 +681,11 @@ tbody tr:hover {
 }
 
 .lg-card {
-  width: 400px;
-  max-width: 100%;
+  /* width:100% + max-width — et non width:400px + max-width:100%, qui est
+     circulaire dans une grille (la piste se dimensionne sur les 400px, donc
+     le 100% valait 400px et la carte débordait sur mobile). */
+  width: 100%;
+  max-width: 400px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-neutral);
   border-radius: var(--radius-lg);

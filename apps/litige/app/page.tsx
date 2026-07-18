@@ -266,7 +266,7 @@ const s: Record<string, CSSProperties> = {
 
   brandBox: { display: 'flex', alignItems: 'center', gap: 10 },
   brandLogo: { width: 32, height: 32, borderRadius: 8, objectFit: 'cover' as const, display: 'block', flexShrink: 0 },
-  brandName: { fontWeight: 700, fontSize: 17, letterSpacing: -0.2, color: 'var(--content-primary)' },
+  brandName: { fontWeight: 700, fontSize: 17, letterSpacing: -0.2, color: 'var(--content-primary)', whiteSpace: 'nowrap' },
   topNav: { display: 'flex', alignItems: 'center', gap: 8 },
 
   /* Bande partenaires */
