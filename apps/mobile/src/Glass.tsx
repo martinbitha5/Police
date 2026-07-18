@@ -40,9 +40,9 @@ export function ScreenBackground({ children }: { children?: ReactNode }) {
         style={StyleSheet.absoluteFill}
       />
       {/* Halos doux pour donner de la profondeur au givré */}
-      <View style={[styles.blob, styles.blobTop, { backgroundColor: gradients.blobBlue }]} />
-      <View style={[styles.blob, styles.blobRight, { backgroundColor: gradients.blobSky }]} />
-      <View style={[styles.blob, styles.blobBottom, { backgroundColor: gradients.blobViolet }]} />
+      <View style={[styles.blob, styles.blobTop, { backgroundColor: gradients.blobForest }]} />
+      <View style={[styles.blob, styles.blobRight, { backgroundColor: gradients.blobLime }]} />
+      <View style={[styles.blob, styles.blobBottom, { backgroundColor: gradients.blobMint }]} />
       {children}
     </View>
   );

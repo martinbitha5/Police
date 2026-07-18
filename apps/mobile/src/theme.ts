@@ -1,30 +1,39 @@
 import { Platform, type ViewStyle } from 'react-native';
 
-// Thème CLAIR — aéroport, propre et lisible en plein jour sur un PDA Zebra.
-// Fonds blancs/ardoise très clairs, accent bleu aviation + teintes d'état douces.
+// ─────────────────────────────────────────────────────────────
+// Thème Wise (Neptune, clair) — aligné sur le dashboard web.
+// Source des valeurs : apps/web/app/globals.css (docs/wise-design-spec.md).
+//
+// Règle de contraste du web reprise ici : le vert vif #9FE870 est TOUJOURS un
+// fond portant du texte forêt (#163300), jamais du blanc. Or sur mobile,
+// plusieurs tokens servent de fond de pastille avec un glyphe blanc
+// (colors.onPrimary). Les tokens qui jouent ce rôle — accent, warning — sont
+// donc des variantes ASSOMBRIES de la teinte Wise correspondante, pour rester
+// lisibles en blanc. Les autres reprennent la valeur web à l'identique.
+// ─────────────────────────────────────────────────────────────
 export const colors = {
-  bg: '#eef2f7', // ardoise très clair (fond d'écran)
-  surface: '#ffffff', // cartes
-  surfaceAlt: '#f8fafc', // zones internes douces
-  border: '#e2e8f0', // slate-200
-  text: '#0f172a', // slate-900
-  muted: '#64748b', // slate-500
-  primary: '#2563eb', // blue-600
-  primaryDark: '#1d4ed8',
-  accent: '#0ea5e9', // sky-500
-  success: '#16a34a',
-  successBg: '#dcfce7',
-  successBorder: '#86efac',
-  danger: '#dc2626',
-  dangerBg: '#fee2e2',
-  dangerBorder: '#fca5a5',
-  warning: '#d97706',
-  warningBg: '#fef3c7',
-  warningBorder: '#fcd34d',
+  bg: '#f7f9f5', // fond d'écran : blanc cassé à peine teinté forêt
+  surface: '#ffffff', // --bg-elevated (cartes)
+  surfaceAlt: '#ecefeb', // --bg-neutral rgba(22,51,0,.08) aplati sur blanc
+  border: '#e2e2e2', // --border-neutral rgba(14,15,12,.12) aplati sur blanc
+  text: '#0e0f0c', // --content-primary
+  muted: '#454745', // --content-secondary
+  primary: '#163300', // --interactive-primary (vert forêt)
+  primaryDark: '#0d1f00', // --interactive-primary-hover
+  accent: '#3b6b12', // vert vif Wise assombri — lisible sous un glyphe blanc
+  success: '#054d28', // --positive
+  successBg: '#e2f6d5', // --positive-bg
+  successBorder: '#9fe870', // --brand-green
+  danger: '#cb272f', // --negative
+  dangerBg: '#fbeaea', // --negative-bg
+  dangerBorder: '#e9a6a9',
+  warning: '#8a6a00', // jaune Wise assombri — lisible sous un glyphe blanc
+  warningBg: '#fff7d7', // --warning-bg
+  warningBorder: '#ffd11a', // --warning
   onPrimary: '#ffffff',
 };
 
-// Palette « verre » — surfaces translucides posées sur un fond dégradé.
+// Palette « verre » — surfaces translucides posées sur le fond dégradé.
 // Le flou (expo-blur) ajoute le givré ; ces couleurs donnent la teinte et les reflets.
 export const glass = {
   fill: 'rgba(255,255,255,0.55)', // remplissage carte
@@ -32,19 +41,20 @@ export const glass = {
   fillSoft: 'rgba(255,255,255,0.35)', // tuiles internes
   border: 'rgba(255,255,255,0.65)', // reflet de bord clair
   borderSoft: 'rgba(255,255,255,0.4)',
-  hairline: 'rgba(15,23,42,0.06)', // séparateurs discrets
-  tint: 'rgba(247,250,255,0.6)', // teinte des barres (header / tab bar)
+  hairline: 'rgba(14,15,12,0.08)', // séparateurs discrets (--content-primary)
+  tint: 'rgba(247,249,245,0.6)', // teinte des barres (header / tab bar)
 };
 
 // Dégradés du fond d'écran (le verre « réfracte » ces teintes).
 export const gradients = {
-  screen: ['#eaf1fb', '#eef2f7', '#f4eefb'] as const, // bleu ciel → ardoise → mauve
-  blobBlue: 'rgba(37,99,235,0.18)',
-  blobSky: 'rgba(14,165,233,0.16)',
-  blobViolet: 'rgba(139,92,246,0.14)',
+  screen: ['#f1f6ec', '#f7f9f5', '#ffffff'] as const, // vert très pâle → blanc
+  blobForest: 'rgba(22,51,0,0.10)', // --brand-forest
+  blobLime: 'rgba(159,232,112,0.22)', // --brand-green
+  blobMint: 'rgba(5,77,40,0.08)', // --positive
 };
 
-export const radius = { sm: 8, md: 12, lg: 16, xl: 24, pill: 999 };
+// Rayons alignés sur le web (--radius-sm/md/lg/xl).
+export const radius = { sm: 10, md: 16, lg: 24, xl: 32, pill: 999 };
 
 export const spacing = (n: number): number => n * 8;
 
@@ -58,7 +68,7 @@ export function shadow(level: 1 | 2 | 3 = 1): ViewStyle {
   return Platform.select<ViewStyle>({
     android: { elevation: map.e },
     default: {
-      shadowColor: '#0f172a',
+      shadowColor: '#0e0f0c',
       shadowOpacity: map.o,
       shadowRadius: map.r,
       shadowOffset: { width: 0, height: map.y },
