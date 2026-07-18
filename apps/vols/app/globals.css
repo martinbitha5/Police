@@ -170,6 +170,15 @@ select option {
   transition: border-color 0.15s ease-in-out;
 }
 
+/* Boutons du sélecteur d'aéroport — la bordure se marque au survol/focus */
+.fl-city {
+  transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+.fl-city:hover {
+  border-color: var(--interactive-primary);
+  background: var(--bg-neutral);
+}
+
 /* Liens services — carte blanche cliquable : ombre légère au survol uniquement */
 .fl-link {
   transition: box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;

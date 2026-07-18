@@ -2,9 +2,20 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { formatRoute, flightNumbersMatch, FLIGHT_STATUS_LABEL, type FlightStatus } from '@police/shared';
+import {
+  formatRoute,
+  flightNumbersMatch,
+  FLIGHT_STATUS_LABEL,
+  AIRPORTS,
+  findAirport,
+  airportLabel,
+  type FlightStatus,
+} from '@police/shared';
 import type { PublicFlight, FlightsResponse } from '@/types';
 import { useIsMobile } from '@/hooks/useIsMobile';
+
+/** Aéroport choisi par le visiteur — mémorisé d'une visite à l'autre. */
+const CITY_KEY = 'vols.airport';
 
 /** Statut vol : pastille pilule colorée (design Wise) — fond doux + texte foncé,
     lisible de loin sur fond blanc. À l'heure/embarquement = vert, porte fermée = jaune, annulé = rouge. */
@@ -54,7 +65,10 @@ const CHECKIN_DOT: Record<CheckInPhase, string> = {
 
 export default function VolsPage() {
   const [date, setDate] = useState(todayISO());
-  const [hub, setHub] = useState('FIH');
+  // Aéroport du visiteur : null tant qu'il n'a pas choisi (on affiche le sélecteur).
+  // `cityReady` évite de montrer le sélecteur avant d'avoir relu le choix mémorisé.
+  const [city, setCity] = useState<string | null>(null);
+  const [cityReady, setCityReady] = useState(false);
   const [flights, setFlights] = useState<PublicFlight[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -71,7 +85,6 @@ export default function VolsPage() {
         setError(data.error ?? 'Impossible de charger les vols. Réessayez.');
       } else {
         setFlights(data.flights);
-        setHub(data.hub);
         setError(null);
         setUpdatedAt(new Date());
       }
@@ -79,6 +92,26 @@ export default function VolsPage() {
       setError('Connexion impossible. Réessayez.');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  // Relit l'aéroport mémorisé au premier rendu client.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CITY_KEY);
+      if (saved && findAirport(saved)) setCity(saved.trim().toUpperCase());
+    } catch {
+      // localStorage indisponible (navigation privée) : on demandera à chaque visite.
+    }
+    setCityReady(true);
+  }, []);
+
+  const chooseCity = useCallback((code: string) => {
+    setCity(code);
+    try {
+      localStorage.setItem(CITY_KEY, code);
+    } catch {
+      // Choix non mémorisé — sans conséquence pour la session en cours.
     }
   }, []);
 
@@ -107,6 +140,18 @@ export default function VolsPage() {
     );
   }, [flights, query]);
 
+  // Départs / arrivées vus depuis l'aéroport du visiteur. Un vol qui fait escale
+  // dans sa ville y arrive ET en repart : il figure donc dans les deux tableaux,
+  // comme sur un affichage d'aéroport.
+  const { departures, arrivals } = useMemo(() => {
+    if (!city) return { departures: [], arrivals: [] };
+    const serves = (f: PublicFlight) => (f.stops ?? []).includes(city);
+    return {
+      departures: filtered.filter((f) => f.origin === city || serves(f)),
+      arrivals: filtered.filter((f) => f.destination === city || serves(f)),
+    };
+  }, [filtered, city]);
+
   const dateLabel = new Date(`${date}T00:00:00`).toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: 'numeric',
@@ -123,45 +168,57 @@ export default function VolsPage() {
           <div>
             <h1 style={isMobile ? { ...s.title, ...s.titleMobile } : s.title}>Vols du jour</h1>
             <p style={s.subtitle}>
-              {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)} · Aéroport {hub}
+              {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
+              {city ? ` · ${airportLabel(city)}` : ''}
               {updatedAt ? ` · mis à jour à ${updatedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''}
             </p>
           </div>
         </div>
-        <div style={isMobile ? { ...s.controls, ...s.controlsMobile } : s.controls}>
-          <input
-            style={isMobile ? { ...s.search, ...s.searchMobile } : s.search}
-            placeholder="Recherchez votre vol (ex. ET0062)"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
+        {city ? (
+          <div style={isMobile ? { ...s.controls, ...s.controlsMobile } : s.controls}>
+            <input
+              style={isMobile ? { ...s.search, ...s.searchMobile } : s.search}
+              placeholder="Recherchez votre vol (ex. ET0062)"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <button type="button" style={s.changeCityBtn} onClick={() => setCity(null)}>
+              Changer d’aéroport
+            </button>
+          </div>
+        ) : null}
       </header>
 
       <main style={isMobile ? { ...s.shell, ...s.shellMobile } : s.shell}>
         <div style={s.container}>
           {error ? <div style={s.error}>{error}</div> : null}
 
-          {loading ? (
+          {!cityReady ? null : !city ? (
+            <CityPicker onPick={chooseCity} isMobile={isMobile} />
+          ) : loading ? (
             <div style={s.loader}>
               <span style={s.spinner} />
               <span>Chargement des vols…</span>
             </div>
-          ) : filtered.length === 0 ? (
-            <div style={s.empty}>
-              {query ? 'Aucun vol ne correspond à votre recherche.' : "Aucun vol programmé aujourd'hui."}
-            </div>
           ) : (
-            <ul style={s.list}>
-              {filtered.map((f) => (
-                <FlightCard
-                  key={`${f.flight_number}-${f.departure_time ?? f.date}`}
-                  flight={f}
-                  hub={hub}
-                  isMobile={isMobile}
-                />
-              ))}
-            </ul>
+            <>
+              <FlightBoard
+                title="Départs"
+                subtitle={`Au départ de ${airportLabel(city)}`}
+                flights={departures}
+                kind="departure"
+                emptyLabel={query ? 'Aucun départ ne correspond à votre recherche.' : 'Aucun départ programmé aujourd’hui.'}
+                isMobile={isMobile}
+              />
+              <FlightBoard
+                title="Arrivées"
+                subtitle={`À destination de ${airportLabel(city)}`}
+                flights={arrivals}
+                kind="arrival"
+                emptyLabel={query ? 'Aucune arrivée ne correspond à votre recherche.' : 'Aucune arrivée programmée aujourd’hui.'}
+                isMobile={isMobile}
+              />
+            </>
           )}
 
           <AirportServices isMobile={isMobile} />
@@ -323,9 +380,95 @@ function CheckInBadge({ departureTime }: { departureTime: string }) {
   );
 }
 
-function FlightCard({ flight, hub, isMobile }: { flight: PublicFlight; hub: string; isMobile: boolean }) {
-  const isDeparture = flight.origin === hub;
-  const kind = isDeparture ? 'Départ' : 'Arrivée';
+/** Sélecteur d'aéroport — premier écran tant que le visiteur n'a pas choisi. */
+function CityPicker({ onPick, isMobile }: { onPick: (code: string) => void; isMobile: boolean }) {
+  const domestic = AIRPORTS.filter((a) => a.domestic);
+  const international = AIRPORTS.filter((a) => !a.domestic);
+
+  const group = (label: string, list: typeof domestic) => (
+    <section style={s.pickerSection}>
+      <h3 style={s.pickerGroupTitle}>{label}</h3>
+      <div style={isMobile ? { ...s.pickerGrid, ...s.pickerGridMobile } : s.pickerGrid}>
+        {list.map((a) => (
+          <button
+            key={a.code}
+            type="button"
+            className="fl-city"
+            style={isMobile ? { ...s.cityBtn, ...s.cityBtnMobile } : s.cityBtn}
+            onClick={() => onPick(a.code)}
+          >
+            <span style={s.cityName}>{a.city}</span>
+            <span style={s.cityCode}>{a.code}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+
+  return (
+    <div style={s.pickerWrap}>
+      <h2 style={isMobile ? { ...s.pickerTitle, fontSize: 26 } : s.pickerTitle}>Où êtes-vous ?</h2>
+      <p style={s.pickerText}>
+        Choisissez votre aéroport pour voir les vols au départ et à l’arrivée de votre ville.
+      </p>
+      {group('RD Congo', domestic)}
+      {group('International', international)}
+    </div>
+  );
+}
+
+/** Tableau « Départs » ou « Arrivées » pour l'aéroport choisi. */
+function FlightBoard({
+  title,
+  subtitle,
+  flights,
+  kind,
+  emptyLabel,
+  isMobile,
+}: {
+  title: string;
+  subtitle: string;
+  flights: PublicFlight[];
+  kind: 'departure' | 'arrival';
+  emptyLabel: string;
+  isMobile: boolean;
+}) {
+  return (
+    <section style={s.boardWrap}>
+      <div style={s.boardHead}>
+        <h2 style={s.boardTitle}>{title}</h2>
+        <span style={s.boardCount}>{flights.length}</span>
+      </div>
+      <p style={s.boardSubtitle}>{subtitle}</p>
+      {flights.length === 0 ? (
+        <div style={s.empty}>{emptyLabel}</div>
+      ) : (
+        <ul style={s.list}>
+          {flights.map((f) => (
+            <FlightCard
+              key={`${kind}-${f.flight_number}-${f.departure_time ?? f.date}`}
+              flight={f}
+              kind={kind}
+              isMobile={isMobile}
+            />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function FlightCard({
+  flight,
+  kind,
+  isMobile,
+}: {
+  flight: PublicFlight;
+  kind: 'departure' | 'arrival';
+  isMobile: boolean;
+}) {
+  const isDeparture = kind === 'departure';
+  const kindLabel = isDeparture ? 'Départ' : 'Arrivée';
   const mainTime = isDeparture ? flight.departure_time : flight.arrival_time;
 
   // Retard estimé : heure prévue dépassée et vol ni fermé ni annulé.
@@ -341,7 +484,7 @@ function FlightCard({ flight, hub, isMobile }: { flight: PublicFlight; hub: stri
       <div style={s.cardMain}>
         <div style={s.timeBlock}>
           <span style={s.time}>{timeOf(mainTime)}</span>
-          <span style={s.kindLabel}>{kind}</span>
+          <span style={s.kindLabel}>{kindLabel}</span>
         </div>
         <span style={s.vSep} aria-hidden />
         <div style={s.cardInfo}>
@@ -412,6 +555,101 @@ const s: Record<string, CSSProperties> = {
   shell: { flex: 1, display: 'flex', justifyContent: 'center', padding: '28px 20px 48px' },
   shellMobile: { padding: '18px 12px 32px' },
   container: { width: '100%', maxWidth: 980, display: 'flex', flexDirection: 'column', gap: 20 },
+
+  // ── Sélecteur d'aéroport ────────────────────────────────────
+  changeCityBtn: {
+    background: 'transparent',
+    border: '1px solid var(--border-neutral)',
+    borderRadius: 9999,
+    padding: '9px 16px',
+    fontSize: 14,
+    fontWeight: 600,
+    color: 'var(--content-primary)',
+    whiteSpace: 'nowrap' as const,
+    cursor: 'pointer',
+  },
+  pickerWrap: { ...tintedTile, padding: '28px 24px', display: 'flex', flexDirection: 'column' as const, gap: 8 },
+  pickerTitle: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontWeight: 400,
+    fontSize: 32,
+    lineHeight: 1.1,
+    letterSpacing: '-0.03em',
+    color: 'var(--content-primary)',
+  },
+  pickerText: { margin: 0, color: 'var(--content-secondary)', fontSize: 15, lineHeight: 1.5, maxWidth: 520 },
+  pickerSection: { marginTop: 18 },
+  pickerGroupTitle: {
+    margin: '0 0 10px',
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--content-tertiary)',
+  },
+  pickerGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 },
+  pickerGridMobile: { gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))', gap: 8 },
+  cityBtn: {
+    ...whiteCard,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    padding: '13px 14px',
+    cursor: 'pointer',
+    textAlign: 'left' as const,
+    minWidth: 0,
+  },
+  // Sur mobile, le code IATA à côté du nom laissait trop peu de place : les
+  // villes longues (Lubumbashi, Dar es Salaam…) étaient tronquées. On empile.
+  cityBtnMobile: {
+    flexDirection: 'column' as const,
+    alignItems: 'flex-start' as const,
+    gap: 2,
+    padding: '11px 12px',
+  },
+  cityName: {
+    fontSize: 15,
+    fontWeight: 600,
+    color: 'var(--content-primary)',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+  },
+  cityCode: {
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: '0.06em',
+    color: 'var(--content-tertiary)',
+    flexShrink: 0,
+  },
+
+  // ── Tableaux Départs / Arrivées ─────────────────────────────
+  boardWrap: { display: 'flex', flexDirection: 'column' as const, gap: 4 },
+  boardHead: { display: 'flex', alignItems: 'center', gap: 10 },
+  boardTitle: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontWeight: 400,
+    fontSize: 24,
+    letterSpacing: '-0.02em',
+    color: 'var(--content-primary)',
+  },
+  boardCount: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 26,
+    height: 24,
+    padding: '0 8px',
+    borderRadius: 9999,
+    background: 'var(--bg-neutral)',
+    color: 'var(--content-secondary)',
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  boardSubtitle: { margin: '0 0 8px', color: 'var(--content-secondary)', fontSize: 14 },
 
   brandBlock: { display: 'flex', alignItems: 'center', gap: 14 },
   logo: { height: 44, objectFit: 'contain' as const, flexShrink: 0 },
