@@ -55,6 +55,7 @@ export default function RootLayout() {
             <Stack.Screen name="checkin" options={{ headerShown: false }} />
             <Stack.Screen name="baggage" options={{ headerShown: false }} />
             <Stack.Screen name="embarquement" options={{ headerShown: false }} />
+            <Stack.Screen name="dolly" options={{ headerShown: false }} />
             <Stack.Screen name="charger" options={{ headerShown: false }} />
             <Stack.Screen name="rush" options={{ headerShown: false }} />
             <Stack.Screen name="soute" options={{ headerShown: false }} />

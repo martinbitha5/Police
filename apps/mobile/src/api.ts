@@ -3,6 +3,7 @@ import type {
   BoardingGateResult,
   BaggageActionResult,
   BaggageLoadAllResult,
+  DollyScanResult,
   SoutePosition,
 } from '@police/shared';
 import { supabase } from './supabase';
@@ -80,6 +81,11 @@ export function rushBaggage(tag: string, flightId: string, scannedBy?: string): 
 /** Charger : pousse en soute tous les bagages enregistrés non-rush (groupé, sans scan). */
 export function loadAllBaggage(flightId: string, scannedBy?: string): Promise<BaggageLoadAllResult> {
   return post<BaggageLoadAllResult>('/scan/load-all', { flightId, scannedBy });
+}
+
+/** Dolly : contrôle rayon X — n'admet que les bagages enregistrés, renvoie la progression. */
+export function scanDolly(tag: string, flightId: string, scannedBy?: string): Promise<DollyScanResult> {
+  return post<DollyScanResult>('/scan/dolly', { tag, flightId, scannedBy });
 }
 
 /** Soute : identifie dans quel compartiment (avant/arrière) le bagage est chargé. */

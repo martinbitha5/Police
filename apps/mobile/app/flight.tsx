@@ -125,6 +125,13 @@ export default function FlightDetail() {
         onPress={() => router.push({ pathname: '/embarquement', params: { flightId: flight.id } })}
       />
       <OptionCard
+        icon="cart"
+        tint={colors.primary}
+        title="Dolly"
+        subtitle="Contrôle rayon X — bagages sûrs vers le chargement"
+        onPress={() => router.push({ pathname: '/dolly', params: { flightId: flight.id } })}
+      />
+      <OptionCard
         icon="cube"
         tint={colors.accent}
         title="Charger"
