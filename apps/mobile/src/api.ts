@@ -5,6 +5,7 @@ import type {
   BaggageLoadAllResult,
   SoutePosition,
 } from '@police/shared';
+import { supabase } from './supabase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api-police.brsats.com';
 
@@ -20,9 +21,20 @@ export interface BoardingScanResponse {
 }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
+  // L'API valide le JWT de l'agent et en dérive l'identité du scanneur : sans
+  // token, elle rejette (401). On lit la session courante avant chaque appel.
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) {
+    throw new Error('Session expirée — reconnectez-vous.');
+  }
+
   const res = await fetch(`${API_URL}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(body),
   });
 
