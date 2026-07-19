@@ -1,0 +1,23 @@
+{
+  "email": {
+    "x": 111,
+    "y": 912,
+    "w": 948,
+    "h": 144,
+    "label": "Votre identifiant agent"
+  },
+  "pass": {
+    "x": 111,
+    "y": 1173,
+    "w": 948,
+    "h": 144,
+    "label": "Votre mot de passe"
+  },
+  "btn": {
+    "x": 111,
+    "y": 1359,
+    "w": 948,
+    "h": 159,
+    "label": "Ouvrir la session"
+  }
+}

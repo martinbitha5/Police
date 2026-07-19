@@ -1,0 +1,44 @@
+{
+  "aeroport": {
+    "x": 324,
+    "y": 93,
+    "w": 756,
+    "h": 41,
+    "label": "Aéroport sélectionné"
+  },
+  "recherche": {
+    "x": 1944,
+    "y": 32,
+    "w": 520,
+    "h": 97,
+    "label": "Rechercher un vol précis"
+  },
+  "changer": {
+    "x": 2484,
+    "y": 40,
+    "w": 332,
+    "h": 82,
+    "label": "Changer d’aéroport"
+  },
+  "departs": {
+    "x": 460,
+    "y": 220,
+    "w": 201,
+    "h": 72,
+    "label": "Vols au départ de votre ville"
+  },
+  "arrivees": {
+    "x": 460,
+    "y": 1264,
+    "w": 213,
+    "h": 72,
+    "label": "Vols à destination de votre ville"
+  },
+  "carte": {
+    "x": 460,
+    "y": 366,
+    "w": 1960,
+    "h": 267,
+    "label": "Un vol : heure, numéro, route, statut"
+  }
+}

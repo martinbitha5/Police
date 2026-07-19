@@ -1,0 +1,44 @@
+{
+  "flight": {
+    "x": 48,
+    "y": 42,
+    "w": 1074,
+    "h": 672,
+    "label": "Le vol en cours"
+  },
+  "stats": {
+    "x": 111,
+    "y": 462,
+    "w": 948,
+    "h": 189,
+    "label": "Avancement du vol"
+  },
+  "checkin": {
+    "x": 48,
+    "y": 885,
+    "w": 1074,
+    "h": 270,
+    "label": "Poste Check-in"
+  },
+  "bag": {
+    "x": 48,
+    "y": 1203,
+    "w": 1074,
+    "h": 270,
+    "label": "Poste Bagages"
+  },
+  "dolly": {
+    "x": 48,
+    "y": 1839,
+    "w": 1074,
+    "h": 300,
+    "label": "Poste Dolly"
+  },
+  "rush": {
+    "x": 48,
+    "y": 2505,
+    "w": 1074,
+    "h": 270,
+    "label": "Poste Rush"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "email": {
+    "x": 1546,
+    "y": 774,
+    "w": 668,
+    "h": 92,
+    "label": "Votre adresse email professionnelle"
+  },
+  "motdepasse": {
+    "x": 1546,
+    "y": 949,
+    "w": 668,
+    "h": 92,
+    "label": "Votre mot de passe"
+  },
+  "bouton": {
+    "x": 1546,
+    "y": 1080,
+    "w": 668,
+    "h": 96,
+    "label": "Se connecter"
+  }
+}

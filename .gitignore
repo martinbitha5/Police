@@ -11,3 +11,10 @@ coverage/
 .expo/
 # Archives de déploiement (zips/tgz générés pour Hostinger)
 deploy/
+
+# Documentation : artefacts de generation
+docs/.capture-profile/
+docs/.capture-profile-mobile/
+docs/__pycache__/
+# Images annotees : derivees de <nom>.png + <nom>.json, regenerees par annotate.py
+docs/img/*_annote.png

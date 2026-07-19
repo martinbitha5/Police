@@ -1,0 +1,23 @@
+{
+  "creation": {
+    "x": 706,
+    "y": 348,
+    "w": 636,
+    "h": 906,
+    "label": "Créer un compte"
+  },
+  "role": {
+    "x": 706,
+    "y": 894,
+    "w": 636,
+    "h": 82,
+    "label": "Choisir le rôle"
+  },
+  "valider": {
+    "x": 706,
+    "y": 1169,
+    "w": 636,
+    "h": 85,
+    "label": "Valider la création"
+  }
+}

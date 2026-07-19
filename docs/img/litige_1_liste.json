@@ -1,0 +1,16 @@
+{
+  "titre": {
+    "x": 568,
+    "y": 56,
+    "w": 574,
+    "h": 57,
+    "label": "Dossiers de litige"
+  },
+  "filtres": {
+    "x": 676,
+    "y": 239,
+    "w": 564,
+    "h": 89,
+    "label": "Filtrer les dossiers"
+  }
+}

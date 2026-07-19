@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<!-- Sans cette balise, l'emulation mobile utilise une largeur de mise en page
+     de 980px et la capture sort avec une large bande vide a droite. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ecrans mobile Police Bagage</title>
+<style>
+  /* Reproduction fidele de l'application agent (apps/mobile).
+     Valeurs reprises de apps/mobile/src/theme.ts, palette Wise. */
+  :root{
+    --bg:#f7f9f5; --surface:#fff; --surface-alt:#ecefeb; --border:#e2e2e2;
+    --text:#0e0f0c; --muted:#454745;
+    --primary:#163300; --primary-dark:#0d1f00; --accent:#3b6b12;
+    --success:#054d28; --success-bg:#e2f6d5; --success-border:#9fe870;
+    --danger:#cb272f; --danger-bg:#fbeaea; --danger-border:#e9a6a9;
+    --warning:#8a6a00; --warning-bg:#fff7d7; --warning-border:#ffd11a;
+    --on-primary:#fff;
+    --r-sm:10px; --r-md:16px; --r-lg:24px; --r-xl:32px; --r-pill:999px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text); background:#fff; -webkit-font-smoothing:antialiased;
+  }
+  /* Fond d'ecran degrade + halos, comme ScreenBackground */
+  .phone{
+    position:relative; width:390px; min-height:844px; overflow:hidden;
+    background:linear-gradient(135deg,#f1f6ec 0%,#f7f9f5 50%,#ffffff 100%);
+    padding:14px 16px 24px;
+  }
+  .blob{position:absolute;border-radius:999px;filter:blur(0.5px)}
+  .b1{width:320px;height:320px;top:-120px;left:-90px;background:rgba(22,51,0,.10)}
+  .b2{width:300px;height:300px;top:120px;right:-130px;background:rgba(159,232,112,.22)}
+  .b3{width:360px;height:360px;bottom:-150px;left:-60px;background:rgba(5,77,40,.08)}
+  .stack{position:relative;display:flex;flex-direction:column;gap:16px}
+
+  /* Carte en verre depoli */
+  .card{
+    background:rgba(255,255,255,.72); border:1px solid rgba(255,255,255,.75);
+    border-radius:var(--r-lg); padding:20px;
+    box-shadow:0 4px 12px rgba(14,15,12,.06);
+  }
+  .card.xl{border-radius:var(--r-xl)}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .col{display:flex;flex-direction:column}
+
+  .flight-no{font-size:24px;font-weight:800;letter-spacing:.5px}
+  .route{font-size:15px;font-weight:600;color:var(--muted);margin-top:2px}
+  .pill{
+    border:1.5px solid var(--primary); color:var(--primary);
+    border-radius:var(--r-pill); padding:5px 12px;
+    font-size:13px; font-weight:800; letter-spacing:1px; white-space:nowrap;
+  }
+  .pill.warn{border-color:var(--warning);color:var(--warning)}
+  .pill.acc{border-color:var(--accent);color:var(--accent)}
+
+  .stats{display:flex;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+  .stat{flex:1;text-align:center}
+  .stat .v{font-size:22px;font-weight:800}
+  .stat .l{font-size:12px;font-weight:600;color:var(--muted)}
+  .sep{width:1px;height:36px;background:var(--border)}
+
+  .section-title{font-size:16px;font-weight:700;margin:4px 0 0 4px}
+
+  /* Carte d'action (poste de travail) */
+  .opt{display:flex;align-items:center;gap:16px;
+    background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.75);
+    border-radius:var(--r-lg);padding:16px}
+  .opt .ic{width:56px;height:56px;border-radius:var(--r-md);display:grid;place-items:center;flex-shrink:0}
+  .opt .ic svg{width:28px;height:28px;fill:#fff}
+  .opt .t{font-size:19px;font-weight:800}
+  .opt .s{font-size:14px;font-weight:600;color:var(--muted);margin-top:2px}
+  .opt .chev{margin-left:auto;color:var(--muted);font-size:22px}
+
+  /* Zone de scan */
+  .stage{display:flex;flex-direction:column;align-items:center;padding:28px 20px}
+  .scanbox{width:190px;height:190px;border-radius:var(--r-xl);
+    border:3px dashed rgba(22,51,0,.28);display:grid;place-items:center;background:rgba(255,255,255,.5)}
+  .scanbox svg{width:72px;height:72px;stroke:var(--primary);fill:none;stroke-width:1.6}
+  .stage h3{font-size:19px;font-weight:700;margin-top:14px;text-align:center}
+  .stage p{font-size:14px;color:var(--muted);margin-top:3px;text-align:center}
+
+  /* Resultats */
+  .res{padding:20px;text-align:center}
+  .res .name{font-size:22px;font-weight:800}
+  .res .tag{font-size:15px;font-weight:700;color:var(--muted);margin-top:2px;font-family:ui-monospace,Consolas,monospace}
+  .res .msg{font-size:16px;font-weight:700;margin-top:10px}
+  .ok{border-left:4px solid var(--success)}
+  .ok .msg{color:var(--success)}
+  .bad{background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--r-lg);padding:20px;text-align:center}
+  .bad .badge{color:var(--danger);font-weight:900;font-size:14px;letter-spacing:1px}
+  .bad .why{font-size:17px;font-weight:700;margin-top:6px}
+  .bad .hint{font-size:14px;color:var(--muted);margin-top:8px}
+
+  .prog{display:flex;align-items:center;gap:12px;padding:16px 18px}
+  .prog .n{font-size:20px;font-weight:900;color:var(--primary)}
+  .prog .d{font-size:16px;font-weight:800;color:var(--muted)}
+  .prog .txt{font-size:15px;font-weight:600}
+  .dot{width:11px;height:11px;border-radius:50%;background:var(--success)}
+
+  /* Login */
+  .brand{display:flex;flex-direction:column;align-items:center;gap:10px;margin:52px 0 28px}
+  .brand .logo{width:74px;height:74px;border-radius:20px;background:var(--primary);display:grid;place-items:center}
+  .brand .logo svg{width:40px;height:40px;fill:#9fe870}
+  .brand h1{font-size:26px;font-weight:800}
+  .brand p{font-size:14px;color:var(--muted)}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .field label{font-size:14px;font-weight:600}
+  .field .input{background:#fff;border:1px solid var(--border);border-radius:var(--r-sm);
+    padding:13px 14px;font-size:15px;color:var(--muted)}
+  .btn{background:var(--primary);color:var(--on-primary);border-radius:var(--r-md);
+    padding:16px;text-align:center;font-size:16px;font-weight:800;margin-top:6px}
+  .btn.lime{background:var(--success-border);color:var(--primary)}
+
+  /* Liste de vols */
+  .fl{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.72);
+    border:1px solid rgba(255,255,255,.75);border-radius:var(--r-lg);padding:16px}
+  .fl .h{font-size:20px;font-weight:800;min-width:62px}
+  .fl .r{font-size:14px;color:var(--muted);font-weight:600}
+  .fl .no{font-size:17px;font-weight:800}
+  .badge-st{font-size:12px;font-weight:700;padding:4px 10px;border-radius:var(--r-pill);
+    background:var(--success-bg);color:var(--success);margin-left:auto;white-space:nowrap}
+
+  /* N'afficher qu'un ecran a la fois */
+  section{display:none}
+  section.on{display:block}
+</style>
+</head>
+<body>
+
+<!-- 0. Connexion -->
+<section id="mob_0_login"><div class="phone">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="stack">
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+      <h1>Police Bagage</h1>
+      <p>Espace agent</p>
+    </div>
+    <div class="card">
+      <div class="field"><label>Email</label><div class="input" id="f-email">agent@airport.com</div></div>
+      <div class="field"><label>Mot de passe</label><div class="input" id="f-pass">••••••••</div></div>
+      <div class="btn" id="f-btn">Se connecter</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 1. Vols du jour -->
+<section id="mob_1_vols"><div class="phone">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="stack">
+    <div><h1 style="font-size:28px;font-weight:800">Vols du jour</h1>
+      <p style="color:var(--muted);font-size:15px;margin-top:2px">Samedi 18 juillet 2026</p></div>
+    <div class="fl" id="v-1"><div class="h">10:00</div><div class="col"><div class="no">ET62</div><div class="r">FIH → FBM</div></div><div class="badge-st">Programmé</div></div>
+    <div class="fl"><div class="h">14:00</div><div class="col"><div class="no">ET64</div><div class="r">FIH → FBM</div></div><div class="badge-st">Programmé</div></div>
+    <div class="fl"><div class="h">17:00</div><div class="col"><div class="no">ET78</div><div class="r">FIH → KND</div></div><div class="badge-st">Programmé</div></div>
+  </div>
+</div></section>
+
+<!-- 2. Ecran du vol : les postes -->
+<section id="mob_2_vol"><div class="phone">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="stack">
+    <div class="card xl" id="w-flight">
+      <div class="row"><div class="flight-no">ET64</div><div class="pill">PROGRAMMÉ</div></div>
+      <div class="row" style="margin-top:18px">
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800">FIH</div><div class="r" style="font-size:13px;color:var(--muted)">14:00</div></div>
+        <div style="flex:1;height:2px;background:var(--border);margin:0 12px"></div>
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800">FBM</div><div class="r" style="font-size:13px;color:var(--muted)">16:30</div></div>
+      </div>
+      <div class="stats" id="w-stats">
+        <div class="stat"><div class="v">47</div><div class="l">Passagers</div></div><div class="sep"></div>
+        <div class="stat"><div class="v">38/72</div><div class="l">Bagages</div></div><div class="sep"></div>
+        <div class="stat"><div class="v">12/47</div><div class="l">Embarqués</div></div>
+      </div>
+    </div>
+    <div class="section-title">Que voulez-vous faire ?</div>
+    <div class="opt" id="w-checkin"><div class="ic" style="background:var(--primary)"><svg viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm8 0h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2z"/></svg></div><div class="col"><div class="t">Check-in</div><div class="s">Scanner les boarding pass</div></div><div class="chev">›</div></div>
+    <div class="opt" id="w-bag"><div class="ic" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M9 3h6a2 2 0 0 1 2 2v1h2a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V5a2 2 0 0 1 2-2zm0 3h6V5H9v1z"/></svg></div><div class="col"><div class="t">Bagages</div><div class="s">Scanner les étiquettes bagage</div></div><div class="chev">›</div></div>
+    <div class="opt" id="w-emb"><div class="ic" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div><div class="col"><div class="t">Embarquement</div><div class="s">Confirmer les passagers à la porte</div></div><div class="chev">›</div></div>
+    <div class="opt" id="w-dolly"><div class="ic" style="background:var(--primary)"><svg viewBox="0 0 24 24"><path d="M7 18a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 18zm10 0a2 2 0 1 0 .001 4.001A2 2 0 0 0 17 18zM3 3h2l3 11h10l2-7H8"/></svg></div><div class="col"><div class="t">Dolly</div><div class="s">Contrôle rayon X, bagages sûrs vers le chargement</div></div><div class="chev">›</div></div>
+    <div class="opt" id="w-charger"><div class="ic" style="background:var(--accent)"><svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5zm0 2.3L18.5 8 12 11.7 5.5 8 12 4.3z"/></svg></div><div class="col"><div class="t">Charger</div><div class="s">Bagages chargés en soute</div></div><div class="chev">›</div></div>
+    <div class="opt" id="w-rush"><div class="ic" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4V7H7a3 3 0 0 0 0 6h1v2H7A5 5 0 0 1 7 5h10V2zM7 22l-4-4 4-4v3h10a3 3 0 0 0 0-6h-1V9h1a5 5 0 0 1 0 10H7v3z"/></svg></div><div class="col"><div class="t">Rush</div><div class="s">Bagages restants à réacheminer</div></div><div class="chev">›</div></div>
+    <div class="opt" id="w-soute"><div class="ic" style="background:var(--accent)"><svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="col"><div class="t">Soute</div><div class="s">Identifier le compartiment</div></div><div class="chev">›</div></div>
+  </div>
+</div></section>
+
+<!-- 3. Check-in -->
+<section id="mob_3_checkin"><div class="phone">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="stack">
+    <div class="card row" id="c-head"><div><div class="flight-no">ET64</div><div class="route">FIH → FBM</div></div><div class="pill">CHECK-IN</div></div>
+    <div class="card xl stage" id="c-stage">
+      <div class="scanbox"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M3 12h18"/></svg></div>
+      <h3>En attente de scan</h3>
+      <p>Scannez le boarding pass du passager</p>
+    </div>
+    <div class="card res ok" id="c-res">
+      <div class="name">KALONJI KABWE Oscar</div>
+      <div class="tag">Siège 13A · Classe Y · 2 bagages</div>
+      <div class="msg">FIH → FBM</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 4. Bagages : rejet anti-fraude -->
+<section id="mob_4_bagages"><div class="phone">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="stack">
+    <div class="card row" id="b-head"><div><div class="flight-no">ET64</div><div class="route">FIH → FBM</div></div><div class="pill warn">BAGAGES</div></div>
+    <div class="card prog" id="b-prog"><div class="dot"></div><div class="txt"><span class="n">38</span><span class="d"> / 72 </span>bagages enregistrés</div></div>
+    <div class="card xl stage" id="b-stage">
+      <div class="scanbox"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M3 12h18"/></svg></div>
+      <h3>Refusé</h3>
+      <p>Prêt pour le prochain scan</p>
+    </div>
+    <div class="bad" id="b-bad">
+      <div class="badge">REFUSÉ</div>
+      <div class="why">Bagage non autorisé, superviseur alerté</div>
+      <div class="hint">0 bagage déclaré sur le boarding pass</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 5. Dolly -->
+<section id="mob_5_dolly"><div class="phone">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="stack">
+    <div class="card row" id="d-head"><div><div class="flight-no">ET64</div><div class="route">FIH → FBM</div></div><div class="pill">DOLLY</div></div>
+    <div class="card prog" id="d-prog"><div class="dot"></div><div class="txt"><span class="n">24</span><span class="d"> / 38 </span>bagages enregistrés sur le dolly</div></div>
+    <div class="card xl stage" id="d-stage">
+      <div class="scanbox"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M3 12h18"/></svg></div>
+      <h3>Contrôle rayon X</h3>
+      <p>Scannez chaque bagage sortant du rayon X</p>
+    </div>
+    <div class="card res ok" id="d-res">
+      <div class="name">MUKENDI Moise</div>
+      <div class="tag">4071303803</div>
+      <div class="msg">Bagage sûr, placé sur le dolly</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 6. Soute -->
+<section id="mob_6_soute"><div class="phone">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="stack">
+    <div class="card"><div class="flight-no">ET64</div><div class="route">FIH → FBM</div></div>
+    <div class="section-title">Choisir le compartiment</div>
+    <div class="opt" id="s-avant"><div class="ic" style="background:var(--primary)"><svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5zM2 12l10 5 10-5M2 17l10 5 10-5"/></svg></div><div class="col"><div class="t">Soute avant</div><div class="s">Compartiment avant de l'avion</div></div><div class="chev">›</div></div>
+    <div class="opt" id="s-arriere"><div class="ic" style="background:var(--accent)"><svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5zM2 12l10 5 10-5M2 17l10 5 10-5"/></svg></div><div class="col"><div class="t">Soute arrière</div><div class="s">Compartiment arrière de l'avion</div></div><div class="chev">›</div></div>
+  </div>
+</div></section>
+
+<!-- 7. Charger -->
+<section id="mob_7_charger"><div class="phone">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="stack">
+    <div class="card row"><div><div class="flight-no">ET64</div><div class="route">FIH → FBM</div></div><div class="pill acc">SOUTE</div></div>
+    <div class="card" id="g-info" style="display:flex;gap:12px;align-items:flex-start">
+      <div style="color:var(--primary);font-weight:900;font-size:18px">i</div>
+      <div style="font-size:14px;line-height:20px">Scannez d'abord les bagages <b style="color:var(--warning)">Rush</b> (restants). Ensuite, chargez en soute tous les bagages enregistrés restants d'un seul geste.</div>
+    </div>
+    <div class="card xl stage" id="g-stage">
+      <div style="width:96px;height:96px;border-radius:48px;background:var(--surface-alt);display:grid;place-items:center;margin-bottom:10px">
+        <svg viewBox="0 0 24 24" style="width:48px;height:48px;fill:var(--accent)"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5z"/></svg>
+      </div>
+      <h3>Charger en soute</h3>
+      <p>Tous les bagages enregistrés non-rush</p>
+      <div class="btn" id="g-btn" style="width:220px;margin-top:16px">Charger les bagages</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 8. Embarquement -->
+<section id="mob_8_embarquement"><div class="phone">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="stack">
+    <div class="card row" id="e-head"><div><div class="flight-no">ET64</div><div class="route">FIH → FBM</div></div><div class="pill">PORTE</div></div>
+    <div class="card prog" id="e-prog"><div class="dot"></div><div class="txt"><span class="n">12</span><span class="d"> / 47 </span>embarqués, reste 35</div></div>
+    <div class="card xl stage" id="e-stage">
+      <div class="scanbox"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M3 12h18"/></svg></div>
+      <h3>Embarquement</h3>
+      <p>Scannez le boarding pass à la porte</p>
+    </div>
+    <div class="card res ok" id="e-res">
+      <div class="name">DIASOLWA Marie</div>
+      <div class="tag">Siège 22F</div>
+      <div class="msg">Passager embarqué</div>
+    </div>
+  </div>
+</div></section>
+
+<script>
+  // Affiche un seul ecran, appele depuis le script de capture.
+  window.showScreen = function(id){
+    document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === id));
+    return !!document.getElementById(id);
+  };
+  showScreen('mob_0_login');
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "info": {
+    "x": 48,
+    "y": 378,
+    "w": 1074,
+    "h": 306,
+    "label": "Ordre des opérations"
+  },
+  "btn": {
+    "x": 255,
+    "y": 1371,
+    "w": 660,
+    "h": 159,
+    "label": "Charger en une fois"
+  }
+}

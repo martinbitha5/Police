@@ -1,0 +1,23 @@
+{
+  "resultat": {
+    "x": 356,
+    "y": 1983,
+    "w": 2168,
+    "h": 48,
+    "label": "Passager, vol et route"
+  },
+  "statut": {
+    "x": 646,
+    "y": 1724,
+    "w": 178,
+    "h": 55,
+    "label": "Étape atteinte par le bagage"
+  },
+  "reclamation": {
+    "x": 2127,
+    "y": 1718,
+    "w": 391,
+    "h": 67,
+    "label": "Ouvrir une réclamation"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "titre": {
+    "x": 508,
+    "y": 276,
+    "w": 1864,
+    "h": 70,
+    "label": "Choisissez votre aéroport"
+  },
+  "domestique": {
+    "x": 508,
+    "y": 504,
+    "w": 1864,
+    "h": 36,
+    "label": "Lignes intérieures RDC"
+  },
+  "ville": {
+    "x": 508,
+    "y": 560,
+    "w": 357,
+    "h": 101,
+    "label": "Cliquez sur votre ville"
+  },
+  "international": {
+    "x": 508,
+    "y": 955,
+    "w": 1864,
+    "h": 36,
+    "label": "Lignes internationales"
+  }
+}

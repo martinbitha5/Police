@@ -1,0 +1,16 @@
+{
+  "titre": {
+    "x": 640,
+    "y": 62,
+    "w": 176,
+    "h": 66,
+    "label": "Suivi des bagages"
+  },
+  "filtres": {
+    "x": 576,
+    "y": 403,
+    "w": 1330,
+    "h": 82,
+    "label": "Filtrer les bagages"
+  }
+}

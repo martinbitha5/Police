@@ -1,0 +1,16 @@
+{
+  "avant": {
+    "x": 48,
+    "y": 501,
+    "w": 1074,
+    "h": 270,
+    "label": "Soute avant"
+  },
+  "arriere": {
+    "x": 48,
+    "y": 819,
+    "w": 1074,
+    "h": 270,
+    "label": "Soute arrière"
+  }
+}

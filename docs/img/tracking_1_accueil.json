@@ -1,0 +1,23 @@
+{
+  "titre": {
+    "x": 308,
+    "y": 354,
+    "w": 1720,
+    "h": 456,
+    "label": "Suivi de bagage, sans guichet"
+  },
+  "champ": {
+    "x": 362,
+    "y": 1122,
+    "w": 512,
+    "h": 104,
+    "label": "Saisissez votre PNR ou votre n° d’étiquette"
+  },
+  "bouton": {
+    "x": 2118,
+    "y": 1266,
+    "w": 400,
+    "h": 96,
+    "label": "Lancer la recherche"
+  }
+}

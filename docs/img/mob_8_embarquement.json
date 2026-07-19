@@ -1,0 +1,16 @@
+{
+  "prog": {
+    "x": 48,
+    "y": 378,
+    "w": 1074,
+    "h": 183,
+    "label": "Reste à embarquer"
+  },
+  "res": {
+    "x": 48,
+    "y": 1587,
+    "w": 1074,
+    "h": 369,
+    "label": "Passager embarqué"
+  }
+}

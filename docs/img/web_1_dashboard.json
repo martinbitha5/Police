@@ -1,0 +1,30 @@
+{
+  "navigation": {
+    "x": 24,
+    "y": 213,
+    "w": 470,
+    "h": 426,
+    "label": "Navigation entre les espaces"
+  },
+  "nouveau": {
+    "x": 2479,
+    "y": 56,
+    "w": 325,
+    "h": 85,
+    "label": "Créer un vol du jour"
+  },
+  "ecartes": {
+    "x": 0,
+    "y": 0,
+    "w": 2880,
+    "h": 1800,
+    "label": "Total des bagages refusés"
+  },
+  "vol": {
+    "x": 596,
+    "y": 528,
+    "w": 531,
+    "h": 271,
+    "label": "Ouvrir un vol pour voir son détail"
+  }
+}
