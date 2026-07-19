@@ -126,6 +126,22 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // ── Élargit à tous les bagages des passagers trouvés ────────────────────
+  // La recherche par étiquette ne ramène qu'une ligne. Sans cet élargissement,
+  // les compteurs du passager seraient calculés sur ce seul bagage alors que le
+  // total vient de declared_baggage_count : le même passager affichait « 0/2 »
+  // en cherchant par étiquette et « 1/2 » en cherchant par PNR. Le passager voit
+  // désormais l'état complet de ses bagages, quel que soit le critère saisi.
+  if (TAG_RE.test(query)) {
+    const ownerIds = [...new Set(bagRows.map((b) => b.passenger_id))];
+    const { data: allBags } = await supabase
+      .from('baggage')
+      .select(BAG_COLUMNS)
+      .in('passenger_id', ownerIds);
+    const complete = (allBags as BagRow[] | null) ?? [];
+    if (complete.length > 0) bagRows = complete;
+  }
+
   // ── Charge passagers + vols + escales + litiges en une passe ────────────
   const paxIds = [...new Set(bagRows.map((b) => b.passenger_id))];
   const flightIds = [...new Set(bagRows.map((b) => b.flight_id))];
