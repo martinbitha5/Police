@@ -74,7 +74,7 @@ export default function Login() {
       <ScreenBackground />
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         <ScrollView
           style={styles.flex}

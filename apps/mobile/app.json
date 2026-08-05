@@ -16,6 +16,7 @@
     ],
     "android": {
       "package": "com.airport.boardingscanner",
+      "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-foreground.png",
         "backgroundImage": "./assets/adaptive-background.png",
