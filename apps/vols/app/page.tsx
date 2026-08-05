@@ -230,6 +230,7 @@ export default function VolsPage() {
               <Link href="/conditions" className="fl-footer-link" style={s.footerLink}>Conditions d'utilisation</Link>
               <Link href="/confidentialite" className="fl-footer-link" style={s.footerLink}>Confidentialité</Link>
               <Link href="/cookies" className="fl-footer-link" style={s.footerLink}>Cookies</Link>
+              <Link href="/mentions-legales" className="fl-footer-link" style={s.footerLink}>Mentions légales</Link>
             </nav>
             <p style={s.footerText}>Informations fournies à titre indicatif · Police Bagage · ATS Handling</p>
           </footer>

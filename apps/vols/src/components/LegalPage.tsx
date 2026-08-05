@@ -47,6 +47,7 @@ export function LegalPage({ title, intro, updated, sections }: LegalPageProps) {
           <Link href="/conditions" className="fl-footer-link" style={s.footerLink}>Conditions d’utilisation</Link>
           <Link href="/confidentialite" className="fl-footer-link" style={s.footerLink}>Confidentialité</Link>
           <Link href="/cookies" className="fl-footer-link" style={s.footerLink}>Cookies</Link>
+          <Link href="/mentions-legales" className="fl-footer-link" style={s.footerLink}>Mentions légales</Link>
         </nav>
         <p style={s.copyright}>© 2026 ATS Handling · Police Bagage</p>
       </div>
