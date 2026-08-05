@@ -152,6 +152,13 @@ export default function FlightDetail() {
         subtitle="Identifier le compartiment de chargement"
         onPress={() => router.push({ pathname: '/soute', params: { flightId: flight.id } })}
       />
+      <OptionCard
+        icon="download"
+        tint={colors.success}
+        title="Arrivée"
+        subtitle="Réceptionner les bagages à destination"
+        onPress={() => router.push({ pathname: '/arrivee', params: { flightId: flight.id } })}
+      />
       </ScrollView>
     </View>
   );

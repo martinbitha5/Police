@@ -24,7 +24,8 @@ const TAG_RE = /^\d{10}$/;
 // jaune, problème en rouge, attente en neutre.
 const STATUS_PILL: Record<string, { bg: string; fg: string }> = {
   rush: { bg: 'var(--negative-bg)', fg: 'var(--negative)' },
-  loaded: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
+  arrived: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
+  in_transit: { bg: 'var(--brand-blue)', fg: 'var(--brand-forest)' },
   registered: { bg: 'var(--warning-bg)', fg: 'var(--warning-content)' },
   pending: { bg: 'var(--bg-neutral)', fg: 'var(--content-secondary)' },
 };
@@ -35,7 +36,7 @@ const CLAIM_PILL: Record<string, { bg: string; fg: string }> = {
 };
 
 // Étapes du parcours bagage — timeline claire, points vert forêt.
-const STEP_ORDER = ['pending', 'registered', 'loaded'] as const;
+const STEP_ORDER = ['pending', 'registered', 'in_transit', 'arrived'] as const;
 
 export default function TrackingPage() {
   const { t }    = useLang();
@@ -302,11 +303,13 @@ function BagRow({
   const statusLabel =
     bag.status === 'rush'
       ? t.home.badgeRush
-      : bag.status === 'loaded'
-        ? t.home.badgeLoaded
-        : bag.status === 'registered'
-          ? t.home.badgeRegistered
-          : t.home.badgePending;
+      : bag.status === 'arrived'
+        ? t.home.badgeArrived
+        : bag.status === 'in_transit'
+          ? t.home.badgeInTransit
+          : bag.status === 'registered'
+            ? t.home.badgeRegistered
+            : t.home.badgePending;
   const claimLabel =
     claimStatus === 'resolved'
       ? t.claim.statusResolved

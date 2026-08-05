@@ -54,7 +54,8 @@ export interface Dictionary {
     searching: string;
     notFound: string;
     summaryLoaded: string;
-    badgeLoaded: string;
+    badgeInTransit: string;
+    badgeArrived: string;
     badgePending: string;
     badgeRegistered: string;
     badgeRush: string;
@@ -154,7 +155,8 @@ export const translations: Record<Lang, Dictionary> = {
       searching: 'Recherche de votre bagage…',
       notFound: 'Aucun bagage trouvé. Vérifiez votre PNR ou votre numéro d’étiquette.',
       summaryLoaded: 'traités',
-      badgeLoaded: 'Chargé en soute',
+      badgeInTransit: 'En route',
+      badgeArrived: 'Arrivé à destination',
       badgePending: 'En attente',
       badgeRegistered: 'Enregistré',
       badgeRush: 'Réacheminement',
@@ -206,7 +208,7 @@ export const translations: Record<Lang, Dictionary> = {
           heading: 'Comment ça marche',
           body: [
             'À l’enregistrement, votre boarding pass est scanné et le nombre de bagages déclarés est enregistré.',
-            'À chaque point de contrôle, l’étiquette physique du bagage est scannée. Dès qu’un bagage est confirmé chargé, son statut passe à « Chargé en soute » et devient visible ici.',
+            'À chaque point de contrôle, l’étiquette physique du bagage est scannée. Dès qu’un bagage est chargé, son statut passe à « En route », puis à « Arrivé à destination » quand l’escale d’arrivée l’a réceptionné.',
           ],
         },
         {
@@ -239,15 +241,19 @@ export const translations: Record<Lang, Dictionary> = {
         },
         {
           q: 'Que signifie « En attente » ?',
-          a: 'Votre bagage a été déclaré au check-in mais l’étiquette physique n’a pas encore été scannée sur le tapis. Le statut passera à « Enregistré » dès le scan au tapis, puis à « Chargé en soute » après chargement.',
+          a: 'Votre bagage a été déclaré au check-in mais l’étiquette physique n’a pas encore été scannée sur le tapis. Le statut passera à « Enregistré » dès le scan au tapis, puis à « En route » après chargement.',
         },
         {
           q: 'Que signifie « Enregistré » ?',
           a: 'L’étiquette physique de votre bagage a été scannée et validée à la zone de tri. Le bagage est contrôlé et confirmé : il va être chargé en soute.',
         },
         {
-          q: 'Que signifie « Chargé en soute » ?',
-          a: 'Votre bagage est physiquement dans la soute de l’avion. Vous pouvez embarquer sereinement.',
+          q: 'Que signifie « En route » ?',
+          a: 'Votre bagage est chargé dans la soute de l’avion et voyage vers sa destination. Vous pouvez embarquer sereinement.',
+        },
+        {
+          q: 'Que signifie « Arrivé à destination » ?',
+          a: 'Votre bagage a été scanné par nos agents à l’aéroport d’arrivée, à sa sortie de la soute. Il est bien arrivé et vous attend en salle de livraison bagages.',
         },
         {
           q: 'Que signifie « Réacheminement » ?',
@@ -426,7 +432,8 @@ export const translations: Record<Lang, Dictionary> = {
       searching: 'Searching for your baggage…',
       notFound: 'No baggage found. Check your PNR or your tag number.',
       summaryLoaded: 'processed',
-      badgeLoaded: 'Loaded in hold',
+      badgeInTransit: 'In transit',
+      badgeArrived: 'Arrived',
       badgePending: 'Pending',
       badgeRegistered: 'Registered',
       badgeRush: 'Rerouting',
@@ -478,7 +485,7 @@ export const translations: Record<Lang, Dictionary> = {
           heading: 'How it works',
           body: [
             'At check-in, your boarding pass is scanned and the number of declared bags is recorded.',
-            'At each checkpoint, the physical baggage tag is scanned. Once a bag is confirmed loaded, its status becomes "Loaded in hold" and appears here.',
+            'At each checkpoint, the physical baggage tag is scanned. Once a bag is loaded, its status becomes "In transit", then "Arrived" when the destination station has received it.',
           ],
         },
         {
@@ -511,15 +518,19 @@ export const translations: Record<Lang, Dictionary> = {
         },
         {
           q: 'What does "Pending" mean?',
-          a: 'Your bag has been declared at check-in but the physical tag has not yet been scanned at the sorting belt. The status will change to "Registered" after belt scan, then to "Loaded in hold" after loading.',
+          a: 'Your bag has been declared at check-in but the physical tag has not yet been scanned at the sorting belt. The status will change to "Registered" after belt scan, then to "In transit" after loading.',
         },
         {
           q: 'What does "Registered" mean?',
           a: 'The physical tag of your bag has been scanned and validated at the sorting area. The bag has passed the security check and will be loaded into the hold.',
         },
         {
-          q: 'What does "Loaded in hold" mean?',
-          a: 'Your bag is physically in the aircraft hold. You can board without worry.',
+          q: 'What does "In transit" mean?',
+          a: 'Your bag is loaded in the aircraft hold and is travelling to its destination. You can board without worry.',
+        },
+        {
+          q: 'What does "Arrived" mean?',
+          a: 'Your bag was scanned by our agents at the arrival airport as it came out of the hold. It has arrived and is waiting for you in the baggage claim hall.',
         },
         {
           q: 'What does "Rerouting" mean?',

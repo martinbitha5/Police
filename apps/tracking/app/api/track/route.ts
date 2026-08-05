@@ -15,7 +15,8 @@ import { rateLimit, clientIp } from '@/lib/rateLimit';
 const TAG_RE = /^\d{10}$/;
 const NOT_FOUND = (message: string): BaggageTrackingResult => ({ status: 'not_found', message });
 
-const BAG_COLUMNS = 'id, tag_number, is_confirmed, in_hold, in_hold_at, rush, scanned_at, passenger_id, flight_id';
+const BAG_COLUMNS =
+  'id, tag_number, is_confirmed, in_hold, in_hold_at, rush, arrived, arrived_at, scanned_at, passenger_id, flight_id';
 
 interface BagRow {
   id: string;
@@ -24,6 +25,8 @@ interface BagRow {
   in_hold: boolean;
   in_hold_at: string | null;
   rush: boolean;
+  arrived: boolean;
+  arrived_at: string | null;
   scanned_at: string | null;
   passenger_id: string;
   flight_id: string;
@@ -31,10 +34,19 @@ interface BagRow {
 
 /** Dérive le statut affiché au passager (du plus avancé au moins avancé). */
 function bagStatus(b: BagRow): BaggageStatus {
+  if (b.arrived) return 'arrived';
   if (b.rush) return 'rush';
-  if (b.in_hold) return 'loaded';
+  if (b.in_hold) return 'in_transit';
   if (b.is_confirmed) return 'registered';
   return 'pending';
+}
+
+/** Date de l'événement correspondant au statut affiché. */
+function bagStampFor(status: BaggageStatus, b: BagRow): string | null {
+  if (status === 'arrived') return b.arrived_at ?? b.in_hold_at ?? b.scanned_at;
+  if (status === 'in_transit') return b.in_hold_at ?? b.scanned_at;
+  if (status === 'pending') return null;
+  return b.scanned_at;
 }
 
 interface DisputeStatusRow {
@@ -215,7 +227,7 @@ export async function POST(request: NextRequest) {
         return {
           tagNumber: b.tag_number,
           status,
-          scannedAt: status === 'loaded' ? (b.in_hold_at ?? b.scanned_at) : status === 'pending' ? null : b.scanned_at,
+          scannedAt: bagStampFor(status, b),
           claimStatus: claimByBagId.get(b.id) ?? null,
         };
       });
