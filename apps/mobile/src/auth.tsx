@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { Profile } from '@police/shared';
-import { supabase } from './supabase';
+import { supabase, signOutLocal } from './supabase';
 import { resetOnboarded } from './settings';
 
 interface AuthState {
@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) {
           // Session corrompue ou refresh token invalide dès le démarrage
           setLoading(false);
-          void supabase.auth.signOut();
+          void signOutLocal();
           return;
         }
         setSession(data.session);
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => {
         if (mounted) {
           setLoading(false);
-          void supabase.auth.signOut();
+          void signOutLocal();
         }
       });
 
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Réinitialise l'onboarding : après déconnexion + fermeture de l'app,
     // la réouverture repasse par l'écran d'accueil, puis le login.
     await resetOnboarded();
-    await supabase.auth.signOut();
+    await signOutLocal();
   }
 
   async function refreshProfile() {

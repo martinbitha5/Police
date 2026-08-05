@@ -18,6 +18,9 @@ export default function Baggage() {
   const flight = flightId ? getFlight(flightId) : undefined;
   const { bagOk, bagTotal } = flightId ? statsFor(flightId) : { bagOk: 0, bagTotal: 0 };
   const [last, setLast] = useState<BaggageScanResult | null>(null);
+  // Échec technique (session, réseau, serveur) : distinct d'un rejet décidé par
+  // l'anti-fraude. Ici le bagage n'a pas été traité du tout.
+  const [failure, setFailure] = useState<string | null>(null);
   const [scanState, setScanState] = useState<ScanState>('scanning');
   const scanSeq = useRef(0);
   const pad = useSafePadding();
@@ -27,6 +30,7 @@ export default function Baggage() {
     scanSeq.current += 1;
     try {
       const res = await scanBaggage(tag, flightId, profile?.gate ?? null, profile?.id);
+      setFailure(null);
       setLast(res);
       if (res.status === 'accepted') {
         setScanState('success');
@@ -37,7 +41,12 @@ export default function Baggage() {
         else feedbackWarning();
       }
     } catch (e) {
-      setLast({ status: 'rejected', reason: 'Bagage déjà enregistré', fraudAlert: false, message: (e as Error).message });
+      // Le scan n'a pas abouti : aucune décision n'a été prise sur ce bagage et
+      // rien n'a été écrit en base. On ne réutilise donc pas la carte de rejet,
+      // qui laisserait croire que le système s'est prononcé. L'agent doit
+      // rescanner l'étiquette.
+      setLast(null);
+      setFailure((e as Error).message);
       setScanState('error');
       feedbackWarning();
     }
@@ -75,18 +84,30 @@ export default function Baggage() {
             {scanState === 'success'
               ? 'Bagage confirmé'
               : scanState === 'error'
-                ? isFraud
-                  ? '🚨 Alerte fraude'
-                  : 'Bagage refusé'
+                ? failure
+                  ? 'Scan non enregistré'
+                  : isFraud
+                    ? '🚨 Alerte fraude'
+                    : 'Bagage refusé'
                 : 'Scannez une étiquette'}
           </Text>
           <Text style={styles.stageHint}>
-            {scanState === 'scanning' ? 'En attente de lecture…' : 'Prêt pour le prochain scan'}
+            {scanState === 'scanning'
+              ? 'En attente de lecture…'
+              : failure
+                ? 'Rescannez cette étiquette'
+                : 'Prêt pour le prochain scan'}
           </Text>
         </GlassCard>
 
         {/* Carte de résultat */}
-        {last ? (
+        {failure ? (
+          <View style={[styles.result, styles.resultWarn]}>
+            <Text style={[styles.resultBadge, styles.badgeWarn]}>SCAN NON ABOUTI</Text>
+            <Text style={styles.resultReason}>Bagage non traité</Text>
+            <Text style={styles.resultMessage}>{failure}</Text>
+          </View>
+        ) : last ? (
           accepted ? (
             <GlassCard strong contentStyle={[styles.result, styles.resultOk]}>
               <Text style={styles.resultName}>{last.passengerName}</Text>
