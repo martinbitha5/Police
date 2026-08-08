@@ -85,6 +85,7 @@ function Dashboard() {
       const { data: al } = await supabase
         .from('fraud_alerts')
         .select('flight_id')
+        .eq('resolved', false)
         .in('flight_id', ids);
       const rows = (al as { flight_id: string }[] | null) ?? [];
       const map: Record<string, number> = {};
@@ -306,6 +307,9 @@ function FlightDetail({
     boardedCount,
   } = useFlightData(flight.id);
 
+  // Une alerte résolue reste consultable mais ne pèse plus sur les compteurs.
+  const activeAlerts = useMemo(() => alerts.filter((a) => !a.resolved), [alerts]);
+
   async function changeStatus(status: Flight['status']) {
     await createClient().from('flights').update({ status }).eq('id', flight.id);
     onUpdated();
@@ -357,10 +361,18 @@ function FlightDetail({
           danger={baggageArrived > 0 && baggageArrived < baggageExpected}
         />
         <Stat label="Rush (réacheminés)" value={String(baggageRush)} icon={<IconBag size={20} />} danger={baggageRush > 0} />
-        <Stat label="Bagages écartés" value={String(alerts.length)} icon={<IconAlert size={20} />} danger={alerts.length > 0} />
+        {/* Les alertes levées (check-in scanné après le bagage) ne comptent plus
+            comme des écartés : sinon une inversion d'ordre de scan gonfle le
+            compteur de fraude et noie les vrais rejets. */}
+        <Stat
+          label="Bagages écartés"
+          value={String(activeAlerts.length)}
+          icon={<IconAlert size={20} />}
+          danger={activeAlerts.length > 0}
+        />
       </div>
 
-      {alerts.length > 0 ? <FraudAlerts alerts={alerts} /> : null}
+      {alerts.length > 0 ? <FraudAlerts alerts={alerts} active={activeAlerts} /> : null}
 
       <h2 style={sectionHeading}>Passagers</h2>
       {isMobile ? (
@@ -468,12 +480,13 @@ function PassengerRowView({ p, fallbackRoute }: { p: PassengerRow; fallbackRoute
   );
 }
 
-function FraudAlerts({ alerts }: { alerts: FraudAlert[] }) {
+function FraudAlerts({ alerts, active }: { alerts: FraudAlert[]; active: FraudAlert[] }) {
   // Repliée par défaut : une vingtaine de rejets empilés remplissaient l'écran
   // et repoussaient la liste des passagers hors de vue. Le détail reste à un
   // clic — sur un système anti-fraude, on ne masque pas un rejet sans recours.
   const [open, setOpen] = useState(false);
-  const last = alerts[0];
+  const cleared = alerts.filter((a) => a.resolved);
+  const last = active[0] ?? alerts[0];
 
   return (
     <div style={s.alertsBox}>
@@ -484,31 +497,55 @@ function FraudAlerts({ alerts }: { alerts: FraudAlert[] }) {
         aria-expanded={open}
       >
         <span style={s.alertTag}>
-          <IconAlert size={15} /> ÉCARTÉ +{alerts.length}
+          <IconAlert size={15} /> ÉCARTÉ +{active.length}
         </span>
         <span style={s.alertSummaryText}>
-          {alerts.length} bagage{alerts.length > 1 ? 's' : ''} écarté{alerts.length > 1 ? 's' : ''}
+          {active.length} bagage{active.length > 1 ? 's' : ''} écarté{active.length > 1 ? 's' : ''}
           {last ? ` · dernier à ${new Date(last.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''}
+          {cleared.length > 0 ? ` · ${cleared.length} levé${cleared.length > 1 ? 's' : ''}` : ''}
         </span>
         <span style={s.alertSummaryAction}>{open ? 'Masquer' : 'Voir le détail'}</span>
       </button>
 
-      {open
-        ? alerts.map((a) => (
-            <div key={a.id} style={s.alert}>
-              <span style={s.alertTag}>
-                <IconAlert size={15} /> ÉCARTÉ
-              </span>
-              <div style={{ flex: 1 }}>
-                <strong>{a.passenger_name ?? 'Passager inconnu'}</strong> · PNR {a.pnr ?? 'N/A'} · Tag{' '}
-                {a.tag_number ?? 'N/A'}
-                <div style={{ color: 'var(--content-secondary)' }}>
-                  {a.reason} {a.gate ? `· ${a.gate}` : ''} · {new Date(a.created_at).toLocaleString('fr-FR')}
-                </div>
-              </div>
-            </div>
-          ))
-        : null}
+      {open ? (
+        <>
+          {active.map((a) => (
+            <AlertRow key={a.id} alert={a} />
+          ))}
+          {cleared.map((a) => (
+            <AlertRow key={a.id} alert={a} />
+          ))}
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function AlertRow({ alert: a }: { alert: FraudAlert }) {
+  // Règle 1 : l'étiquette n'est rattachée à aucun boarding pass, donc ni nom ni
+  // PNR à afficher. Prétendre « Passager inconnu · PNR N/A » n'aide personne ;
+  // c'est la note de diagnostic qui porte l'information exploitable.
+  const identified = Boolean(a.passenger_name || a.pnr);
+
+  return (
+    <div style={a.resolved ? { ...s.alert, background: 'var(--bg-neutral)' } : s.alert}>
+      <span style={a.resolved ? { ...s.alertTag, background: 'var(--content-secondary)' } : s.alertTag}>
+        <IconAlert size={15} /> {a.resolved ? 'LEVÉ' : 'ÉCARTÉ'}
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <strong>Étiquette {a.tag_number ?? 'N/A'}</strong>
+        {identified ? (
+          <>
+            {' '}
+            · {a.passenger_name ?? 'Nom inconnu'} · PNR {a.pnr ?? 'N/A'}
+          </>
+        ) : null}
+        <div style={{ color: 'var(--content-secondary)' }}>
+          {a.reason}
+          {a.gate ? ` · ${a.gate}` : ''} · {new Date(a.created_at).toLocaleString('fr-FR')}
+        </div>
+        {a.note ? <div style={{ color: 'var(--content-secondary)', marginTop: 4 }}>{a.note}</div> : null}
+      </div>
     </div>
   );
 }
