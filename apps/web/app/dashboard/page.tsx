@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { flightScope, scopeFlightQuery } from '@/lib/scope';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import type { Flight, FraudAlert } from '@police/shared';
-import { formatRoute } from '@police/shared';
+import type { Flight, FraudAlert, Baggage, PassengerLeg } from '@police/shared';
+import { formatRoute, SOUTE_LABEL } from '@police/shared';
 import { createClient } from '@/supabase/client';
 import { useFlightData, type PassengerRow } from '@/useFlightData';
 import { AppShell, useSession } from '@/components/AppShell';
@@ -310,6 +310,10 @@ function FlightDetail({
   // Une alerte résolue reste consultable mais ne pèse plus sur les compteurs.
   const activeAlerts = useMemo(() => alerts.filter((a) => !a.resolved), [alerts]);
 
+  // Passager dont on affiche la fiche. Le tableau ne montre qu'un compteur
+  // « 1/2 » : savoir QUEL bagage manque demande d'ouvrir le détail.
+  const [detailPax, setDetailPax] = useState<PassengerRow | null>(null);
+
   async function changeStatus(status: Flight['status']) {
     await createClient().from('flights').update({ status }).eq('id', flight.id);
     onUpdated();
@@ -382,7 +386,12 @@ function FlightDetail({
         ) : (
           <div style={s.paxCardList}>
             {passengers.map((p) => (
-              <PassengerCardMobile key={p.id} p={p} fallbackRoute={formatRoute(flight, '→')} />
+              <PassengerCardMobile
+                key={p.id}
+                p={p}
+                fallbackRoute={formatRoute(flight, '→')}
+                onOpen={() => setDetailPax(p)}
+              />
             ))}
           </div>
         )
@@ -408,23 +417,48 @@ function FlightDetail({
                   </td>
                 </tr>
               ) : (
-                passengers.map((p) => <PassengerRowView key={p.id} p={p} fallbackRoute={formatRoute(flight, '→')} />)
+                passengers.map((p) => (
+                  <PassengerRowView
+                    key={p.id}
+                    p={p}
+                    fallbackRoute={formatRoute(flight, '→')}
+                    onOpen={() => setDetailPax(p)}
+                  />
+                ))
               )}
             </tbody>
           </table>
         </div>
       )}
+
+      {detailPax ? (
+        <PassengerDetailModal
+          p={detailPax}
+          fallbackRoute={formatRoute(flight, '→')}
+          onClose={() => setDetailPax(null)}
+        />
+      ) : null}
     </div>
   );
 }
 
-function PassengerCardMobile({ p, fallbackRoute }: { p: PassengerRow; fallbackRoute: string }) {
+function PassengerCardMobile({
+  p,
+  fallbackRoute,
+  onOpen,
+}: {
+  p: PassengerRow;
+  fallbackRoute: string;
+  onOpen: () => void;
+}) {
   const complete = p.declared_baggage_count > 0 && p.confirmedCount >= p.declared_baggage_count;
   const bagColor = p.declared_baggage_count === 0 ? 'var(--content-secondary)' : complete ? 'var(--positive)' : 'var(--warning-content)';
   return (
-    <div style={s.paxCard}>
+    <div style={{ ...s.paxCard, cursor: 'pointer' }} onClick={onOpen}>
       <div style={s.paxCardHead}>
-        <span style={s.paxCardName}>{p.full_name}</span>
+        <button type="button" style={{ ...s.paxNameBtn, ...s.paxCardName }} onClick={onOpen}>
+          {p.full_name}
+        </button>
         {p.boarded ? (
           <span style={{ ...badge, background: 'var(--positive-bg)', color: 'var(--positive)' }}>
             <span style={{ ...s.statusDot, background: 'currentColor' }} /> Embarqué
@@ -453,12 +487,26 @@ function PaxMeta({ label, value, color }: { label: string; value: string; color?
   );
 }
 
-function PassengerRowView({ p, fallbackRoute }: { p: PassengerRow; fallbackRoute: string }) {
+function PassengerRowView({
+  p,
+  fallbackRoute,
+  onOpen,
+}: {
+  p: PassengerRow;
+  fallbackRoute: string;
+  onOpen: () => void;
+}) {
   const complete = p.declared_baggage_count > 0 && p.confirmedCount >= p.declared_baggage_count;
   const color = p.declared_baggage_count === 0 ? 'var(--content-secondary)' : complete ? 'var(--positive)' : 'var(--warning-content)';
   return (
-    <tr>
-      <td style={s.td}>{p.full_name}</td>
+    // Toute la ligne est cliquable pour le confort, mais le nom reste un vrai
+    // bouton : c'est lui qui rend la fiche atteignable au clavier.
+    <tr style={{ cursor: 'pointer' }} onClick={onOpen}>
+      <td style={s.td}>
+        <button type="button" style={s.paxNameBtn} onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+          {p.full_name}
+        </button>
+      </td>
       <td style={s.td}>{p.seat ?? 'N/A'}</td>
       <td style={s.td}>{p.class ?? 'N/A'}</td>
       <td style={s.td}>{p.route ?? fallbackRoute}</td>
@@ -546,6 +594,157 @@ function AlertRow({ alert: a }: { alert: FraudAlert }) {
         </div>
         {a.note ? <div style={{ color: 'var(--content-secondary)', marginTop: 4 }}>{a.note}</div> : null}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Fiche passager. Le tableau se limite à « 1/2 » sur les bagages ; pour agir,
+ * le superviseur a besoin de savoir QUELLE étiquette manque et où en sont
+ * celles qui sont passées. Les données sont chargées à l'ouverture plutôt
+ * qu'avec la liste : sur un vol à 111 passagers, précharger les étiquettes et
+ * les escales de tout le monde pour n'en consulter qu'une serait du gâchis.
+ */
+function PassengerDetailModal({
+  p,
+  fallbackRoute,
+  onClose,
+}: {
+  p: PassengerRow;
+  fallbackRoute: string;
+  onClose: () => void;
+}) {
+  const [legs, setLegs] = useState<PassengerLeg[]>([]);
+  const [bags, setBags] = useState<Baggage[]>([]);
+  const [agents, setAgents] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const supabase = createClient();
+      const [{ data: legRows }, { data: bagRows }] = await Promise.all([
+        supabase.from('passenger_legs').select('*').eq('passenger_id', p.id).order('leg_order'),
+        supabase.from('baggage').select('*').eq('passenger_id', p.id).order('tag_number'),
+      ]);
+      if (cancelled) return;
+      setLegs((legRows as PassengerLeg[] | null) ?? []);
+      setBags((bagRows as Baggage[] | null) ?? []);
+
+      // Nom des agents qui ont scanné, plutôt qu'un UUID illisible.
+      const ids = [p.scanned_by, p.boarded_by].filter((v): v is string => Boolean(v));
+      if (ids.length > 0) {
+        const { data: profs } = await supabase.from('profiles').select('id, full_name').in('id', ids);
+        if (cancelled) return;
+        const map: Record<string, string> = {};
+        for (const pr of (profs as { id: string; full_name: string }[] | null) ?? []) map[pr.id] = pr.full_name;
+        setAgents(map);
+      }
+      setLoading(false);
+    }
+    void load();
+    return () => { cancelled = true; };
+  }, [p.id, p.scanned_by, p.boarded_by]);
+
+  const route = legs.length > 0 ? null : (p.route ?? fallbackRoute);
+  const confirmed = bags.filter((b) => b.is_confirmed).length;
+
+  function agentName(id: string | null): string {
+    if (!id) return 'agent inconnu';
+    return agents[id] ?? 'agent inconnu';
+  }
+
+  return (
+    <div style={s.overlay} onClick={onClose}>
+      <div style={s.paxModal} onClick={(e) => e.stopPropagation()}>
+        <div style={s.modalHead}>
+          <div style={{ minWidth: 0 }}>
+            <h2 style={{ margin: 0, fontSize: 20, letterSpacing: '-0.03em' }}>{p.full_name}</h2>
+            <div style={s.paxModalSub}>
+              PNR {p.pnr} · Siège {p.seat ?? 'N/A'} · Classe {p.class ?? 'N/A'}
+              {p.sequence_number ? ` · Séquence ${p.sequence_number}` : ''}
+            </div>
+          </div>
+          <button type="button" style={s.modalClose} onClick={onClose} aria-label="Fermer">
+            <IconClose size={18} />
+          </button>
+        </div>
+
+        <section style={s.paxSection}>
+          <h3 style={s.paxSectionTitle}>Itinéraire</h3>
+          {route ? (
+            <div style={s.paxLineValue}>{route}</div>
+          ) : (
+            legs.map((l) => (
+              <div key={l.id} style={s.paxLeg}>
+                <span style={s.stopIndex}>{l.leg_order}</span>
+                <span style={s.paxLineValue}>
+                  {l.origin} → {l.destination}
+                </span>
+                <span style={s.paxLineLabel}>{l.flight_number ?? ''}</span>
+              </div>
+            ))
+          )}
+        </section>
+
+        <section style={s.paxSection}>
+          <h3 style={s.paxSectionTitle}>Suivi</h3>
+          <div style={s.paxLine}>
+            <span style={s.paxLineLabel}>Enregistré</span>
+            <span style={s.paxLineValue}>
+              {formatTime(p.scanned_at)} par {agentName(p.scanned_by)}
+            </span>
+          </div>
+          <div style={s.paxLine}>
+            <span style={s.paxLineLabel}>Embarquement</span>
+            <span style={s.paxLineValue}>
+              {p.boarded
+                ? `${formatTime(p.boarded_at)} par ${agentName(p.boarded_by)}`
+                : 'Pas encore embarqué'}
+            </span>
+          </div>
+        </section>
+
+        <section style={s.paxSection}>
+          <h3 style={s.paxSectionTitle}>
+            Bagages · {confirmed} au tapis sur {p.declared_baggage_count} déclaré
+            {p.declared_baggage_count > 1 ? 's' : ''}
+          </h3>
+          {loading ? (
+            <div style={s.paxLineLabel}>Chargement…</div>
+          ) : bags.length === 0 ? (
+            <div style={s.paxLineLabel}>Aucun bagage déclaré sur le boarding pass.</div>
+          ) : (
+            bags.map((b) => <BaggageDetailRow key={b.id} b={b} />)
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
+/** Une étiquette et son parcours réel, étape par étape. */
+function BaggageDetailRow({ b }: { b: Baggage }) {
+  const steps: string[] = [];
+  if (b.is_confirmed) steps.push(`Au tapis ${formatTime(b.scanned_at)}`);
+  if (b.on_dolly) steps.push(`Dolly ${formatTime(b.on_dolly_at)}`);
+  if (b.soute) steps.push(`${SOUTE_LABEL[b.soute]} ${formatTime(b.soute_at)}`);
+  if (b.in_hold) steps.push(`Chargé ${formatTime(b.in_hold_at)}`);
+  if (b.rush) steps.push(`Rush ${formatTime(b.rush_at)}`);
+  if (b.arrived) steps.push(`Arrivé ${formatTime(b.arrived_at)}`);
+
+  return (
+    <div style={s.paxBag}>
+      <span style={s.paxBagTag}>{b.tag_number}</span>
+      {b.is_confirmed ? (
+        <span style={s.paxLineValue}>{steps.join(' · ')}</span>
+      ) : (
+        // Le cas qui n'apparaît nulle part ailleurs : déclaré au comptoir, mais
+        // jamais présenté au tapis. Ni le compteur ni les alertes ne le disent.
+        <span style={{ ...s.paxLineValue, color: 'var(--warning-content)' }}>
+          Déclaré au comptoir, jamais scanné au tapis
+        </span>
+      )}
     </div>
   );
 }
@@ -798,8 +997,23 @@ const s: Record<string, CSSProperties> = {
   td: { padding: 14, color: 'var(--content-primary)', borderBottom: '1px solid var(--border-neutral)' },
   tdEmpty: { padding: '32px 14px', textAlign: 'center', color: 'var(--content-secondary)' },
 
+  // Pas de soulignement ni de couleur d'accent : sur une centaine de lignes ça
+  // ferait un mur de liens. Le survol de ligne (globals.css) et le curseur
+  // suffisent à indiquer que c'est cliquable.
+  paxNameBtn: { background: 'transparent', border: 'none', padding: 0, font: 'inherit', fontWeight: 600, color: 'inherit', cursor: 'pointer', textAlign: 'left' },
+
   overlay: { ...modalOverlay },
   modal: { ...modalPanel, width: 460, maxWidth: '100%', padding: 24, display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90vh', overflowY: 'auto' },
+  paxModal: { ...modalPanel, width: 560, maxWidth: '100%', padding: 24, display: 'flex', flexDirection: 'column', gap: 20, maxHeight: '90vh', overflowY: 'auto' },
+  paxModalSub: { color: 'var(--content-secondary)', fontSize: 13, marginTop: 4 },
+  paxSection: { display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid var(--border-neutral)', paddingTop: 16 },
+  paxSectionTitle: { margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--content-secondary)', fontWeight: 600 },
+  paxLine: { display: 'flex', gap: 12, alignItems: 'baseline', flexWrap: 'wrap' },
+  paxLineLabel: { color: 'var(--content-secondary)', fontSize: 13, minWidth: 110 },
+  paxLineValue: { fontSize: 14, color: 'var(--content-primary)' },
+  paxLeg: { display: 'flex', gap: 10, alignItems: 'center' },
+  paxBag: { display: 'flex', gap: 12, alignItems: 'baseline', flexWrap: 'wrap', paddingTop: 4 },
+  paxBagTag: { fontVariantNumeric: 'tabular-nums', fontSize: 14, fontWeight: 600, minWidth: 110 },
   modalHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   modalClose: { background: 'transparent', border: 'none', color: 'var(--content-secondary)', display: 'grid', placeItems: 'center', padding: 4 },
   row: { display: 'flex', gap: 12 },
