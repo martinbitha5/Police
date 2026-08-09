@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { AppState } from 'react-native';
 import type { Flight } from '@police/shared';
 import { todayAtAirport } from '@police/shared';
+import { fetchOperatingDay } from './api';
 import { useAuth } from './auth';
 import { supabase } from './supabase';
 
@@ -14,9 +16,36 @@ export interface FlightStats {
 
 const EMPTY_STATS: FlightStats = { pax: 0, bagTotal: 0, bagOk: 0, boarded: 0 };
 
+/**
+ * Confrontation entre la journée du serveur et celle de l'appareil.
+ *
+ * Sert à afficher le désaccord plutôt qu'à le subir : un PDA dont la date
+ * dérive demandait les vols d'un autre jour et recevait une liste cohérente
+ * mais fausse, sans que rien ne le signale.
+ */
+export interface ClockCheck {
+  /** Journée retenue pour la liste affichée. */
+  day: string;
+  /** Journée calculée par le serveur. null si l'API est injoignable. */
+  serverDay: string | null;
+  /** Journée calculée par l'horloge de l'appareil. */
+  deviceDay: string;
+  /**
+   * Écart entre l'horloge de l'appareil et celle du serveur, en millisecondes.
+   * Inclut le temps d'aller-retour réseau, négligeable au regard des écarts
+   * qu'on cherche à repérer (des minutes, souvent des heures). null si l'API
+   * n'a pas répondu.
+   */
+  driftMs: number | null;
+}
+
+const UNKNOWN_CLOCK: ClockCheck = { day: '', serverDay: null, deviceDay: '', driftMs: null };
+
 interface FlightsState {
   flights: Flight[];
   loading: boolean;
+  /** État de l'horloge à la dernière synchronisation. */
+  clock: ClockCheck;
   getFlight: (id: string) => Flight | undefined;
   statsFor: (id: string) => FlightStats;
   refresh: () => Promise<void>;
@@ -26,9 +55,15 @@ interface FlightsState {
 const FlightsContext = createContext<FlightsState | undefined>(undefined);
 
 // La liste des vols proposée à l'agent est celle de la journée d'exploitation
-// de SON aéroport. toISOString() renvoyait la date UTC : à Kinshasa (UTC+1),
-// entre 00h00 et 01h00, le PDA proposait encore les vols de la veille et un
-// scan pouvait partir sur le mauvais vol.
+// de SON aéroport. Elle est demandée au serveur : l'horloge d'un PDA de terrain
+// n'est pas une source de vérité, et un appareil qui dérive travaillait sur les
+// vols d'un autre jour sans que personne ne s'en aperçoive. Repli sur l'horloge
+// locale si l'API ne répond pas, mieux vaut la liste d'hier que pas de liste.
+
+/** Clé de tri des vols : heure de départ croissante, sans horaire en dernier. */
+function departureKey(f: Flight): string {
+  return f.departure_time ?? '9999';
+}
 
 /** Ligne renvoyée par la RPC flight_stats_for_date. */
 interface StatsRow {
@@ -83,8 +118,12 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [stats, setStats] = useState<Record<string, FlightStats>>({});
   const [loading, setLoading] = useState(true);
+  const [clock, setClock] = useState<ClockCheck>(UNKNOWN_CLOCK);
   // Identifiants des vols connus, pour ne réagir qu'aux événements pertinents.
   const flightIds = useRef<Set<string>>(new Set());
+  // Journée affichée, lisible depuis les gestionnaires temps réel sans les
+  // réabonner à chaque changement de date.
+  const dayRef = useRef<string>('');
 
   const refreshStats = useCallback(async (id: string) => {
     const s = await fetchStats(id);
@@ -93,7 +132,24 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!session) return;
-    const day = todayAtAirport(profile?.airport_code);
+
+    // Quel jour est-il à l'aéroport ? On demande au serveur, et on garde
+    // l'horloge de l'appareil comme repli, pas comme référence.
+    const deviceDay = todayAtAirport(profile?.airport_code);
+    let serverDay: string | null = null;
+    let driftMs: number | null = null;
+    try {
+      const answer = await fetchOperatingDay();
+      serverDay = answer.day;
+      driftMs = Date.now() - new Date(answer.serverTime).getTime();
+    } catch {
+      // API injoignable : on continue sur l'horloge locale, comportement d'avant.
+    }
+    const day = serverDay ?? deviceDay;
+
+    dayRef.current = day;
+    setClock({ day, serverDay, deviceDay, driftMs });
+
     const { data } = await supabase
       .from('flights')
       .select('*')
@@ -112,7 +168,9 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
     if (!session) {
       setFlights([]);
       setStats({});
+      setClock(UNKNOWN_CLOCK);
       flightIds.current = new Set();
+      dayRef.current = '';
       setLoading(false);
       return;
     }
@@ -181,6 +239,32 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
           setFlights((prev) => prev.map((f) => (f.id === updated.id ? updated : f)));
         }
       })
+      // Un vol créé par le superviseur en cours de journée n'apparaissait
+      // jamais : seules les modifications étaient écoutées. L'agent voyait une
+      // liste d'apparence normale, à laquelle il manquait son vol.
+      // Le cloisonnement par aéroport s'applique aussi aux événements temps
+      // réel ; on ne garde en plus que la journée affichée, pour ne pas voir
+      // surgir un vol de demain préparé à l'avance.
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'flights' }, (payload) => {
+        const created = payload.new as Flight;
+        if (!created?.id || created.date !== dayRef.current) return;
+        flightIds.current.add(created.id);
+        setFlights((prev) =>
+          prev.some((f) => f.id === created.id)
+            ? prev
+            : [...prev, created].sort((a, b) => departureKey(a).localeCompare(departureKey(b))),
+        );
+      })
+      // Vol supprimé : on ne retire que ce qu'on affiche déjà. La suppression
+      // ne transporte que la clé primaire, donc pas de quoi vérifier le
+      // périmètre — se limiter aux vols connus revient au même, ils sont déjà
+      // passés par la policy de lecture.
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'flights' }, (payload) => {
+        const removed = (payload.old as { id?: string } | null)?.id;
+        if (!removed || !flightIds.current.has(removed)) return;
+        flightIds.current.delete(removed);
+        setFlights((prev) => prev.filter((f) => f.id !== removed));
+      })
       .subscribe((status) => {
         // À la (re)connexion du canal, on réconcilie avec des compteurs
         // autoritatifs (rattrape les événements manqués pendant une coupure).
@@ -192,11 +276,24 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
     };
   }, [session, refresh]);
 
+  // Retour de l'app au premier plan. Un PDA posé sur un comptoir rouvrait sur
+  // les données de plusieurs heures plus tôt, et personne ne pense à tirer la
+  // liste. C'est aussi ce qui fait basculer la journée après minuit.
+  useEffect(() => {
+    if (!session) return;
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void refresh();
+    });
+    return () => sub.remove();
+  }, [session, refresh]);
+
   const getFlight = useCallback((id: string) => flights.find((f) => f.id === id), [flights]);
   const statsFor = useCallback((id: string) => stats[id] ?? EMPTY_STATS, [stats]);
 
   return (
-    <FlightsContext.Provider value={{ flights, loading, getFlight, statsFor, refresh, refreshStatsFor: refreshStats }}>
+    <FlightsContext.Provider
+      value={{ flights, loading, clock, getFlight, statsFor, refresh, refreshStatsFor: refreshStats }}
+    >
       {children}
     </FlightsContext.Provider>
   );

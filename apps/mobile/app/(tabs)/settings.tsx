@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Switch, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Switch, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { ScreenBackground, GlassCard, useContentPadding } from '@/Glass';
 import { colors, radius, spacing } from '@/theme';
 import { hapticsOn, setHaptics } from '@/settings';
+import { useFlights } from '@/flights-store';
+import { clockSummary, dayLabel, clockIsOff, wrongDay } from '@/clock';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api-police.brsats.com';
 const SUPABASE_HOST = (() => {
@@ -17,14 +19,39 @@ const SUPABASE_HOST = (() => {
 })();
 const VERSION = Constants.expoConfig?.version ?? '1.0.0';
 
+/**
+ * Journée d'exploitation en clair. On n'affiche les deux dates que lorsqu'elles
+ * divergent : c'est le désaccord qui est l'information, pas la date elle-même.
+ */
+function operatingDayValue(clock: { day: string; serverDay: string | null; deviceDay: string }): string {
+  if (!clock.day) return '—';
+  if (clock.serverDay === null) return `${dayLabel(clock.day)} (appareil, serveur injoignable)`;
+  return clock.serverDay === clock.deviceDay
+    ? dayLabel(clock.day)
+    : `${dayLabel(clock.serverDay)} (aéroport) · ${dayLabel(clock.deviceDay)} (appareil)`;
+}
+
 export default function Settings() {
   const [haptics, setHapticsState] = useState(hapticsOn());
   const pad = useContentPadding(true);
   const router = useRouter();
+  const { clock, refresh } = useFlights();
+  const [syncing, setSyncing] = useState(false);
 
   const toggleHaptics = (v: boolean) => {
     setHapticsState(v);
     void setHaptics(v);
+  };
+
+  // Recharge les données. Ne touche pas à la session : un agent en plein
+  // embarquement ne doit pas se retrouver à retaper son mot de passe.
+  const resynchronise = async () => {
+    setSyncing(true);
+    try {
+      await refresh();
+    } finally {
+      setSyncing(false);
+    }
   };
 
   return (
@@ -66,6 +93,29 @@ export default function Settings() {
       </Section>
 
       <Section title="Connexion">
+        <InfoRow
+          icon="calendar"
+          label="Journée d'exploitation"
+          value={operatingDayValue(clock)}
+          alert={wrongDay(clock)}
+          lines={2}
+        />
+        <Divider />
+        <InfoRow
+          icon="time"
+          label="Horloge de l'appareil"
+          value={clockSummary(clock)}
+          alert={clockIsOff(clock)}
+        />
+        <Divider />
+        <ActionRow
+          icon="refresh"
+          label="Resynchroniser"
+          hint="Recharge vols et compteurs. Ne déconnecte pas."
+          busy={syncing}
+          onPress={() => void resynchronise()}
+        />
+        <Divider />
         <InfoRow icon="server" label="Serveur API" value={API_URL} />
         <Divider />
         <InfoRow icon="cloud" label="Base Supabase" value={SUPABASE_HOST} />
@@ -101,19 +151,63 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function InfoRow({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
+function InfoRow({
+  icon,
+  label,
+  value,
+  alert,
+  lines = 1,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+  /** Met la valeur en évidence : quelque chose ne va pas et doit se voir. */
+  alert?: boolean;
+  lines?: number;
+}) {
   return (
     <View style={styles.row}>
+      <View style={styles.rowIcon}>
+        <Ionicons name={icon} size={18} color={alert ? colors.warning : colors.primary} />
+      </View>
+      <View style={styles.rowTexts}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        <Text style={[styles.rowValue, alert && styles.rowValueAlert]} numberOfLines={lines}>
+          {value}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function ActionRow({
+  icon,
+  label,
+  hint,
+  busy,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  hint: string;
+  busy: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+      onPress={busy ? undefined : onPress}
+      disabled={busy}
+    >
       <View style={styles.rowIcon}>
         <Ionicons name={icon} size={18} color={colors.primary} />
       </View>
       <View style={styles.rowTexts}>
         <Text style={styles.rowLabel}>{label}</Text>
-        <Text style={styles.rowValue} numberOfLines={1}>
-          {value}
-        </Text>
+        <Text style={styles.rowHint}>{hint}</Text>
       </View>
-    </View>
+      {busy ? <ActivityIndicator color={colors.primary} /> : null}
+    </Pressable>
   );
 }
 
@@ -174,6 +268,7 @@ const styles = StyleSheet.create({
   rowLabel: { color: colors.text, fontSize: 15, fontWeight: '700' },
   rowHint: { color: colors.muted, fontSize: 12, marginTop: 2, fontWeight: '600' },
   rowValue: { color: colors.muted, fontSize: 13, marginTop: 2, fontWeight: '600' },
+  rowValueAlert: { color: colors.warning, fontWeight: '700' },
   divider: { height: 1, backgroundColor: colors.border },
   footer: { color: colors.muted, fontSize: 12, textAlign: 'center', marginTop: spacing(1) },
 });

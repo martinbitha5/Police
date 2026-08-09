@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { FlightStatus } from '@police/shared';
 import { useAuth } from '@/auth';
 import { useFlights } from '@/flights-store';
+import { dayLabel, wrongDay } from '@/clock';
 import { ScreenBackground, GlassCard, useContentPadding } from '@/Glass';
 import { colors, radius, spacing } from '@/theme';
 
@@ -59,7 +60,7 @@ function formatTime(ts: string | null): string {
 export default function Flights() {
   const router = useRouter();
   const { profile } = useAuth();
-  const { flights, loading, refresh, statsFor } = useFlights();
+  const { flights, loading, clock, refresh, statsFor } = useFlights();
   const [refreshing, setRefreshing] = useState(false);
   const pad = useContentPadding(true);
 
@@ -115,6 +116,23 @@ export default function Flights() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListHeaderComponent={
           <View style={styles.headerWrap}>
+            {/* 0. Horloge de l'appareil en désaccord avec l'aéroport.
+                Cas grave : la liste reste crédible alors qu'elle porte sur un
+                autre jour, et les scans partent sur les mauvais vols. */}
+            {wrongDay(clock) ? (
+              <View style={styles.clockAlert}>
+                <Ionicons name="time-outline" size={18} color={colors.warning} />
+                <View style={styles.clockAlertTexts}>
+                  <Text style={styles.clockAlertTitle}>Date de cet appareil incorrecte</Text>
+                  <Text style={styles.clockAlertText}>
+                    L'appareil est au {dayLabel(clock.deviceDay)}, l'aéroport au {dayLabel(clock.day)}. Les vols
+                    ci-dessous sont bien ceux du {dayLabel(clock.day)}. Faites régler la date de l'appareil et
+                    prévenez votre superviseur.
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
             {/* 1. Bandeau d'accueil */}
             <Text style={styles.greeting}>Bonjour, {firstName(profile?.full_name)}</Text>
             <View style={styles.metaRow}>
@@ -198,6 +216,18 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing(3) },
   headerWrap: { marginBottom: spacing(1) },
+  clockAlert: {
+    flexDirection: 'row',
+    gap: spacing(1.5),
+    padding: spacing(1.75),
+    marginBottom: spacing(2),
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.warning,
+  },
+  clockAlertTexts: { flex: 1 },
+  clockAlertTitle: { color: colors.warning, fontSize: 14, fontWeight: '800' },
+  clockAlertText: { color: colors.text, fontSize: 13, lineHeight: 19, marginTop: 2, fontWeight: '600' },
   greeting: { color: colors.text, fontSize: 26, fontWeight: '800', marginLeft: spacing(0.5) },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing(1), marginTop: spacing(0.5), marginLeft: spacing(0.5), marginBottom: spacing(2) },
   metaDate: { color: colors.muted, fontSize: 14, fontWeight: '600' },

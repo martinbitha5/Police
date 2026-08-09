@@ -27,17 +27,19 @@ export interface BoardingScanResponse {
 }
 
 function send(path: string, body: unknown, token: string): Promise<Response> {
+  // Pas de corps = lecture simple (GET). Les scans, eux, portent toujours un corps.
+  const read = body === undefined;
   return fetch(`${API_URL}${path}`, {
-    method: 'POST',
+    method: read ? 'GET' : 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      ...(read ? {} : { 'Content-Type': 'application/json' }),
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(body),
+    body: read ? undefined : JSON.stringify(body),
   });
 }
 
-async function post<T>(path: string, body: unknown): Promise<T> {
+async function request<T>(path: string, body?: unknown): Promise<T> {
   // L'API valide le JWT de l'agent et en dérive l'identité du scanneur : sans
   // token, elle rejette (401). On lit la session courante avant chaque appel.
   const { data } = await supabase.auth.getSession();
@@ -91,8 +93,28 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   return json as T;
 }
 
+/** Journée d'exploitation et heure serveur, référence face à l'horloge du PDA. */
+export interface OperatingDay {
+  airport: string | null;
+  /** Journée en cours à l'aéroport de l'agent (AAAA-MM-JJ). */
+  day: string;
+  /** Instant serveur au moment de la réponse (ISO 8601). */
+  serverTime: string;
+}
+
+/**
+ * Quel jour est-il à l'aéroport ? Question posée au serveur, pas à l'appareil.
+ *
+ * Une horloge de PDA décalée fait afficher les vols d'un autre jour sans que
+ * rien ne le signale. L'appelant reste libre de retomber sur l'horloge locale
+ * si l'API est injoignable : mieux vaut la liste d'hier que pas de liste.
+ */
+export function fetchOperatingDay(): Promise<OperatingDay> {
+  return request<OperatingDay>('/operating-day');
+}
+
 export function scanBoarding(raw: string, flightId: string, scannedBy?: string): Promise<BoardingScanResponse> {
-  return post<BoardingScanResponse>('/scan/boarding', { raw, flightId, scannedBy });
+  return request<BoardingScanResponse>('/scan/boarding', { raw, flightId, scannedBy });
 }
 
 export function scanBaggage(
@@ -101,7 +123,7 @@ export function scanBaggage(
   gate?: string | null,
   scannedBy?: string,
 ): Promise<BaggageScanResult> {
-  return post<BaggageScanResult>('/scan/baggage', { tag, flightId, gate, scannedBy });
+  return request<BaggageScanResult>('/scan/baggage', { tag, flightId, gate, scannedBy });
 }
 
 export function scanEmbarquement(
@@ -109,27 +131,27 @@ export function scanEmbarquement(
   flightId: string,
   scannedBy?: string,
 ): Promise<BoardingGateResult> {
-  return post<BoardingGateResult>('/scan/embarquement', { raw, flightId, scannedBy });
+  return request<BoardingGateResult>('/scan/embarquement', { raw, flightId, scannedBy });
 }
 
 /** Rush : marque le bagage restant pour réacheminement sur le prochain vol. */
 export function rushBaggage(tag: string, flightId: string, scannedBy?: string): Promise<BaggageActionResult> {
-  return post<BaggageActionResult>('/scan/rush', { tag, flightId, scannedBy });
+  return request<BaggageActionResult>('/scan/rush', { tag, flightId, scannedBy });
 }
 
 /** Charger : pousse en soute tous les bagages enregistrés non-rush (groupé, sans scan). */
 export function loadAllBaggage(flightId: string, scannedBy?: string): Promise<BaggageLoadAllResult> {
-  return post<BaggageLoadAllResult>('/scan/load-all', { flightId, scannedBy });
+  return request<BaggageLoadAllResult>('/scan/load-all', { flightId, scannedBy });
 }
 
 /** Dolly : contrôle rayon X — n'admet que les bagages enregistrés, renvoie la progression. */
 export function scanDolly(tag: string, flightId: string, scannedBy?: string): Promise<DollyScanResult> {
-  return post<DollyScanResult>('/scan/dolly', { tag, flightId, scannedBy });
+  return request<DollyScanResult>('/scan/dolly', { tag, flightId, scannedBy });
 }
 
 /** Arrivée : réception à destination — confirme qu'un bagage chargé est bien arrivé. */
 export function scanArrivee(tag: string, flightId: string, scannedBy?: string): Promise<ArrivalScanResult> {
-  return post<ArrivalScanResult>('/scan/arrivee', { tag, flightId, scannedBy });
+  return request<ArrivalScanResult>('/scan/arrivee', { tag, flightId, scannedBy });
 }
 
 /** Soute : identifie dans quel compartiment (avant/arrière) le bagage est chargé. */
@@ -139,5 +161,5 @@ export function scanSoute(
   soute: SoutePosition,
   scannedBy?: string,
 ): Promise<BaggageActionResult> {
-  return post<BaggageActionResult>('/scan/soute', { tag, flightId, soute, scannedBy });
+  return request<BaggageActionResult>('/scan/soute', { tag, flightId, soute, scannedBy });
 }
