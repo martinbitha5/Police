@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Flight } from '@police/shared';
+import { todayAtAirport } from '@police/shared';
 import { useAuth } from './auth';
 import { supabase } from './supabase';
 
@@ -24,9 +25,10 @@ interface FlightsState {
 
 const FlightsContext = createContext<FlightsState | undefined>(undefined);
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+// La liste des vols proposée à l'agent est celle de la journée d'exploitation
+// de SON aéroport. toISOString() renvoyait la date UTC : à Kinshasa (UTC+1),
+// entre 00h00 et 01h00, le PDA proposait encore les vols de la veille et un
+// scan pouvait partir sur le mauvais vol.
 
 /** Ligne renvoyée par la RPC flight_stats_for_date. */
 interface StatsRow {
@@ -77,7 +79,7 @@ interface ChangePayload {
 const clamp0 = (n: number) => (n < 0 ? 0 : n);
 
 export function FlightsProvider({ children }: { children: ReactNode }) {
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [stats, setStats] = useState<Record<string, FlightStats>>({});
   const [loading, setLoading] = useState(true);
@@ -91,18 +93,19 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!session) return;
+    const day = todayAtAirport(profile?.airport_code);
     const { data } = await supabase
       .from('flights')
       .select('*')
-      .eq('date', today())
+      .eq('date', day)
       .order('departure_time', { ascending: true });
     const list = (data as Flight[] | null) ?? [];
     setFlights(list);
     flightIds.current = new Set(list.map((f) => f.id));
     setLoading(false);
     // Toutes les stats du jour en UNE requête (au lieu de 4 × nombre de vols).
-    setStats(await fetchAllStats(today()));
-  }, [session]);
+    setStats(await fetchAllStats(day));
+  }, [session, profile?.airport_code]);
 
   // Charge à la connexion, vide à la déconnexion.
   useEffect(() => {

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import type { Baggage, Passenger, Flight, BaggageDispute, DisputeStatus } from '@police/shared';
-import { formatRoute, DISPUTE_STATUS_LABEL } from '@police/shared';
+import { formatRoute, DISPUTE_STATUS_LABEL, todayAtAirport } from '@police/shared';
 import { createClient } from '@/supabase/client';
 import { AppShell, useSession } from '@/components/AppShell';
 import { card, input, label, btnPrimary, btnGhost, badge, badgeTone, DISPUTE_BADGE } from '@/ui/theme';
@@ -16,13 +16,6 @@ type BaggageRow = Baggage & {
 
 const DISPUTE_STATUSES: DisputeStatus[] = ['open', 'investigating', 'resolved'];
 
-/** Date du jour au format YYYY-MM-DD (fuseau local). */
-function todayISO(): string {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${m}-${day}`;
-}
 
 export default function Page() {
   return (
@@ -35,6 +28,9 @@ export default function Page() {
 function LitigeView() {
   const profile  = useSession();
   const isMobile = useIsMobile();
+  // Journée d'exploitation de l'aéroport du profil, pas celle de l'appareil ni
+  // celle d'UTC : elle bascule à minuit sur place.
+  const todayISO = todayAtAirport(profile?.airport_code);
   const [rows, setRows] = useState<BaggageRow[]>([]);
   const [disputes, setDisputes] = useState<BaggageDispute[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +38,7 @@ function LitigeView() {
 
   const [query, setQuery] = useState('');
   const [flightFilter, setFlightFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState(todayISO());
+  const [dateFilter, setDateFilter] = useState(todayISO);
   const [loadFilter, setLoadFilter] = useState<'all' | 'loaded' | 'pending'>('all');
   const [disputeFilter, setDisputeFilter] = useState<'all' | 'none' | DisputeStatus>('all');
 
@@ -134,7 +130,7 @@ function LitigeView() {
         <div>
           <h1 style={s.title}>Litiges bagage</h1>
           <p style={s.sub}>
-            {dateFilter === todayISO() ? "Aujourd'hui" : dateFilter} · {rows.length} bagage{rows.length > 1 ? 's' : ''} ·{' '}
+            {dateFilter === todayISO ? "Aujourd'hui" : dateFilter} · {rows.length} bagage{rows.length > 1 ? 's' : ''} ·{' '}
             {openCount} litige{openCount > 1 ? 's' : ''} en cours
           </p>
         </div>
@@ -172,12 +168,12 @@ function LitigeView() {
               type="date"
               style={s.dateInput}
               value={dateFilter}
-              max={todayISO()}
-              onChange={(e) => setDateFilter(e.target.value || todayISO())}
+              max={todayISO}
+              onChange={(e) => setDateFilter(e.target.value || todayISO)}
             />
             <button
-              style={{ ...s.todayBtn, ...(dateFilter === todayISO() ? s.todayBtnActive : {}) }}
-              onClick={() => setDateFilter(todayISO())}
+              style={{ ...s.todayBtn, ...(dateFilter === todayISO ? s.todayBtnActive : {}) }}
+              onClick={() => setDateFilter(todayISO)}
               type="button"
             >
               Aujourd'hui

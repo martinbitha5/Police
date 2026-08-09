@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import ExcelJS from 'exceljs';
 import type { Flight, Passenger, BaggageDispute } from '@police/shared';
-import { formatRoute, DISPUTE_STATUS_LABEL } from '@police/shared';
+import { formatRoute, DISPUTE_STATUS_LABEL, todayAtAirport, HUB_CODE } from '@police/shared';
 import { createClient } from '@/supabase/server';
 
 type DisputeRow = BaggageDispute & {
@@ -18,12 +18,12 @@ const COLOR = {
   zebra: 'FFF8FAFC',
 };
 
-/** Date du jour au format YYYY-MM-DD (fuseau local). */
+/**
+ * Journée d'exploitation. Route serveur : déployée, elle tourne en UTC, le
+ * fuseau de la machine donnerait la mauvaise date une partie de la nuit.
+ */
 function todayISO(): string {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${m}-${day}`;
+  return todayAtAirport(HUB_CODE);
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;

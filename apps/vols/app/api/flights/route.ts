@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { todayAtAirport } from '@police/shared';
 import { createAdminClient } from '@/supabase/admin';
 import type { PublicFlight } from '@/types';
 
@@ -25,12 +26,12 @@ const cache = new Map<string, CacheEntry>();
 // la même requête Supabase au lieu d'en déclencher chacune une (thundering herd).
 const inFlight = new Map<string, Promise<PublicFlight[]>>();
 
-/** Date du jour au format YYYY-MM-DD (fuseau local serveur). */
+/**
+ * Journée d'exploitation du hub. Surtout pas le fuseau du serveur : déployé, il
+ * tourne en UTC et basculerait de jour une heure trop tôt pour Kinshasa.
+ */
 function todayISO(): string {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${m}-${day}`;
+  return todayAtAirport(HUB);
 }
 
 async function fetchFlights(date: string): Promise<PublicFlight[]> {

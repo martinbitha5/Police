@@ -9,6 +9,8 @@ import {
   AIRPORTS,
   findAirport,
   airportLabel,
+  todayAtAirport,
+  HUB_CODE,
   type FlightStatus,
 } from '@police/shared';
 import type { PublicFlight, FlightsResponse } from '@/types';
@@ -26,11 +28,12 @@ const STATUS_PILL: Record<FlightStatus, { bg: string; fg: string }> = {
   cancelled: { bg: 'var(--negative-bg)', fg: 'var(--negative)' },
 };
 
+/**
+ * Journée d'exploitation du hub, pas celle du visiteur. Un passager qui consulte
+ * le tableau depuis l'étranger doit voir les vols du jour à Kinshasa.
+ */
 function todayISO(): string {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${m}-${day}`;
+  return todayAtAirport(HUB_CODE);
 }
 
 function timeOf(ts: string | null): string {
