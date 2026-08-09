@@ -1,7 +1,9 @@
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import type { FlightStatus } from '@police/shared';
+import type { FlightOperation, FlightStatus } from '@police/shared';
+import { operationAllowed, stationRole, stationRoleSummary } from '@police/shared';
+import { useAuth } from '@/auth';
 import { useFlights } from '@/flights-store';
 import { ScreenBackground, GlassCard, useSafePadding } from '@/Glass';
 import { colors, radius, spacing } from '@/theme';
@@ -24,9 +26,97 @@ function formatTime(ts: string | null): string {
   return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
+/**
+ * Opérations d'un vol, dans l'ordre du terrain.
+ *
+ * Toutes ne sont pas proposées partout : l'agent de l'aéroport de départ
+ * prépare et charge, celui de l'aéroport d'arrivée réceptionne, celui d'une
+ * escale fait les deux. On masque plutôt que de griser, parce qu'une option
+ * grisée reste une option qu'on essaie d'ouvrir. L'API refuse de toute façon,
+ * un PDA resté en version antérieure ne peut donc rien enregistrer de travers.
+ */
+const OPERATIONS: {
+  op: FlightOperation;
+  path: '/checkin' | '/baggage' | '/embarquement' | '/dolly' | '/charger' | '/rush' | '/soute' | '/arrivee';
+  icon: keyof typeof Ionicons.glyphMap;
+  tint: string;
+  title: string;
+  subtitle: string;
+  /** Verrouillé quand la porte est fermée ou le vol annulé. */
+  lockOnClosed?: boolean;
+}[] = [
+  {
+    op: 'checkin',
+    path: '/checkin',
+    icon: 'qr-code',
+    tint: colors.primary,
+    title: 'Check-in',
+    subtitle: 'Scanner les boarding pass',
+    lockOnClosed: true,
+  },
+  {
+    op: 'baggage',
+    path: '/baggage',
+    icon: 'bag-handle',
+    tint: colors.warning,
+    title: 'Bagages',
+    subtitle: 'Scanner les étiquettes bagage',
+  },
+  {
+    op: 'embarquement',
+    path: '/embarquement',
+    icon: 'airplane',
+    tint: colors.success,
+    title: 'Embarquement',
+    subtitle: 'Confirmer les passagers à la porte',
+    lockOnClosed: true,
+  },
+  {
+    op: 'dolly',
+    path: '/dolly',
+    icon: 'cart',
+    tint: colors.primary,
+    title: 'Dolly',
+    subtitle: 'Contrôle rayon X — bagages sûrs vers le chargement',
+  },
+  {
+    op: 'charger',
+    path: '/charger',
+    icon: 'cube',
+    tint: colors.accent,
+    title: 'Charger',
+    subtitle: 'Bagages chargés en soute pour la destination',
+  },
+  {
+    op: 'rush',
+    path: '/rush',
+    icon: 'repeat',
+    tint: colors.warning,
+    title: 'Rush',
+    subtitle: 'Bagages restants à réacheminer',
+  },
+  {
+    op: 'soute',
+    path: '/soute',
+    icon: 'layers',
+    tint: colors.accent,
+    title: 'Soute',
+    subtitle: 'Identifier le compartiment de chargement',
+  },
+  {
+    op: 'arrivee',
+    path: '/arrivee',
+    icon: 'download',
+    tint: colors.success,
+    title: 'Arrivée',
+    subtitle: 'Réceptionner les bagages à destination',
+  },
+];
+
 export default function FlightDetail() {
   const { flightId } = useLocalSearchParams<{ flightId: string }>();
   const router = useRouter();
+  const { profile } = useAuth();
   const { getFlight, statsFor, loading } = useFlights();
   const flight = flightId ? getFlight(flightId) : undefined;
   const { pax, bagTotal, bagOk, boarded } = flightId
@@ -53,6 +143,13 @@ export default function FlightDetail() {
       </View>
     );
   }
+
+  // Ce que l'agent peut faire dépend de la place de SON aéroport sur CE vol,
+  // pas de son compte : le même agent prépare le départ de son vol du matin et
+  // réceptionne l'avion qui rentre l'après-midi.
+  const role = stationRole(flight, profile?.airport_code);
+  const available = OPERATIONS.filter((o) => operationAllowed(o.op, role));
+  const summary = stationRoleSummary(role, flight);
 
   return (
     <View style={styles.root}>
@@ -99,66 +196,22 @@ export default function FlightDetail() {
         </View>
       </GlassCard>
 
-      <Text style={styles.sectionTitle}>Que voulez-vous faire ?</Text>
+      <View>
+        <Text style={styles.sectionTitle}>Que voulez-vous faire ?</Text>
+        {summary ? <Text style={styles.sectionNote}>{summary}</Text> : null}
+      </View>
 
-      <OptionCard
-        icon="qr-code"
-        tint={colors.primary}
-        title="Check-in"
-        subtitle="Scanner les boarding pass"
-        lockedReason={isLocked ? lockReason : undefined}
-        onPress={() => router.push({ pathname: '/checkin', params: { flightId: flight.id } })}
-      />
-      <OptionCard
-        icon="bag-handle"
-        tint={colors.warning}
-        title="Bagages"
-        subtitle="Scanner les étiquettes bagage"
-        onPress={() => router.push({ pathname: '/baggage', params: { flightId: flight.id } })}
-      />
-      <OptionCard
-        icon="airplane"
-        tint={colors.success}
-        title="Embarquement"
-        subtitle="Confirmer les passagers à la porte"
-        lockedReason={isLocked ? lockReason : undefined}
-        onPress={() => router.push({ pathname: '/embarquement', params: { flightId: flight.id } })}
-      />
-      <OptionCard
-        icon="cart"
-        tint={colors.primary}
-        title="Dolly"
-        subtitle="Contrôle rayon X — bagages sûrs vers le chargement"
-        onPress={() => router.push({ pathname: '/dolly', params: { flightId: flight.id } })}
-      />
-      <OptionCard
-        icon="cube"
-        tint={colors.accent}
-        title="Charger"
-        subtitle="Bagages chargés en soute pour la destination"
-        onPress={() => router.push({ pathname: '/charger', params: { flightId: flight.id } })}
-      />
-      <OptionCard
-        icon="repeat"
-        tint={colors.warning}
-        title="Rush"
-        subtitle="Bagages restants à réacheminer"
-        onPress={() => router.push({ pathname: '/rush', params: { flightId: flight.id } })}
-      />
-      <OptionCard
-        icon="layers"
-        tint={colors.accent}
-        title="Soute"
-        subtitle="Identifier le compartiment de chargement"
-        onPress={() => router.push({ pathname: '/soute', params: { flightId: flight.id } })}
-      />
-      <OptionCard
-        icon="download"
-        tint={colors.success}
-        title="Arrivée"
-        subtitle="Réceptionner les bagages à destination"
-        onPress={() => router.push({ pathname: '/arrivee', params: { flightId: flight.id } })}
-      />
+      {available.map((o) => (
+        <OptionCard
+          key={o.op}
+          icon={o.icon}
+          tint={o.tint}
+          title={o.title}
+          subtitle={o.subtitle}
+          lockedReason={o.lockOnClosed && isLocked ? lockReason : undefined}
+          onPress={() => router.push({ pathname: o.path, params: { flightId: flight.id } })}
+        />
+      ))}
       </ScrollView>
     </View>
   );
@@ -253,6 +306,7 @@ const styles = StyleSheet.create({
   statValue: { color: colors.text, fontSize: 22, fontWeight: '800' },
   statLabel: { color: colors.muted, fontSize: 12, fontWeight: '600' },
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: spacing(0.5), marginLeft: spacing(0.5) },
+  sectionNote: { color: colors.muted, fontSize: 14, fontWeight: '600', marginTop: 2, marginLeft: spacing(0.5) },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
