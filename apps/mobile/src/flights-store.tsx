@@ -77,10 +77,15 @@ interface StatsRow {
 /**
  * Stats de TOUS les vols du jour en UNE seule requête (RPC agrégée), au lieu de
  * 4 requêtes count par vol. Clé de la scalabilité multi-agents.
+ *
+ * Renvoie null en cas d'échec — JAMAIS un objet vide. Un réseau mobile qui
+ * lâche une requête faisait retomber tous les compteurs à zéro en silence : le
+ * PDA affichait « 0 pax » sur un vol plein, et le temps réel repartait de zéro.
+ * L'appelant décide quoi faire d'un échec (garder le cache, réessayer).
  */
-async function fetchAllStats(date: string): Promise<Record<string, FlightStats>> {
+async function fetchAllStats(date: string): Promise<Record<string, FlightStats> | null> {
   const { data, error } = await supabase.rpc('flight_stats_for_date', { d: date });
-  if (error || !data) return {};
+  if (error || !data) return null;
   const out: Record<string, FlightStats> = {};
   for (const r of data as StatsRow[]) {
     out[r.flight_id] = {
@@ -94,9 +99,10 @@ async function fetchAllStats(date: string): Promise<Record<string, FlightStats>>
 }
 
 /** Stats d'un seul vol (rafraîchissement ciblé après un scan). Mêmes exclusions
- * que la RPC : bagages passagers hors annulés, passagers hors débarqués. */
-async function fetchStats(flightId: string): Promise<FlightStats> {
-  const [{ count: p }, { count: bt }, { count: bo }, { count: brd }] = await Promise.all([
+ * que la RPC : bagages passagers hors annulés, passagers hors débarqués.
+ * null en cas d'échec réseau : on garde alors les chiffres déjà affichés. */
+async function fetchStats(flightId: string): Promise<FlightStats | null> {
+  const [p, bt, bo, brd] = await Promise.all([
     supabase.from('passengers').select('id', { count: 'exact', head: true }).eq('flight_id', flightId).eq('offloaded', false),
     supabase.from('baggage').select('id', { count: 'exact', head: true }).eq('flight_id', flightId).eq('kind', 'passenger').eq('cancelled', false),
     supabase
@@ -113,7 +119,8 @@ async function fetchStats(flightId: string): Promise<FlightStats> {
       .eq('offloaded', false)
       .eq('boarded', true),
   ]);
-  return { pax: p ?? 0, bagTotal: bt ?? 0, bagOk: bo ?? 0, boarded: brd ?? 0 };
+  if (p.error || bt.error || bo.error || brd.error) return null;
+  return { pax: p.count ?? 0, bagTotal: bt.count ?? 0, bagOk: bo.count ?? 0, boarded: brd.count ?? 0 };
 }
 
 /** Événement realtime minimal (postgres_changes). */
@@ -139,7 +146,8 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
 
   const refreshStats = useCallback(async (id: string) => {
     const s = await fetchStats(id);
-    setStats((prev) => ({ ...prev, [id]: s }));
+    // Échec réseau : on garde les chiffres affichés plutôt que des zéros.
+    if (s) setStats((prev) => ({ ...prev, [id]: s }));
   }, []);
 
   const refresh = useCallback(async () => {
@@ -171,8 +179,21 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
     setFlights(list);
     flightIds.current = new Set(list.map((f) => f.id));
     setLoading(false);
+
     // Toutes les stats du jour en UNE requête (au lieu de 4 × nombre de vols).
-    setStats(await fetchAllStats(day));
+    // Si elle échoue (réseau qui lâche UNE requête), on ne laisse pas des
+    // zéros : repli vol par vol, et ce qui échoue encore garde son cache.
+    const bulk = await fetchAllStats(day);
+    if (bulk) {
+      setStats(bulk);
+    } else {
+      const perFlight = await Promise.all(list.map(async (f) => [f.id, await fetchStats(f.id)] as const));
+      setStats((prev) => {
+        const next = { ...prev };
+        for (const [id, s] of perFlight) if (s) next[id] = s;
+        return next;
+      });
+    }
   }, [session, profile?.airport_code]);
 
   // Charge à la connexion, vide à la déconnexion.
@@ -297,6 +318,22 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
     });
     return () => sub.remove();
   }, [session, refresh]);
+
+  // Filet de sécurité : certains réseaux tuent le websocket temps réel sans
+  // bruit, et plus aucun événement n'arrive. Toutes les 60 s, app au premier
+  // plan, on recharge les stats agrégées (UNE requête) ; un échec garde le
+  // cache. Chaque PDA reste ainsi cohérent même quand le temps réel est mort.
+  useEffect(() => {
+    if (!session) return;
+    const id = setInterval(() => {
+      if (AppState.currentState !== 'active' || !dayRef.current) return;
+      void (async () => {
+        const bulk = await fetchAllStats(dayRef.current);
+        if (bulk) setStats(bulk);
+      })();
+    }, 60_000);
+    return () => clearInterval(id);
+  }, [session]);
 
   const getFlight = useCallback((id: string) => flights.find((f) => f.id === id), [flights]);
   const statsFor = useCallback((id: string) => stats[id] ?? EMPTY_STATS, [stats]);

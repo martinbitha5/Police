@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -134,8 +135,15 @@ export default function FlightDetail() {
   const { flightId } = useLocalSearchParams<{ flightId: string }>();
   const router = useRouter();
   const { profile } = useAuth();
-  const { getFlight, statsFor, loading } = useFlights();
+  const { getFlight, statsFor, loading, refreshStatsFor } = useFlights();
   const flight = flightId ? getFlight(flightId) : undefined;
+
+  // À l'ouverture du vol, on redemande SES compteurs à la base : l'écran doit
+  // afficher les vrais chiffres même si le chargement groupé du login a
+  // échoué sur ce réseau ou si le temps réel est resté muet.
+  useEffect(() => {
+    if (flightId) void refreshStatsFor(flightId);
+  }, [flightId, refreshStatsFor]);
   const { pax, bagTotal, bagOk, boarded } = flightId
     ? statsFor(flightId)
     : { pax: 0, bagTotal: 0, bagOk: 0, boarded: 0 };
