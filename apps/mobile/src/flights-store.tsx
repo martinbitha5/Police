@@ -93,13 +93,25 @@ async function fetchAllStats(date: string): Promise<Record<string, FlightStats>>
   return out;
 }
 
-/** Stats d'un seul vol (rafraîchissement ciblé après un scan). */
+/** Stats d'un seul vol (rafraîchissement ciblé après un scan). Mêmes exclusions
+ * que la RPC : bagages passagers hors annulés, passagers hors débarqués. */
 async function fetchStats(flightId: string): Promise<FlightStats> {
   const [{ count: p }, { count: bt }, { count: bo }, { count: brd }] = await Promise.all([
-    supabase.from('passengers').select('id', { count: 'exact', head: true }).eq('flight_id', flightId),
-    supabase.from('baggage').select('id', { count: 'exact', head: true }).eq('flight_id', flightId),
-    supabase.from('baggage').select('id', { count: 'exact', head: true }).eq('flight_id', flightId).eq('is_confirmed', true),
-    supabase.from('passengers').select('id', { count: 'exact', head: true }).eq('flight_id', flightId).eq('boarded', true),
+    supabase.from('passengers').select('id', { count: 'exact', head: true }).eq('flight_id', flightId).eq('offloaded', false),
+    supabase.from('baggage').select('id', { count: 'exact', head: true }).eq('flight_id', flightId).eq('kind', 'passenger').eq('cancelled', false),
+    supabase
+      .from('baggage')
+      .select('id', { count: 'exact', head: true })
+      .eq('flight_id', flightId)
+      .eq('kind', 'passenger')
+      .eq('cancelled', false)
+      .eq('is_confirmed', true),
+    supabase
+      .from('passengers')
+      .select('id', { count: 'exact', head: true })
+      .eq('flight_id', flightId)
+      .eq('offloaded', false)
+      .eq('boarded', true),
   ]);
   return { pax: p ?? 0, bagTotal: bt ?? 0, bagOk: bo ?? 0, boarded: brd ?? 0 };
 }
@@ -194,28 +206,27 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
         const cur = prev[fid] ?? EMPTY_STATS;
         let { pax, bagTotal, bagOk, boarded } = cur;
 
+        // Contribution d'une ligne aux compteurs : mêmes exclusions que la RPC.
+        // Un passager débarqué ou un bagage annulé / expédition rush ne compte
+        // pas ; on calcule la contribution avant / après pour rester exact sur
+        // les transitions (annulation, débarquement).
+        const paxIn = (r: Record<string, unknown> | null) => Boolean(r) && r!.offloaded !== true;
+        const bagIn = (r: Record<string, unknown> | null) =>
+          Boolean(r) && r!.kind !== 'rush_forward' && r!.cancelled !== true;
+
         if (table === 'passengers') {
-          if (payload.eventType === 'INSERT') {
-            pax += 1;
-            if (nw?.boarded === true) boarded += 1;
-          } else if (payload.eventType === 'DELETE') {
-            pax -= 1;
-            if (od?.boarded === true) boarded -= 1;
-          } else {
-            if (od?.boarded !== true && nw?.boarded === true) boarded += 1;
-            else if (od?.boarded === true && nw?.boarded !== true) boarded -= 1;
-          }
+          const before = payload.eventType === 'INSERT' ? null : od;
+          const after = payload.eventType === 'DELETE' ? null : nw;
+          pax += (paxIn(after) ? 1 : 0) - (paxIn(before) ? 1 : 0);
+          boarded +=
+            (paxIn(after) && after?.boarded === true ? 1 : 0) - (paxIn(before) && before?.boarded === true ? 1 : 0);
         } else {
-          if (payload.eventType === 'INSERT') {
-            bagTotal += 1;
-            if (nw?.is_confirmed === true) bagOk += 1;
-          } else if (payload.eventType === 'DELETE') {
-            bagTotal -= 1;
-            if (od?.is_confirmed === true) bagOk -= 1;
-          } else {
-            if (od?.is_confirmed !== true && nw?.is_confirmed === true) bagOk += 1;
-            else if (od?.is_confirmed === true && nw?.is_confirmed !== true) bagOk -= 1;
-          }
+          const before = payload.eventType === 'INSERT' ? null : od;
+          const after = payload.eventType === 'DELETE' ? null : nw;
+          bagTotal += (bagIn(after) ? 1 : 0) - (bagIn(before) ? 1 : 0);
+          bagOk +=
+            (bagIn(after) && after?.is_confirmed === true ? 1 : 0) -
+            (bagIn(before) && before?.is_confirmed === true ? 1 : 0);
         }
 
         return {

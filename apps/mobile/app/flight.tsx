@@ -37,7 +37,16 @@ function formatTime(ts: string | null): string {
  */
 const OPERATIONS: {
   op: FlightOperation;
-  path: '/checkin' | '/baggage' | '/embarquement' | '/dolly' | '/charger' | '/rush' | '/soute' | '/arrivee';
+  path:
+    | '/checkin'
+    | '/baggage'
+    | '/embarquement'
+    | '/dolly'
+    | '/charger'
+    | '/rush'
+    | '/expedition-rush'
+    | '/soute'
+    | '/arrivee';
   icon: keyof typeof Ionicons.glyphMap;
   tint: string;
   title: string;
@@ -61,6 +70,14 @@ const OPERATIONS: {
     tint: colors.warning,
     title: 'Bagages',
     subtitle: 'Scanner les étiquettes bagage',
+  },
+  {
+    op: 'expedition_rush',
+    path: '/expedition-rush',
+    icon: 'send',
+    tint: colors.primary,
+    title: 'Expédition rush',
+    subtitle: 'Bagages voyageant sans passager',
   },
   {
     op: 'embarquement',
@@ -92,8 +109,8 @@ const OPERATIONS: {
     path: '/rush',
     icon: 'repeat',
     tint: colors.warning,
-    title: 'Rush',
-    subtitle: 'Bagages restants à réacheminer',
+    title: 'Restants',
+    subtitle: 'Bagages de ce vol restés au sol, à réacheminer',
   },
   {
     op: 'soute',

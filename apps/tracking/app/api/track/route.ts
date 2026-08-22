@@ -102,6 +102,9 @@ export async function POST(request: NextRequest) {
       .from('baggage')
       .select(BAG_COLUMNS)
       .eq('tag_number', query)
+      // Le suivi passager ne montre que les bagages passagers : une ligne
+      // « expédition rush » (sans passager) n'a pas de fiche à afficher.
+      .eq('kind', 'passenger')
       .order('scanned_at', { ascending: false })
       .limit(1);
     if (error) return NextResponse.json({ error: 'Erreur de recherche' }, { status: 500 });
@@ -128,6 +131,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('baggage')
       .select(BAG_COLUMNS)
+      .eq('kind', 'passenger')
       .in('passenger_id', ids);
     if (error) return NextResponse.json({ error: 'Erreur de recherche' }, { status: 500 });
     bagRows = (data as BagRow[] | null) ?? [];
@@ -149,6 +153,7 @@ export async function POST(request: NextRequest) {
     const { data: allBags } = await supabase
       .from('baggage')
       .select(BAG_COLUMNS)
+      .eq('kind', 'passenger')
       .in('passenger_id', ownerIds);
     const complete = (allBags as BagRow[] | null) ?? [];
     if (complete.length > 0) bagRows = complete;

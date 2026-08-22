@@ -11,7 +11,11 @@ import { ScreenBackground, GlassCard, useSafePadding } from './Glass';
 import { feedbackSuccess, feedbackWarning } from './feedback';
 import { colors, radius, spacing } from './theme';
 
-/** Écran Rush : scan des bagages restants à réacheminer sur le prochain vol. */
+/**
+ * Écran Restants : scan des bagages de CE vol qui restent au sol, à réacheminer
+ * sur un vol suivant. (L'entrée d'un bagage sans passager sur un vol se fait
+ * dans l'écran Expédition rush, pas ici.)
+ */
 export function RushScreen() {
   const { flightId } = useLocalSearchParams<{ flightId: string }>();
   const { profile } = useAuth();
@@ -58,14 +62,14 @@ export function RushScreen() {
             </Text>
           </View>
           <View style={[styles.modePill, { borderColor: colors.warning }]}>
-            <Text style={[styles.modeText, { color: colors.warning }]}>RUSH</Text>
+            <Text style={[styles.modeText, { color: colors.warning }]}>RESTANTS</Text>
           </View>
         </GlassCard>
 
         <GlassCard strong rounded={radius.xl} contentStyle={styles.stage}>
           <ScanLottie state={scanState} replayKey={scanSeq.current} size={210} />
           <Text style={styles.stageTitle}>
-            {scanState === 'success' ? 'Marqué pour réacheminement' : scanState === 'error' ? 'Refusé' : 'Réacheminement (Rush)'}
+            {scanState === 'success' ? 'Marqué pour réacheminement' : scanState === 'error' ? 'Refusé' : 'Restants (à réacheminer)'}
           </Text>
           <Text style={styles.stageHint}>
             {scanState === 'scanning' ? 'Scannez les bagages restants à réacheminer' : 'Prêt pour le prochain scan'}

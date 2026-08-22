@@ -5,6 +5,7 @@ import type {
   BaggageLoadAllResult,
   DollyScanResult,
   ArrivalScanResult,
+  ExpeditionRushResult,
   SoutePosition,
 } from '@police/shared';
 import { isAuthRetryableFetchError } from '@supabase/supabase-js';
@@ -134,9 +135,23 @@ export function scanEmbarquement(
   return request<BoardingGateResult>('/scan/embarquement', { raw, flightId, scannedBy });
 }
 
-/** Rush : marque le bagage restant pour réacheminement sur le prochain vol. */
+/** Restants : marque le bagage restant pour réacheminement sur le prochain vol. */
 export function rushBaggage(tag: string, flightId: string, scannedBy?: string): Promise<BaggageActionResult> {
   return request<BaggageActionResult>('/scan/rush', { tag, flightId, scannedBy });
+}
+
+/**
+ * Expédition rush : bagage voyageant SANS passager sur ce vol.
+ * Sans otherTag = premier scan (identification) ; avec = enregistrement.
+ * soloTag = le bagage ne porte qu'une seule étiquette, enregistrer avec elle.
+ */
+export function expeditionRush(
+  tag: string,
+  flightId: string,
+  otherTag?: string,
+  soloTag?: boolean,
+): Promise<ExpeditionRushResult> {
+  return request<ExpeditionRushResult>('/scan/expedition-rush', { tag, otherTag, soloTag, flightId });
 }
 
 /** Charger : pousse en soute tous les bagages enregistrés non-rush (groupé, sans scan). */
