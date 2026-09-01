@@ -1,14 +1,32 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Profile } from '@police/shared';
 import { createClient } from '@/supabase/client';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { IconBag, IconLogout } from './icons';
+import { IconBag, IconLogout, IconMenu, IconPlane, IconSearch, IconLogin } from './icons';
+import { SITE_APPS } from '@/lib/site-apps';
 import { Footer } from './Footer';
 
 const HUB = process.env.NEXT_PUBLIC_HUB ?? 'FIH';
+
+// Raccourcis de la barre compacte sur téléphone, après le menu et les litiges.
+// L'application n'a qu'un seul écran : les cellules restantes mènent aux
+// portails voisins, dont l'espace superviseur en pastille pleine.
+const APP_ICON: Record<string, (p: { size?: number }) => ReactNode> = {
+  'Suivi bagage': IconSearch,
+  'Vols du jour': IconPlane,
+  'Espace superviseur': IconLogin,
+};
+
+const QUICK_APPS = SITE_APPS.map((a) => ({
+  label: a.label,
+  url: a.url,
+  icon: APP_ICON[a.label] ?? IconBag,
+  cta: a.label === 'Espace superviseur',
+}));
 
 function formatToday(): string {
   const s = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -46,23 +64,65 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <SessionCtx.Provider value={profile}>
         <div style={m.root}>
-          <header style={m.topBar}>
-            <div style={m.topBrand}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="Litige Bagage" style={m.topLogo} />
-                <div>
-                  <span style={m.topBrandName}>Litige Bagage</span>
-                  <span style={m.topBrandHub}>Hub {HUB}</span>
+          {/* Barre du haut — deux états : la marque en haut de page, une rangée
+              de raccourcis dès qu'on défile. L'échange est fait en CSS
+              (globals.css, .pb-full / .pb-icons) d'après `data-scrolled`, sans
+              état React qui se rejouerait à chaque pixel. Les deux états font
+              60 px, la hauteur sur laquelle le tiroir s'ouvre : une barre qui
+              rétrécit décalerait la page en défilant. */}
+          <header className="pb-topbar" style={m.topBar}>
+            <div className="pb-bar pb-full" style={m.topBarInner}>
+              <div style={m.topBrand}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo.png" alt="Litige Bagage" style={m.topLogo} />
+                  <div>
+                    <span style={m.topBrandName}>Litige Bagage</span>
+                    <span style={m.topBrandHub}>Hub {HUB}</span>
+                  </div>
                 </div>
               </div>
+              <div style={m.topRight}>
+                {profile ? <div style={m.topAvatar}>{(profile.full_name ?? '?').charAt(0).toUpperCase()}</div> : null}
+                <button style={m.menuBtn} onClick={() => setMenuOpen(v => !v)} aria-label="Menu">
+                  <HamburgerIcon open={menuOpen} />
+                </button>
+              </div>
             </div>
-            <div style={m.topRight}>
-              {profile ? <div style={m.topAvatar}>{(profile.full_name ?? '?').charAt(0).toUpperCase()}</div> : null}
-              <button style={m.menuBtn} onClick={() => setMenuOpen(v => !v)} aria-label="Menu">
-                <HamburgerIcon open={menuOpen} />
+
+            <nav className="pb-icons" style={m.topBarIcons} aria-label="Raccourcis">
+              <button
+                className={`pb-icon${menuOpen ? ' pb-icon-on' : ''}`}
+                onClick={() => setMenuOpen(v => !v)}
+                aria-label="Menu"
+              >
+                <IconMenu size={22} />
               </button>
-            </div>
+              <Link href="/litiges" className="pb-icon pb-icon-on" aria-label="Litiges bagage" onClick={() => setMenuOpen(false)}>
+                <IconBag size={20} />
+              </Link>
+              {QUICK_APPS.map((q) => {
+                const Icon = q.icon;
+                return (
+                  <a
+                    key={q.label}
+                    href={q.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`pb-icon${q.cta ? ' pb-icon-cta' : ''}`}
+                    aria-label={q.label}
+                  >
+                    {q.cta ? (
+                      <span className="pb-icon-pill">
+                        <Icon size={19} />
+                      </span>
+                    ) : (
+                      <Icon size={20} />
+                    )}
+                  </a>
+                );
+              })}
+            </nav>
           </header>
 
           {menuOpen ? (
@@ -167,17 +227,24 @@ function HamburgerIcon({ open }: { open: boolean }) {
 const m: Record<string, CSSProperties> = {
   root: { display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)' },
 
+  // L'enveloppe ne porte plus la mise en page : elle accueille deux rangées
+  // dont une seule est visible à la fois. Le `display` reste aux classes
+  // .pb-full / .pb-icons, qu'un style inline empêcherait de masquer.
   topBar: {
     position: 'sticky',
     top: 0,
     zIndex: 20,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '13px 16px',
     background: 'var(--surface)',
     borderBottom: '1px solid var(--border)',
   },
+  topBarInner: {
+    height: 60,
+    justifyContent: 'space-between',
+    padding: '0 16px',
+  },
+  // Pas de marge latérale : les cellules vont d'un bord à l'autre, séparées
+  // par des filets, comme une rangée d'onglets.
+  topBarIcons: { height: 60 },
   topBrand: { display: 'flex', alignItems: 'center', gap: 1 },
   topLogo: { width: 30, height: 30, borderRadius: 7, objectFit: 'cover' as const, display: 'block', flexShrink: 0 },
   topBrandName: { display: 'block', fontWeight: 800, fontSize: 15, letterSpacing: -0.3, color: 'var(--text)' },

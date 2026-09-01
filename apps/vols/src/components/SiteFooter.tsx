@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { SITE_APPS } from '@/lib/site-apps';
 
 /**
- * Pied de page en colonnes, commun à toute l'application.
+ * Pied de page en colonnes, commun au tableau des vols et aux pages légales.
  *
  * Même gabarit que les autres portails du projet : colonnes de liens, puis un
  * filet, la marque et le partenaire, enfin les réseaux et la ligne légale
@@ -82,10 +82,12 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     links: SITE_APPS.map((a) => ({ label: a.label, href: a.url, external: true })),
   },
   {
-    title: 'Espace',
+    title: 'Informations',
     links: [
-      { label: 'Litiges bagage', href: '/litiges' },
-      { label: 'Connexion', href: '/login' },
+      { label: 'Conditions d’utilisation', href: '/conditions' },
+      { label: 'Confidentialité', href: '/confidentialite' },
+      { label: 'Cookies', href: '/cookies' },
+      { label: 'Mentions légales', href: '/mentions-legales' },
     ],
   },
   {
@@ -97,7 +99,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
-export function Footer() {
+export function SiteFooter() {
   return (
     <footer className="sf">
       <div className="sf-inner">
@@ -127,8 +129,8 @@ export function Footer() {
         <div className="sf-bottom">
           <div className="sf-brand">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Litige Bagage" className="sf-brand-logo" style={{ borderRadius: 7 }} />
-            <span className="sf-brand-name">Litige Bagage</span>
+            <img src="/air.png" alt="Air Congo" className="sf-brand-logo" />
+            <span className="sf-brand-name">Vols du jour</span>
           </div>
 
           <div className="sf-partners">
@@ -169,7 +171,7 @@ export function Footer() {
           <div className="sf-legal-text">
             <span className="sf-copy">© {YEAR} African Transport Systems</span>
             <span className="sf-legal-sep" aria-hidden="true" />
-            <span className="sf-copy">Accès réservé au personnel autorisé</span>
+            <span className="sf-copy">Informations fournies à titre indicatif</span>
           </div>
         </div>
       </div>

@@ -92,7 +92,7 @@ export default function TrackingPage() {
       <Header />
       <Breadcrumb current={t.breadcrumb.tracking} />
 
-      <main style={isMobile ? { ...shared.main, ...shared.mainMobile } : shared.main}>
+      <main data-rv-auto style={isMobile ? { ...shared.main, ...shared.mainMobile } : shared.main}>
         {/* Héros Wise : H1 display énorme + sous-titre sobre */}
         <div style={s.hero}>
           <h1 style={isMobile ? { ...s.title, fontSize: 'clamp(2.25rem, 9vw, 3rem)' } : s.title}>{t.home.title}</h1>

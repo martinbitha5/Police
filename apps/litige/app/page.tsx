@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
+import { Footer } from '@/components/Footer';
+import { SITE_APPS } from '@/lib/site-apps';
+import { IconHome as NavHome, IconSearch as NavSearch, IconPlane as NavPlane, IconLogin as NavLogin } from '@/components/icons';
 
 const HUB = process.env.NEXT_PUBLIC_HUB ?? 'FIH';
 
@@ -42,8 +45,8 @@ export default function Landing() {
   return (
     <div style={s.page}>
       {/* Barre de navigation */}
-      <header className="lp-topbar">
-        <div className="lp-topbar-inner">
+      <header className="lp-topbar pb-topbar">
+        <div className="lp-topbar-inner pb-full">
           <div style={s.brandBox}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Litige Bagage" style={s.brandLogo} />
@@ -54,6 +57,30 @@ export default function Landing() {
             <Link href="/login" className="lp-login-btn">Connexion</Link>
           </nav>
         </div>
+
+        {/* Rangée de raccourcis, téléphone et défilement seulement */}
+        <nav className="pb-icons lp-topbar-icons" aria-label="Raccourcis">
+          <Link href="/" className="pb-icon pb-icon-on" aria-label="Accueil">
+            <NavHome size={21} />
+          </Link>
+          {SITE_APPS.filter((a) => a.label !== 'Espace superviseur').map((a) => (
+            <a
+              key={a.url}
+              href={a.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pb-icon"
+              aria-label={a.label}
+            >
+              {a.label === 'Suivi bagage' ? <NavSearch size={20} /> : <NavPlane size={20} />}
+            </a>
+          ))}
+          <Link href="/login" className="pb-icon pb-icon-cta" aria-label="Connexion">
+            <span className="pb-icon-pill">
+              <NavLogin size={19} />
+            </span>
+          </Link>
+        </nav>
       </header>
 
       {/* Héros — 2 colonnes */}
@@ -75,7 +102,7 @@ export default function Landing() {
         </div>
 
         {/* Tuiles de faits */}
-        <div className="lp-facts">
+        <div className="lp-facts" data-rv-auto>
           <div className="lp-fact">
             <div className="lp-fact-value">Par jour</div>
             <div className="lp-fact-label">Filtrez vos litiges par date, vol et statut de chargement.</div>
@@ -97,7 +124,7 @@ export default function Landing() {
 
       {/* Bandeau vert vif */}
       <section className="lp-band">
-        <div className="lp-band-inner">
+        <div className="lp-band-inner rv">
           <h2 className="lp-band-title">Aucun bagage ne reste sans suite.</h2>
           <p className="lp-band-text">
             Du signalement à la résolution, chaque litige est tracé, documenté et clôturé,
@@ -111,8 +138,8 @@ export default function Landing() {
       <section className="lp-section">
         <div className="lp-section-inner">
           <div className="lp-section-kicker">Capacités</div>
-          <h2 className="lp-section-title">Faites tout, au même endroit.</h2>
-          <div className="lp-cap-grid">
+          <h2 className="lp-section-title rv">Faites tout, au même endroit.</h2>
+          <div className="lp-cap-grid" data-rv-auto>
             {CAPABILITIES.map((c) => (
               <div key={c.title} className="lp-cap">
                 <div className="lp-cap-icon">{c.icon}</div>
@@ -128,8 +155,8 @@ export default function Landing() {
       <section id="fonctionnement" className="lp-section" style={{ paddingTop: 0 }}>
         <div className="lp-section-inner">
           <div className="lp-section-kicker">Fonctionnement</div>
-          <h2 className="lp-section-title">Résolvez en quatre étapes.</h2>
-          <div className="lp-steps">
+          <h2 className="lp-section-title rv">Résolvez en quatre étapes.</h2>
+          <div className="lp-steps" data-rv-auto>
             {STEPS.map((st) => (
               <div key={st.n} className="lp-step">
                 <div className="lp-step-num">{st.n}</div>
@@ -142,29 +169,16 @@ export default function Landing() {
       </section>
 
       {/* Bande partenaires */}
-      <section style={s.partnerBand}>
+      <section className="rv" style={s.partnerBand}>
         <span style={s.partnerLabel}>Partenaire opérationnel</span>
         <div style={s.partnerDivider} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/air.png" alt="Air Congo" style={s.partnerLogo} />
       </section>
 
-      {/* Pied de page */}
-      <footer className="lp-footer">
-        <div className="lp-footer-inner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Litige Bagage" style={{ width: 28, height: 28, borderRadius: 7, objectFit: 'cover', display: 'block' }} />
-            <span style={{ color: 'var(--content-primary)', fontWeight: 600 }}>Litige Bagage</span>
-            <span style={{ color: 'var(--content-tertiary)', fontSize: 16 }}>·</span>
-            <span style={s.footerAirPill}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/air.png" alt="Air Congo" style={{ height: 20, objectFit: 'contain', display: 'block' }} />
-            </span>
-          </div>
-          <span>Accès réservé au personnel autorisé</span>
-        </div>
-      </footer>
+      {/* Pied de page — bloc commun à toute l'application */}
+      <Footer />
+
     </div>
   );
 }
@@ -293,12 +307,5 @@ const s: Record<string, CSSProperties> = {
     height: 38,
     objectFit: 'contain' as const,
     display: 'block',
-  },
-  footerAirPill: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    background: '#fff',
-    borderRadius: 9999,
-    padding: '5px 12px',
   },
 };

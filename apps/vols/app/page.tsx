@@ -15,6 +15,8 @@ import {
 } from '@police/shared';
 import type { PublicFlight, FlightsResponse } from '@/types';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { QuickBar } from '@/components/QuickBar';
+import { SiteFooter } from '@/components/SiteFooter';
 
 /** Aéroport choisi par le visiteur — mémorisé d'une visite à l'autre. */
 const CITY_KEY = 'vols.airport';
@@ -164,7 +166,10 @@ export default function VolsPage() {
 
   return (
     <div style={s.pageWrap}>
-      <header style={isMobile ? s.stickyHeaderMobile : s.stickyHeader}>
+      {/* En-tête à deux états : complet en haut de page, rangée de raccourcis
+          sur téléphone dès qu'on défile (voir QuickBar et globals.css). */}
+      <header className="pb-topbar" style={s.stickyShell}>
+        <div className="pb-bar pb-fade" style={isMobile ? s.stickyHeaderMobile : s.stickyHeader}>
         <div style={s.brandBlock}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/air.png" alt="Air Congo" style={isMobile ? { ...s.logo, height: 36 } : s.logo} />
@@ -190,10 +195,12 @@ export default function VolsPage() {
             </button>
           </div>
         ) : null}
+        </div>
+        <QuickBar />
       </header>
 
       <main style={isMobile ? { ...s.shell, ...s.shellMobile } : s.shell}>
-        <div style={s.container}>
+        <div style={s.container} data-rv-auto>
           {error ? <div style={s.error}>{error}</div> : null}
 
           {!cityReady ? null : !city ? (
@@ -226,19 +233,11 @@ export default function VolsPage() {
 
           <AirportServices isMobile={isMobile} />
 
-          <footer style={s.footer}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/air.png" alt="Air Congo" style={s.footerLogo} />
-            <nav style={s.footerNav}>
-              <Link href="/conditions" className="fl-footer-link" style={s.footerLink}>Conditions d'utilisation</Link>
-              <Link href="/confidentialite" className="fl-footer-link" style={s.footerLink}>Confidentialité</Link>
-              <Link href="/cookies" className="fl-footer-link" style={s.footerLink}>Cookies</Link>
-              <Link href="/mentions-legales" className="fl-footer-link" style={s.footerLink}>Mentions légales</Link>
-            </nav>
-            <p style={s.footerText}>Informations fournies à titre indicatif · Police Bagage · ATS Handling</p>
-          </footer>
         </div>
       </main>
+
+      {/* Pied de page en colonnes, commun aux pages légales */}
+      <SiteFooter />
     </div>
   );
 }
@@ -532,12 +531,16 @@ const headerLight: CSSProperties = {
 
 const s: Record<string, CSSProperties> = {
   pageWrap: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-screen)' },
-  stickyHeader: {
+  // Enveloppe collante : elle porte le fond et le filet, jamais la mise en
+  // page. Le `display` reste aux classes .pb-full / .pb-icons, qu'un style
+  // inline empêcherait de masquer au défilement.
+  // En-tête ordinaire : il défile avec la page. La rangée de raccourcis prend
+  // le relais en haut de l'écran (voir .pb-icons-fixed), ce qui évite de
+  // changer une hauteur dans le flux et donc de faire sauter le contenu.
+  stickyShell: {
     ...headerLight,
-    position: 'sticky' as const,
-    top: 0,
-    zIndex: 1050,
-    display: 'flex',
+  },
+  stickyHeader: {
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap' as const,
@@ -546,11 +549,6 @@ const s: Record<string, CSSProperties> = {
     minHeight: 76,
   },
   stickyHeaderMobile: {
-    ...headerLight,
-    position: 'sticky' as const,
-    top: 0,
-    zIndex: 1050,
-    display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'stretch' as const,
     gap: 12,

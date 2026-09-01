@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { SiteFooter } from './SiteFooter';
 
 export interface LegalSection {
   heading: string;
@@ -20,6 +21,7 @@ interface LegalPageProps {
 export function LegalPage({ title, intro, updated, sections }: LegalPageProps) {
   const isMobile = useIsMobile();
   return (
+    <>
     <main style={isMobile ? { ...s.shell, ...s.shellMobile } : s.shell}>
       <div style={s.container}>
         <Link href="/" style={s.back}>
@@ -32,7 +34,7 @@ export function LegalPage({ title, intro, updated, sections }: LegalPageProps) {
 
         <div style={isMobile ? { ...s.card, ...s.cardMobile } : s.card}>
           {sections.map((sec) => (
-            <section key={sec.heading} style={s.section}>
+            <section key={sec.heading} className="rv" style={s.section}>
               <h2 style={s.heading}>{sec.heading}</h2>
               {sec.body.map((para, i) => (
                 <p key={i} style={s.paragraph}>
@@ -43,15 +45,10 @@ export function LegalPage({ title, intro, updated, sections }: LegalPageProps) {
           ))}
         </div>
 
-        <nav style={s.footerNav}>
-          <Link href="/conditions" className="fl-footer-link" style={s.footerLink}>Conditions d’utilisation</Link>
-          <Link href="/confidentialite" className="fl-footer-link" style={s.footerLink}>Confidentialité</Link>
-          <Link href="/cookies" className="fl-footer-link" style={s.footerLink}>Cookies</Link>
-          <Link href="/mentions-legales" className="fl-footer-link" style={s.footerLink}>Mentions légales</Link>
-        </nav>
-        <p style={s.copyright}>© 2026 ATS Handling · Police Bagage</p>
       </div>
     </main>
+    <SiteFooter />
+    </>
   );
 }
 

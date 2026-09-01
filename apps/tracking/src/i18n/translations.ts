@@ -112,6 +112,7 @@ export interface Dictionary {
     navTitle: string;
     legalTitle: string;
     contactTitle: string;
+    productsTitle: string;
     rights: string;
   };
   mentions: LegalPage;
@@ -290,6 +291,7 @@ export const translations: Record<Lang, Dictionary> = {
       navTitle: 'Navigation',
       legalTitle: 'Légal',
       contactTitle: 'Contact',
+      productsTitle: 'Autres services',
       rights: 'Tous droits réservés.',
     },
     mentions: {
@@ -567,6 +569,7 @@ export const translations: Record<Lang, Dictionary> = {
       navTitle: 'Navigation',
       legalTitle: 'Legal',
       contactTitle: 'Contact',
+      productsTitle: 'Other services',
       rights: 'All rights reserved.',
     },
     mentions: {

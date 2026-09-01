@@ -125,7 +125,7 @@ function LitigeView() {
   const openCount = useMemo(() => disputes.filter((d) => d.status !== 'resolved').length, [disputes]);
 
   return (
-    <div style={isMobile ? { ...s.wrap, ...s.wrapMobile } : s.wrap}>
+    <div data-rv-auto style={isMobile ? { ...s.wrap, ...s.wrapMobile } : s.wrap}>
       <header style={isMobile ? { ...s.header, ...s.headerMobile } : s.header}>
         <div>
           <h1 style={s.title}>Litiges bagage</h1>

@@ -6,7 +6,23 @@ import { useState, type CSSProperties } from 'react';
 import { useLang } from '../i18n/LanguageProvider';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { shared as s } from './theme';
-import { IconGlobe } from './icons';
+import { IconGlobe, IconMenu, IconSearch, IconMail, IconBag, IconPlane, IconLogin } from './icons';
+import { SITE_APPS } from '@/lib/site-apps';
+
+// Raccourcis de la barre compacte vers les portails voisins. L'espace
+// superviseur occupe la dernière cellule, en pastille pleine.
+const APP_ICON: Record<string, (p: { size?: number }) => React.ReactElement> = {
+  'Vols du jour': IconPlane,
+  'Litiges bagage': IconBag,
+  'Espace superviseur': IconLogin,
+};
+
+const QUICK_APPS = SITE_APPS.map((a) => ({
+  label: a.label,
+  url: a.url,
+  icon: APP_ICON[a.label] ?? IconBag,
+  cta: a.label === 'Espace superviseur',
+}));
 
 export function Header() {
   const { t, lang, setLang } = useLang();
@@ -23,7 +39,8 @@ export function Header() {
   if (isMobile) {
     return (
       <>
-        <header style={m.header}>
+        <header className="pb-topbar" style={m.headerShell}>
+          <div className="pb-bar pb-full" style={m.headerRow}>
           <Link href="/" style={{ ...s.brand, minWidth: 0, flexShrink: 1 }} onClick={() => setOpen(false)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/air.png" alt="Air Congo" height={30} style={{ objectFit: 'contain', flexShrink: 0 }} />
@@ -40,6 +57,44 @@ export function Header() {
               <BurgerIcon open={open} />
             </button>
           </div>
+          </div>
+
+          <nav className="pb-icons" style={m.headerIcons} aria-label="Raccourcis">
+            <button
+              className={`pb-icon${open ? ' pb-icon-on' : ''}`}
+              onClick={() => setOpen(v => !v)}
+              aria-label="Menu"
+            >
+              <IconMenu size={22} />
+            </button>
+            <Link href="/" className={`pb-icon${pathname === '/' ? ' pb-icon-on' : ''}`} aria-label={t.nav.home} onClick={() => setOpen(false)}>
+              <IconSearch size={20} />
+            </Link>
+            <Link href="/support" className={`pb-icon${pathname.startsWith('/support') ? ' pb-icon-on' : ''}`} aria-label={t.nav.support} onClick={() => setOpen(false)}>
+              <IconMail size={20} />
+            </Link>
+            {QUICK_APPS.map((q) => {
+              const Icon = q.icon;
+              return (
+                <a
+                  key={q.url}
+                  href={q.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`pb-icon${q.cta ? ' pb-icon-cta' : ''}`}
+                  aria-label={q.label}
+                >
+                  {q.cta ? (
+                    <span className="pb-icon-pill">
+                      <Icon size={19} />
+                    </span>
+                  ) : (
+                    <Icon size={20} />
+                  )}
+                </a>
+              );
+            })}
+          </nav>
         </header>
 
         {open ? (
@@ -103,12 +158,7 @@ function BurgerIcon({ open }: { open: boolean }) {
 }
 
 const m: Record<string, CSSProperties> = {
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 64,
-    padding: '0 16px',
+  headerShell: {
     background: 'var(--bg-screen)',
     borderBottom: '1px solid var(--border-neutral)',
     color: 'var(--content-primary)',
@@ -116,6 +166,14 @@ const m: Record<string, CSSProperties> = {
     top: 0,
     zIndex: 1050,
   },
+  headerRow: {
+    justifyContent: 'space-between',
+    height: 64,
+    padding: '0 16px',
+  },
+  // Pas de marge latérale : les cellules vont d'un bord à l'autre, séparées
+  // par des filets, comme une rangée d'onglets.
+  headerIcons: { height: 64 },
   headerRight: { display: 'flex', alignItems: 'center', gap: 10 },
   burger: { background: 'transparent', border: 'none', color: 'var(--content-primary)', padding: 4, display: 'grid', placeItems: 'center' },
   drawer: {

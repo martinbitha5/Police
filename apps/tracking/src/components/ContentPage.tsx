@@ -32,7 +32,7 @@ export function ContentPage({ crumb, title, intro, sections, updatedLabel, updat
 
         <div className="content-card" style={s.contentCard}>
           {sections.map((sec) => (
-            <section key={sec.heading} style={s.section}>
+            <section key={sec.heading} className="rv" style={s.section}>
               <h2 style={s.sectionHeading}>{sec.heading}</h2>
               {sec.body.map((para, i) => (
                 <p key={i} style={s.paragraph}>
