@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/supabase/client';
+import { input, label } from '@/ui/theme';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,7 +30,8 @@ export default function LoginPage() {
 
   return (
     <div style={styles.page}>
-      {/* Panneau gauche — identité sur vert vif (desktop) */}
+      {/* Panneau gauche : identité sur fond d'encre (desktop). Le fond est posé
+          par .lg-side dans globals.css, le texte blanc est explicite ici. */}
       <aside className="lg-side">
         <div style={styles.sideTop}>
           <div style={styles.brandBox}>
@@ -62,17 +64,17 @@ export default function LoginPage() {
         <div style={styles.sideFoot}>Police Bagage · ATS Handling</div>
       </aside>
 
-      {/* Panneau droit — formulaire */}
+      {/* Panneau droit : formulaire */}
       <main style={styles.main}>
         <form onSubmit={onSubmit} className="lg-card">
           <h1 style={styles.title}>Connexion</h1>
           <p style={styles.subtitle}>Espace superviseur et administration</p>
 
           <div style={styles.field}>
-            <label style={styles.label} htmlFor="email">Email</label>
+            <label style={label} htmlFor="email">Email</label>
             <input
               id="email"
-              style={styles.input}
+              style={input}
               type="email"
               placeholder="nom@entreprise.com"
               value={email}
@@ -83,10 +85,10 @@ export default function LoginPage() {
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label} htmlFor="password">Mot de passe</label>
+            <label style={label} htmlFor="password">Mot de passe</label>
             <input
               id="password"
-              style={styles.input}
+              style={input}
               type="password"
               placeholder="••••••••"
               value={password}
@@ -111,6 +113,8 @@ export default function LoginPage() {
   );
 }
 
+// Le panneau d'encre est le seul endroit du site où une couleur est écrite en
+// clair : du blanc, et ses transparences, posés sur le noir de .lg-side.
 const styles: Record<string, React.CSSProperties> = {
   page: { minHeight: '100vh', display: 'flex', background: 'var(--bg-screen)' },
 
@@ -123,53 +127,59 @@ const styles: Record<string, React.CSSProperties> = {
     objectFit: 'cover' as const,
     display: 'block',
   },
-  brandName: { fontWeight: 700, fontSize: 16, color: 'var(--brand-forest)' },
+  brandName: {
+    fontFamily: 'var(--font-display)',
+    fontWeight: 700,
+    fontSize: 16,
+    letterSpacing: '-0.02em',
+    color: '#fff',
+  },
   sideBody: { margin: 'auto 0', paddingBottom: 40, position: 'relative' },
   sideTitle: {
     margin: 0,
     fontFamily: 'var(--font-display)',
-    fontWeight: 400,
+    fontWeight: 700,
     fontSize: 'clamp(1.75rem, 2.2vw, 2.375rem)',
     lineHeight: 'var(--lh-display)',
-    color: 'var(--brand-forest)',
+    letterSpacing: '-0.02em',
+    color: '#fff',
   },
-  sideText: { margin: '18px 0 0', color: 'var(--brand-forest)', fontSize: 15, lineHeight: 1.6, maxWidth: 330 },
+  sideText: { margin: '18px 0 0', color: 'rgba(255,255,255,0.7)', fontSize: 15, lineHeight: 1.6, maxWidth: 330 },
   sidePoints: { marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 },
-  sidePoint: { display: 'flex', alignItems: 'center', gap: 10, color: 'var(--brand-forest)', fontSize: 14, fontWeight: 600 },
-  sideDot: { width: 6, height: 6, borderRadius: '50%', background: 'var(--brand-forest)', flexShrink: 0 },
-  sideFoot: { color: 'var(--brand-forest)', fontSize: 12.5, fontWeight: 600, position: 'relative' },
+  sidePoint: { display: 'flex', alignItems: 'center', gap: 10, color: '#fff', fontSize: 14, fontWeight: 500 },
+  sideDot: { width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.6)', flexShrink: 0 },
+  sideFoot: { color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 500, position: 'relative' },
 
-  // minWidth: 0 — sans lui, ce flex item garde `min-width: auto` et refuse de
+  // minWidth: 0 : sans lui, ce flex item garde `min-width: auto` et refuse de
   // descendre sous la largeur mini de son contenu (carte 400px + padding),
   // soit 448px : la carte était rognée sur un écran de 375px.
   main: { flex: 1, minWidth: 0, display: 'grid', placeItems: 'center', padding: 24 },
-  title: { margin: 0, fontSize: 26, fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--content-primary)' },
+  title: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontSize: 26,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 'var(--lh-title)',
+    color: 'var(--content-primary)',
+  },
   subtitle: { margin: '-10px 0 6px', color: 'var(--content-secondary)', fontSize: 14 },
 
   field: { display: 'flex', flexDirection: 'column', gap: 6 },
-  label: { fontSize: 13, fontWeight: 600, color: 'var(--content-primary)' },
-  input: {
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 10,
-    padding: '11px 13px',
-    color: 'var(--content-primary)',
-    fontSize: 14.5,
-  },
   error: {
     color: 'var(--negative)',
     background: 'var(--negative-bg)',
     border: 'none',
-    borderRadius: 10,
+    borderRadius: 8,
     padding: '10px 14px',
     margin: 0,
-    fontSize: 13.5,
+    fontSize: 14,
   },
   foot: { display: 'flex', justifyContent: 'center', marginTop: 2 },
   backLink: {
     color: 'var(--content-link)',
-    fontSize: 13.5,
-    fontWeight: 600,
+    fontSize: 14,
+    fontWeight: 500,
     textDecoration: 'underline',
     textUnderlineOffset: '0.3em',
   },

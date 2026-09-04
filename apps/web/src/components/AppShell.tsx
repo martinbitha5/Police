@@ -7,6 +7,7 @@ import type { Profile } from '@police/shared';
 import { createClient } from '@/supabase/client';
 import { partnerBrand } from '@/lib/partner';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { btnSecondary } from '@/ui/theme';
 import { IconDashboard, IconUsers, IconLogout, IconReport, IconBag, IconUser, IconPlane, IconAudit, IconMenu } from './icons';
 import { Footer } from './Footer';
 import { PartnerCtx, SessionCtx } from './session';
@@ -195,10 +196,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Link
                     key={n.href}
                     href={n.href}
+                    className="nav-item"
+                    aria-current={active ? 'page' : undefined}
                     style={{ ...m.drawerItem, ...(active ? m.drawerItemActive : {}) }}
                     onClick={() => setMenuOpen(false)}
                   >
-                    <Icon size={18} />
+                    {/* L'icône seule porte l'accent : le libellé reste noir. */}
+                    <span style={{ display: 'inline-flex', color: active ? 'var(--accent)' : 'inherit' }}>
+                      <Icon size={18} />
+                    </span>
                     <span>{n.label}</span>
                   </Link>
                 );
@@ -235,14 +241,21 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <div style={d.navLabel}>Navigation</div>
-          <nav style={d.nav}>
+          <nav style={d.nav} aria-label="Navigation principale">
             {nav.map((n) => {
               const active = n.href === '/' ? pathname === '/' : pathname.startsWith(n.href);
               const Icon = n.icon;
               return (
-                <Link key={n.href} href={n.href} style={{ ...d.navItem, ...(active ? d.navItemActive : {}) }}>
-                  <Icon size={17} />
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  className="nav-item"
+                  aria-current={active ? 'page' : undefined}
+                  style={{ ...d.navItem, ...(active ? d.navItemActive : {}) }}
+                >
+                  <span style={{ display: 'inline-flex', color: active ? 'var(--accent)' : 'inherit' }}>
+                    <Icon size={18} />
+                  </span>
                   <span>{n.label}</span>
                 </Link>
               );
@@ -293,7 +306,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 /** Icône hamburger / croix animée. */
 function HamburgerIcon({ open }: { open: boolean }) {
-  const bar: CSSProperties = { width: 22, height: 2.5, borderRadius: 2, background: 'var(--content-primary)', transition: 'all 0.2s' };
+  const bar: CSSProperties = { width: 22, height: 2, borderRadius: 2, background: 'var(--content-primary)', transition: 'all 0.2s' };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: 2 }}>
       <span style={{ ...bar, transform: open ? 'rotate(45deg) translate(5px, 5px)' : 'none' }} />
@@ -302,6 +315,29 @@ function HamburgerIcon({ open }: { open: boolean }) {
     </div>
   );
 }
+
+// Entrée de navigation : pilule pleine largeur. Au repos texte gris poids
+// 500 ; active fond gris soutenu, texte noir poids 600 (en monochrome, deux
+// gris voisins ne suffisent pas à distinguer « sélectionné » de « survolé »,
+// la graisse fait la différence). Le survol (fond --bg-neutral) est porté par
+// la classe .nav-item dans globals.css : un style inline ne sait pas survoler.
+const NAV_ITEM: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+  padding: '10px 14px',
+  borderRadius: 9999,
+  color: 'var(--content-secondary)',
+  fontSize: 14,
+  fontWeight: 500,
+  textDecoration: 'none',
+};
+
+const NAV_ITEM_ACTIVE: CSSProperties = {
+  background: 'var(--bg-neutral-hover)',
+  color: 'var(--content-primary)',
+  fontWeight: 600,
+};
 
 // ── Styles mobile ───────────────────────────────────────────────
 const m: Record<string, CSSProperties> = {
@@ -315,7 +351,7 @@ const m: Record<string, CSSProperties> = {
     top: 0,
     zIndex: 20,
     background: 'var(--bg-screen)',
-    borderBottom: '1px solid var(--border-neutral)',
+    borderBottom: '1px solid var(--divider)',
   },
   topBarInner: {
     height: 60,
@@ -326,16 +362,23 @@ const m: Record<string, CSSProperties> = {
   // par des filets, comme une rangée d'onglets.
   topBarIcons: { height: 60 },
   topBrand: { display: 'flex', alignItems: 'center', gap: 1 },
-  topLogo: { width: 30, height: 30, borderRadius: 7, objectFit: 'cover' as const, display: 'block', flexShrink: 0 },
-  topBrandName: { display: 'block', fontWeight: 700, fontSize: 15, letterSpacing: '-0.03em', color: 'var(--content-primary)' },
-  topBrandHub: { display: 'block', color: 'var(--content-secondary)', fontSize: 11, fontWeight: 600 },
+  topLogo: { width: 30, height: 30, borderRadius: 8, objectFit: 'cover' as const, display: 'block', flexShrink: 0 },
+  topBrandName: {
+    display: 'block',
+    fontFamily: 'var(--font-display)',
+    fontWeight: 700,
+    fontSize: 15,
+    letterSpacing: '-0.02em',
+    color: 'var(--content-primary)',
+  },
+  topBrandHub: { display: 'block', color: 'var(--content-secondary)', fontSize: 12, fontWeight: 500 },
   topRight: { display: 'flex', alignItems: 'center', gap: 10 },
   topAvatar: {
     width: 34,
     height: 34,
     borderRadius: '50%',
     background: 'var(--bg-neutral)',
-    color: 'var(--brand-forest)',
+    color: 'var(--content-primary)',
     display: 'grid',
     placeItems: 'center',
     fontWeight: 700,
@@ -354,30 +397,30 @@ const m: Record<string, CSSProperties> = {
     flexDirection: 'column',
     gap: 4,
     background: 'var(--bg-screen)',
-    borderBottom: '1px solid var(--border-neutral)',
+    borderBottom: '1px solid var(--divider)',
     boxShadow: 'var(--shadow-card)',
     // Petits écrans (SE, écrans courts) : le menu défile au lieu de déborder.
     maxHeight: 'calc(100vh - 61px)',
     overflowY: 'auto',
   },
-  drawerUser: { display: 'flex', alignItems: 'center', gap: 12, padding: '6px 6px 14px', borderBottom: '1px solid var(--border-neutral)', marginBottom: 6 },
+  drawerUser: { display: 'flex', alignItems: 'center', gap: 12, padding: '6px 6px 14px', borderBottom: '1px solid var(--divider)', marginBottom: 6 },
   drawerAvatar: {
     width: 42,
     height: 42,
     borderRadius: '50%',
     background: 'var(--bg-neutral)',
-    color: 'var(--brand-forest)',
+    color: 'var(--content-primary)',
     display: 'grid',
     placeItems: 'center',
     fontWeight: 700,
     fontSize: 16,
     flexShrink: 0,
   },
-  drawerName: { fontWeight: 700, fontSize: 15, color: 'var(--content-primary)' },
+  drawerName: { fontWeight: 600, fontSize: 15, color: 'var(--content-primary)' },
   drawerRole: { color: 'var(--content-secondary)', fontSize: 12, textTransform: 'capitalize', marginTop: 2 },
-  drawerItem: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 9999, color: 'var(--content-secondary)', fontSize: 15, fontWeight: 600, textDecoration: 'none' },
-  drawerItemActive: { background: 'var(--bg-neutral-hover)', color: 'var(--brand-forest)' },
-  drawerLogout: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'transparent', border: '1px solid var(--border-neutral)', color: 'var(--negative)', borderRadius: 9999, padding: '11px', fontWeight: 600, fontSize: 14, marginTop: 8 },
+  drawerItem: { ...NAV_ITEM, padding: '12px 16px', fontSize: 15 },
+  drawerItemActive: NAV_ITEM_ACTIVE,
+  drawerLogout: { ...btnSecondary, width: '100%', marginTop: 8, fontSize: 14 },
 
   main: { flex: 1, padding: '0 0 24px' },
   loading: { color: 'var(--content-secondary)', display: 'grid', placeItems: 'center', height: '60vh' },
@@ -389,7 +432,7 @@ const d: Record<string, CSSProperties> = {
   sidebar: {
     width: 260,
     background: 'var(--bg-screen)',
-    borderRight: '1px solid var(--border-neutral)',
+    borderRight: '1px solid var(--divider)',
     padding: '20px 12px 16px',
     display: 'flex',
     flexDirection: 'column',
@@ -407,69 +450,44 @@ const d: Record<string, CSSProperties> = {
     display: 'block',
     flexShrink: 0,
   },
-  brand: { fontWeight: 700, fontSize: 15, letterSpacing: '-0.03em', color: 'var(--content-primary)' },
-  brandSub: { color: 'var(--content-secondary)', fontSize: 11.5, marginTop: 1, fontWeight: 600 },
-
-  navLabel: {
-    color: 'var(--content-tertiary)',
-    fontSize: 10.5,
+  brand: {
+    fontFamily: 'var(--font-display)',
     fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    padding: '0 16px 8px',
+    fontSize: 15,
+    letterSpacing: '-0.02em',
+    color: 'var(--content-primary)',
   },
-  nav: { display: 'flex', flexDirection: 'column', gap: 2 },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 11,
-    padding: '10px 16px',
-    borderRadius: 9999,
-    color: 'var(--content-secondary)',
-    fontSize: 14,
-    fontWeight: 500,
-    textDecoration: 'none',
-  },
-  navItemActive: { background: 'var(--bg-neutral-hover)', color: 'var(--brand-forest)', fontWeight: 600 },
+  brandSub: { color: 'var(--content-secondary)', fontSize: 12, marginTop: 1, fontWeight: 500 },
 
-  dateBox: { marginTop: 'auto', color: 'var(--content-tertiary)', fontSize: 12, padding: '0 16px 12px' },
-  user: { display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid var(--border-neutral)', paddingTop: 14 },
+  nav: { display: 'flex', flexDirection: 'column', gap: 2 },
+  navItem: NAV_ITEM,
+  navItemActive: NAV_ITEM_ACTIVE,
+
+  dateBox: { marginTop: 'auto', color: 'var(--content-tertiary)', fontSize: 12, padding: '0 14px 12px' },
+  user: { display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid var(--divider)', paddingTop: 14 },
   userRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '0 4px' },
   avatar: {
     width: 36,
     height: 36,
     borderRadius: '50%',
     background: 'var(--bg-neutral)',
-    boxShadow: 'inset 0 0 0 1px var(--border-neutral)',
-    color: 'var(--brand-forest)',
+    color: 'var(--content-primary)',
     display: 'grid',
     placeItems: 'center',
     fontWeight: 700,
     fontSize: 14,
     flexShrink: 0,
   },
-  userName: { fontWeight: 600, fontSize: 13.5, color: 'var(--content-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  userRole: { color: 'var(--content-secondary)', fontSize: 11.5, textTransform: 'capitalize' },
-  logout: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    background: 'transparent',
-    border: '1px solid var(--border-neutral)',
-    color: 'var(--content-secondary)',
-    borderRadius: 9999,
-    padding: '8px 10px',
-    fontWeight: 600,
-    fontSize: 13,
-  },
+  userName: { fontWeight: 600, fontSize: 14, color: 'var(--content-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  userRole: { color: 'var(--content-secondary)', fontSize: 12, textTransform: 'capitalize' },
+  logout: { ...btnSecondary, width: '100%', height: 40, fontSize: 14 },
 
   main: { flex: 1, overflow: 'auto', minWidth: 0, background: 'var(--bg-screen)' },
   centered: { color: 'var(--content-secondary)', display: 'grid', placeItems: 'center', height: '60vh' },
 
   // Libellé et logo sur la MÊME ligne : le libellé à gauche, le logo à droite.
   partnerBox: {
-    borderTop: '1px solid var(--border-neutral)',
+    borderTop: '1px solid var(--divider)',
     padding: '12px 12px 10px',
     display: 'flex',
     alignItems: 'center',
@@ -477,16 +495,17 @@ const d: Record<string, CSSProperties> = {
     gap: 10,
   },
   partnerLabel: {
-    fontSize: 10,
-    fontWeight: 700,
+    fontSize: 12,
+    fontWeight: 600,
     textTransform: 'uppercase' as const,
-    letterSpacing: 1.2,
+    letterSpacing: 0.5,
     color: 'var(--content-tertiary)',
   },
   partnerPill: {
     display: 'inline-flex',
     alignItems: 'center',
-    background: 'var(--bg-neutral)',
+    background: 'var(--bg-elevated)',
+    border: '1px solid var(--divider)',
     borderRadius: 9999,
     padding: '7px 13px',
     flexShrink: 0,

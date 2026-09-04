@@ -1,27 +1,41 @@
 import { useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { ExpeditionRushResult } from '@police/shared';
 import { useFlights } from './flights-store';
 import { expeditionRush } from './api';
 import { HiddenScanner } from './HiddenScanner';
-import { ScanLottie, type ScanState } from './ScanLottie';
-import { ScreenBackground, GlassCard, useSafePadding } from './Glass';
 import { feedbackSuccess, feedbackWarning } from './feedback';
-import { colors, radius, spacing } from './theme';
+import {
+  BottomBar,
+  Button,
+  FlightHeader,
+  Header,
+  Mono,
+  ScanResult,
+  ScanStage,
+  Screen,
+  ScreenScroll,
+  Surface,
+  Text,
+  useTheme,
+  type ScanState,
+} from './ui';
 
 /**
  * Écran Expédition rush : enregistre un bagage qui voyage SANS passager sur ce
  * vol (mention RUSH). Rien à voir avec le tapis Bagages, qui sert à la
- * réconciliation bagage ↔ passager.
+ * réconciliation bagage / passager.
  *
  * Le bagage porte deux étiquettes (l'originale + la RUSH imprimée au
  * réacheminement) : l'agent scanne les deux, dans n'importe quel ordre. Le
- * premier scan identifie (restant connu → on nomme le propriétaire), le second
+ * premier scan identifie (restant connu, on nomme le propriétaire), le second
  * lie les deux numéros et enregistre. Un bagage inconnu part en attente de
  * validation superviseur : le dolly le refusera tant que rien n'est tranché.
  */
 export function ExpeditionRushScreen() {
+  const theme = useTheme();
+  const router = useRouter();
   const { flightId } = useLocalSearchParams<{ flightId: string }>();
   const { getFlight } = useFlights();
   const flight = flightId ? getFlight(flightId) : undefined;
@@ -30,7 +44,6 @@ export function ExpeditionRushScreen() {
   const [last, setLast] = useState<ExpeditionRushResult | null>(null);
   const [scanState, setScanState] = useState<ScanState>('scanning');
   const scanSeq = useRef(0);
-  const pad = useSafePadding();
 
   function reset() {
     setFirstTag(null);
@@ -43,7 +56,7 @@ export function ExpeditionRushScreen() {
     scanSeq.current += 1;
 
     if (firstTag && tag === firstTag) {
-      setLast({ status: 'rejected', message: "Même étiquette scannée deux fois. Scannez l'AUTRE étiquette du bagage." });
+      setLast({ status: 'rejected', message: "Même étiquette scannée deux fois. Scannez l'autre étiquette du bagage." });
       setScanState('error');
       feedbackWarning();
       return;
@@ -102,113 +115,166 @@ export function ExpeditionRushScreen() {
   }
 
   const waitingSecond = firstTag !== null && last?.status === 'lookup';
+  const accepted = last?.status === 'accepted' ? last : null;
+  const lookup = last?.status === 'lookup' ? last : null;
+
+  // Étape courante : 1 avant tout scan, 2 en attente de la seconde étiquette,
+  // 3 quand le bagage est enregistré et attend le superviseur.
+  const currentStep = accepted ? (accepted.validation === 'approved' ? 4 : 3) : waitingSecond ? 2 : 1;
 
   return (
-    <View style={styles.root}>
-      <ScreenBackground />
-      <ScrollView style={styles.container} contentContainerStyle={[styles.content, pad]}>
+    <Screen>
+      <Header title="Expédition rush" onBack={() => router.back()} />
+      <ScreenScroll contentContainerStyle={{ gap: theme.spacing.base }}>
         <HiddenScanner onScan={onScan} />
 
-        <GlassCard strong contentStyle={styles.header}>
-          <View>
-            <Text style={styles.flight}>{flight?.flight_number ?? '—'}</Text>
-            <Text style={styles.route}>
-              {flight ? `${flight.origin}  →  ${flight.destination}` : 'Chargement…'}
-            </Text>
-          </View>
-          <View style={[styles.modePill, { borderColor: colors.primary }]}>
-            <Text style={[styles.modeText, { color: colors.primary }]}>EXPÉDITION RUSH</Text>
-          </View>
-        </GlassCard>
+        <FlightHeader
+          flightNumber={flight?.flight_number ?? ''}
+          origin={flight?.origin ?? ''}
+          destination={flight?.destination ?? ''}
+          mode="Expédition rush"
+          note="Bagage voyageant sans passager. Scannez ses deux étiquettes, l'originale et la rush, dans n'importe quel ordre."
+        />
 
-        <GlassCard strong rounded={radius.xl} contentStyle={styles.stage}>
-          <ScanLottie state={scanState} replayKey={scanSeq.current} size={210} />
-          <Text style={styles.stageTitle}>
-            {scanState === 'success'
+        <Surface elevation={0} bordered padding="base">
+          <Step index={1} current={currentStep} label="Première étiquette" detail={firstTag ?? undefined} />
+          <Step index={2} current={currentStep} label="Seconde étiquette" />
+          <Step index={3} current={currentStep} label="Validation superviseur" last />
+        </Surface>
+
+        <ScanStage
+          state={scanState}
+          replayKey={scanSeq.current}
+          title={
+            scanState === 'success'
               ? 'Bagage enregistré'
               : scanState === 'error'
                 ? 'Refusé'
                 : waitingSecond
-                  ? 'Étiquette 2 / 2'
-                  : 'Bagage sans passager'}
-          </Text>
-          <Text style={styles.stageHint}>
-            {waitingSecond
-              ? "Scannez l'autre étiquette du bagage (originale ou RUSH)"
+                  ? 'Étiquette 2 sur 2'
+                  : 'Bagage sans passager'
+          }
+          hint={
+            waitingSecond
+              ? "Scannez l'autre étiquette du bagage, originale ou rush"
               : scanState === 'scanning'
                 ? 'Scannez une des deux étiquettes du bagage'
-                : 'Prêt pour le prochain bagage'}
-          </Text>
-        </GlassCard>
+                : 'Prêt pour le prochain bagage'
+          }
+        />
 
         {last ? (
-          last.status === 'lookup' ? (
-            <GlassCard strong contentStyle={[styles.result, { borderLeftWidth: 4, borderLeftColor: colors.primary }]}>
-              {last.known && last.passengerName ? (
-                <Text style={styles.resultName}>{last.passengerName}</Text>
-              ) : null}
-              <Text style={[styles.resultMsg, { color: colors.text }]}>{last.message}</Text>
-              <Pressable style={styles.soloBtn} onPress={onSoloTag}>
-                <Text style={styles.soloText}>Ce bagage n&apos;a qu&apos;une étiquette</Text>
-              </Pressable>
-              <Pressable style={styles.resetBtn} onPress={reset}>
-                <Text style={styles.resetText}>Recommencer</Text>
-              </Pressable>
-            </GlassCard>
-          ) : last.status === 'accepted' ? (
-            <GlassCard
-              strong
-              contentStyle={[
-                styles.result,
-                { borderLeftWidth: 4, borderLeftColor: last.validation === 'approved' ? colors.success : colors.warning },
+          lookup ? (
+            <ScanResult
+              tone="info"
+              badgeLabel="En attente"
+              title={lookup.known && lookup.passengerName ? lookup.passengerName : 'Première étiquette lue'}
+              subtitle={firstTag ?? undefined}
+              meta={lookup.originFlight ? [{ label: "Vol d'origine", value: lookup.originFlight }] : undefined}
+              message={lookup.message}
+            />
+          ) : accepted ? (
+            <ScanResult
+              tone={accepted.validation === 'approved' ? 'success' : 'warning'}
+              badgeLabel={accepted.validation === 'approved' ? 'Validé' : 'À valider'}
+              title={accepted.passengerName ?? 'Bagage sans passager'}
+              meta={[
+                { label: 'Étiquette', value: accepted.tagNumber },
+                { label: 'Rush', value: accepted.rushTagNumber },
+                ...(accepted.originFlight ? [{ label: "Vol d'origine", value: accepted.originFlight }] : []),
               ]}
-            >
-              {last.passengerName ? <Text style={styles.resultName}>{last.passengerName}</Text> : null}
-              <Text style={styles.resultTag}>
-                {last.tagNumber} · RUSH {last.rushTagNumber}
-              </Text>
-              <Text
-                style={[
-                  styles.resultMsg,
-                  { color: last.validation === 'approved' ? colors.success : colors.warning },
-                ]}
-              >
-                {last.message}
-              </Text>
-            </GlassCard>
+              message={accepted.message}
+            />
           ) : (
-            <View style={[styles.result, styles.resultWarn]}>
-              <Text style={styles.resultBadge}>REFUSÉ</Text>
-              <Text style={styles.resultReason}>{last.message}</Text>
-            </View>
+            <ScanResult tone="danger" title="Scan refusé" message={last.message} />
           )
         ) : null}
-      </ScrollView>
+      </ScreenScroll>
+
+      {/* Actions disponibles seulement entre les deux scans. Aucune n'est
+          primaire : la suite attendue est un scan, pas un tap. */}
+      {waitingSecond ? (
+        <BottomBar style={{ gap: theme.spacing.sm }}>
+          <Button
+            label="Ce bagage n'a qu'une étiquette"
+            variant="secondary"
+            onPress={() => void onSoloTag()}
+            fullWidth
+            size="lg"
+          />
+          <Button label="Recommencer" variant="ghost" onPress={reset} fullWidth />
+        </BottomBar>
+      ) : null}
+    </Screen>
+  );
+}
+
+/**
+ * Ligne d'étape numérotée : disque plein noir, numéro inversé, quand l'étape
+ * est faite ; bordé quand elle est à venir ; libellé renforcé pour l'étape
+ * courante.
+ */
+function Step({
+  index,
+  current,
+  label,
+  detail,
+  last = false,
+}: {
+  index: number;
+  current: number;
+  label: string;
+  detail?: string;
+  last?: boolean;
+}) {
+  const theme = useTheme();
+  const done = index < current;
+  const active = index === current;
+
+  return (
+    <View
+      style={[
+        styles.step,
+        {
+          gap: theme.spacing.md,
+          paddingBottom: last ? 0 : theme.spacing.md,
+          marginBottom: last ? 0 : theme.spacing.md,
+          borderBottomWidth: last ? 0 : theme.borderWidth.hairline,
+          borderBottomColor: theme.colors.divider,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.disc,
+          {
+            borderRadius: theme.radius.pill,
+            backgroundColor: done ? theme.colors.text : 'transparent',
+            borderWidth: done ? 0 : theme.borderWidth.thin,
+            borderColor: active ? theme.colors.text : theme.colors.borderStrong,
+          },
+        ]}
+      >
+        <Text variant="overline" tabular color={done ? 'textInverse' : active ? 'text' : 'textMuted'}>
+          {index}
+        </Text>
+      </View>
+
+      <View style={{ flex: 1 }}>
+        <Text variant={active ? 'bodyStrong' : 'body'} color={done || active ? 'text' : 'textSecondary'}>
+          {label}
+        </Text>
+        {detail ? (
+          <Mono variant="caption" color="textSecondary" style={{ marginTop: theme.spacing.xxs }}>
+            {detail}
+          </Mono>
+        ) : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  container: { flex: 1 },
-  content: { paddingHorizontal: spacing(2), gap: spacing(2) },
-  header: { padding: spacing(2.5), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  flight: { color: colors.text, fontSize: 24, fontWeight: '800', letterSpacing: 0.5 },
-  route: { color: colors.muted, fontSize: 15, marginTop: 2, fontWeight: '600' },
-  modePill: { borderWidth: 1.5, borderRadius: radius.pill, paddingHorizontal: spacing(1.5), paddingVertical: spacing(0.5) },
-  modeText: { fontSize: 13, fontWeight: '800', letterSpacing: 1 },
-  stage: { paddingVertical: spacing(3), alignItems: 'center' },
-  stageTitle: { color: colors.text, fontSize: 19, fontWeight: '700', marginTop: spacing(1), textAlign: 'center' },
-  stageHint: { color: colors.muted, fontSize: 14, marginTop: 2, textAlign: 'center' },
-  result: { padding: spacing(2.5), alignItems: 'center' },
-  resultWarn: { backgroundColor: colors.warningBg, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.warningBorder },
-  resultName: { color: colors.text, fontSize: 22, fontWeight: '800', textAlign: 'center' },
-  resultTag: { color: colors.muted, fontSize: 15, fontWeight: '700', marginTop: 2, fontFamily: 'monospace' },
-  resultMsg: { fontSize: 16, fontWeight: '700', marginTop: spacing(1), textAlign: 'center' },
-  resultBadge: { color: colors.warning, fontWeight: '900', fontSize: 14, letterSpacing: 1, marginBottom: spacing(0.5) },
-  resultReason: { color: colors.text, fontSize: 17, fontWeight: '700', textAlign: 'center' },
-  soloBtn: { marginTop: spacing(1.5), paddingHorizontal: spacing(2), paddingVertical: spacing(0.75), borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.primary },
-  soloText: { color: colors.primary, fontSize: 14, fontWeight: '700' },
-  resetBtn: { marginTop: spacing(1), paddingHorizontal: spacing(2), paddingVertical: spacing(0.75), borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border },
-  resetText: { color: colors.muted, fontSize: 14, fontWeight: '700' },
+  step: { flexDirection: 'row', alignItems: 'center' },
+  disc: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
 });

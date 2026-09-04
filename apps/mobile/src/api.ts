@@ -14,7 +14,7 @@ import { supabase, signOutLocal } from './supabase';
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api-police.brsats.com';
 
 /** Message unique quand la session n'est plus exploitable sur cet appareil. */
-const SESSION_LOST = 'Session expirée — reconnectez-vous.';
+const SESSION_LOST = 'Session expirée. Reconnectez-vous.';
 
 export interface BoardingScanResponse {
   passenger: {
@@ -85,7 +85,7 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
   try {
     json = await res.json();
   } catch {
-    throw new Error('Serveur indisponible — réessayez dans quelques instants.');
+    throw new Error('Serveur indisponible. Réessayez dans quelques instants.');
   }
 
   if (!res.ok) {

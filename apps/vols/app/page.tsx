@@ -21,12 +21,16 @@ import { SiteFooter } from '@/components/SiteFooter';
 /** Aéroport choisi par le visiteur — mémorisé d'une visite à l'autre. */
 const CITY_KEY = 'vols.airport';
 
-/** Statut vol : pastille pilule colorée (design Wise) — fond doux + texte foncé,
-    lisible de loin sur fond blanc. À l'heure/embarquement = vert, porte fermée = jaune, annulé = rouge. */
+/** Statut vol : pastille pilule colorée (design Wise), fond doux + texte foncé,
+    lisible de loin sur fond blanc. À l'heure, embarquement, décollé, arrivé = vert ;
+    embarquement terminé et retardé = ambre ; annulé = rouge. */
 const STATUS_PILL: Record<FlightStatus, { bg: string; fg: string }> = {
   scheduled: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
+  delayed: { bg: 'var(--warning-bg)', fg: 'var(--warning-content)' },
   boarding: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
   closed: { bg: 'var(--warning-bg)', fg: 'var(--warning-content)' },
+  departed: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
+  arrived: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
   cancelled: { bg: 'var(--negative-bg)', fg: 'var(--negative)' },
 };
 

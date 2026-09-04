@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 import { Footer } from '@/components/Footer';
 import { PublicTopbar } from '@/components/PublicTopbar';
+import { eyebrow } from '@/ui/theme';
 
 export const metadata = {
   title: 'Police Bagage · Supervision',
@@ -22,7 +23,7 @@ const CAPABILITIES: { icon: ReactNode; title: string; desc: string }[] = [
   {
     icon: <IconShield />,
     title: 'Interceptez la fraude',
-    desc: 'Un bagage non déclaré au check-in ? Il est bloqué avant la soute et signalé immédiatement au superviseur.',
+    desc: 'Un bagage non déclaré au check-in est bloqué avant la soute et signalé aussitôt au superviseur.',
   },
   {
     icon: <IconChart />,
@@ -32,20 +33,20 @@ const CAPABILITIES: { icon: ReactNode; title: string; desc: string }[] = [
 ];
 
 const STEPS = [
-  { n: 'ÉTAPE 1', title: 'Check-in', desc: 'Scannez le boarding pass. Le passager et ses bagages déclarés entrent dans le système.' },
-  { n: 'ÉTAPE 2', title: 'Tri bagages', desc: 'Scannez chaque étiquette sur le tapis. Elle est confrontée à la déclaration du passager.' },
-  { n: 'ÉTAPE 3', title: 'Embarquement', desc: 'Contrôlez à la porte : seuls les passagers du vol passent, le comptage est automatique.' },
-  { n: 'ÉTAPE 4', title: 'Supervision', desc: 'Suivez vos vols en temps réel. Chaque alerte arrive avec le détail du bagage.' },
+  { n: 'Étape 1', title: 'Check-in', desc: 'Scannez le boarding pass. Le passager et ses bagages déclarés entrent dans le système.' },
+  { n: 'Étape 2', title: 'Tri bagages', desc: 'Scannez chaque étiquette sur le tapis. Elle est confrontée à la déclaration du passager.' },
+  { n: 'Étape 3', title: 'Embarquement', desc: 'Contrôlez à la porte : seuls les passagers du vol passent, le comptage est automatique.' },
+  { n: 'Étape 4', title: 'Supervision', desc: 'Suivez vos vols en temps réel. Chaque alerte arrive avec le détail du bagage.' },
 ];
 
 export default function Landing() {
   return (
     <div style={s.page}>
-      {/* Barre de navigation — bascule en rangée d'icônes au défilement sur
+      {/* Barre de navigation : bascule en rangée d'icônes au défilement sur
           téléphone (voir PublicTopbar). */}
       <PublicTopbar hub />
 
-      {/* Héro — 2 colonnes, titre display, visuel arrondi */}
+      {/* Héro : 2 colonnes, titre display, visuel arrondi */}
       <section className="lp-hero">
         <div className="lp-hero-grid">
           <div className="lp-hero-copy rv">
@@ -53,13 +54,13 @@ export default function Landing() {
               Chaque bagage suivi, du comptoir à la soute.
             </h1>
             <p className="lp-tagline">
-              Suivez vos vols, vos passagers et chaque étiquette bagage en temps réel.
-              Les bagages non déclarés sont interceptés avant la soute, sans paperasse
-              inutile, sans écart invisible.
+              Suivez vos vols, vos passagers et chaque étiquette en temps réel.
+              Un bagage non déclaré est intercepté avant la soute. Aucun écart
+              ne passe inaperçu.
             </p>
             <div className="lp-actions">
               <Link href="/login" className="lp-cta">Commencer</Link>
-              <a href="#fonctionnement" className="lp-cta-link">Voir comment ça marche</a>
+              <a href="#fonctionnement" className="lp-cta-link">Voir le déroulé</a>
             </div>
 
             <div className="lp-stats" data-rv-auto>
@@ -85,7 +86,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Capacités — tuiles teintées, icônes en cercles */}
+      {/* Capacités : cartes blanches, icônes en disque gris */}
       <section className="lp-section">
         <div className="lp-section-inner">
           <h2 className="lp-section-title rv">Gardez le contrôle, du check-in à l’avion</h2>
@@ -101,7 +102,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Déroulé opérationnel — section teintée */}
+      {/* Déroulé opérationnel : section teintée */}
       <section id="fonctionnement" className="lp-section lp-section-tinted">
         <div className="lp-section-inner">
           <h2 className="lp-section-title rv">Un vol, quatre étapes</h2>
@@ -117,21 +118,21 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Bandeau vert vif — appel à l'action inversé */}
+      {/* Bandeau d'encre : appel à l'action inversé */}
       <section className="lp-section">
         <div className="lp-section-inner">
           <div className="lp-band rv">
             <h2 className="lp-band-title">Prenez la main sur vos vols du jour.</h2>
             <p className="lp-band-text">
-              Connectez-vous à l’espace superviseur : chaque passager, chaque bagage
-              et chaque alerte de fraude vous attend au même endroit.
+              Connectez-vous à l’espace superviseur. Chaque passager, chaque bagage
+              et chaque alerte vous attendent au même endroit.
             </p>
             <Link href="/login" className="lp-band-btn">Connexion</Link>
           </div>
         </div>
       </section>
 
-      {/* Bande partenaires — les compagnies opérées par la plateforme */}
+      {/* Bande partenaires : les compagnies opérées par la plateforme */}
       <section className="rv" style={s.partnerBand}>
         <span style={s.partnerLabel}>Partenaires opérationnels</span>
         <div style={s.partnerDivider} />
@@ -142,13 +143,13 @@ export default function Landing() {
         <img src="/caa.png" alt="CAA - Compagnie Africaine d'Aviation" style={s.partnerLogo} />
       </section>
 
-      {/* Pied de page — bloc commun à tout le site */}
+      {/* Pied de page : bloc commun à tout le site */}
       <Footer variant="public" />
     </div>
   );
 }
 
-// ── Icônes ───────────────────────────────────────────────────
+// Icônes : trait 1.8, couleur héritée du disque qui les porte.
 
 function IconScan() {
   return (
@@ -192,8 +193,8 @@ function IconChart() {
 const s: Record<string, CSSProperties> = {
   page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-screen)' },
 
-
-  /* Bande partenaires */
+  /* Bande partenaires : un filet, un libellé en capitales, les logos sur
+     fond blanc (ils sont dessinés pour le blanc). */
   partnerBand: {
     display: 'flex',
     alignItems: 'center',
@@ -203,14 +204,9 @@ const s: Record<string, CSSProperties> = {
     padding: '28px 24px',
     background: 'var(--bg-screen)',
     borderTop: '1px solid var(--border-neutral)',
+    borderRadius: 0,
   },
-  partnerLabel: {
-    fontSize: 12,
-    fontWeight: 700,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 1.5,
-    color: 'var(--content-secondary)',
-  },
+  partnerLabel: { ...eyebrow, margin: 0 },
   partnerDivider: {
     width: 1,
     height: 28,

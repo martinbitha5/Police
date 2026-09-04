@@ -5,11 +5,18 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import type { Profile } from '@police/shared';
 import { createClient } from '@/supabase/client';
 import { AppShell } from '@/components/AppShell';
-import { card, btnPrimary, sectionHeading } from '@/ui/theme';
+import { card, btnPrimary, btnSecondary, input, label, sectionHeading } from '@/ui/theme';
 import { ROLE_LABEL } from '@/ui/theme';
 import { IconUser } from '@/components/icons';
 
 const ROLE_TEXT: Record<string, string> = ROLE_LABEL;
+
+/** Initiales d'un nom complet, deux lettres au plus, pour l'avatar. */
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const letters = parts.length >= 2 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] ?? '').slice(0, 2);
+  return letters.toUpperCase();
+}
 
 function formatDate(ts: string | null): string {
   if (!ts) return '';
@@ -114,12 +121,13 @@ function Profil() {
   const roleLabel = profile?.role ? (ROLE_TEXT[profile.role] ?? profile.role) : '';
   const siteCode = profile?.airport_code ?? '';
   const airlineCode = profile?.airline_code ?? '';
+  const avatarText = initials(profile?.full_name ?? '');
 
   return (
     <div style={isMobile ? { ...s.content, ...s.contentMobile } : s.content}>
       <div style={s.pageHeader}>
-        <div style={s.avatarBig}>
-          <IconUser size={26} />
+        <div style={s.avatarBig} aria-hidden>
+          {avatarText || <IconUser size={26} />}
         </div>
         <div>
           <h1 style={s.pageTitle}>Mon profil</h1>
@@ -147,10 +155,10 @@ function Profil() {
         <h2 style={sectionHeading}>Informations</h2>
         <form onSubmit={saveName} style={s.form}>
           <div style={s.field}>
-            <label style={s.label} htmlFor="full_name">Nom complet</label>
+            <label style={label} htmlFor="full_name">Nom complet</label>
             <input
               id="full_name"
-              style={s.input}
+              style={input}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Votre nom complet"
@@ -159,7 +167,7 @@ function Profil() {
           </div>
           {nameFeedback ? <Pill feedback={nameFeedback} /> : null}
           <div style={s.actions}>
-            <button type="submit" style={savingName ? s.btnDisabled : btnPrimary} disabled={savingName}>
+            <button type="submit" style={btnPrimary} disabled={savingName}>
               {savingName ? 'Enregistrement…' : 'Enregistrer'}
             </button>
           </div>
@@ -171,11 +179,11 @@ function Profil() {
         <h2 style={sectionHeading}>Mot de passe</h2>
         <form onSubmit={changePassword} style={s.form}>
           <div style={s.field}>
-            <label style={s.label} htmlFor="new_password">Nouveau mot de passe</label>
+            <label style={label} htmlFor="new_password">Nouveau mot de passe</label>
             <input
               id="new_password"
               type="password"
-              style={s.input}
+              style={input}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Au moins 8 caractères"
@@ -184,11 +192,11 @@ function Profil() {
             />
           </div>
           <div style={s.field}>
-            <label style={s.label} htmlFor="confirm_password">Confirmation</label>
+            <label style={label} htmlFor="confirm_password">Confirmation</label>
             <input
               id="confirm_password"
               type="password"
-              style={s.input}
+              style={input}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Répétez le mot de passe"
@@ -198,7 +206,9 @@ function Profil() {
           </div>
           {pwFeedback ? <Pill feedback={pwFeedback} /> : null}
           <div style={s.actions}>
-            <button type="submit" style={savingPassword ? s.btnDisabled : btnPrimary} disabled={savingPassword}>
+            {/* Second formulaire de l'écran : bouton secondaire, le primaire
+                reste « Enregistrer ». */}
+            <button type="submit" style={btnSecondary} disabled={savingPassword}>
               {savingPassword ? 'Modification…' : 'Changer le mot de passe'}
             </button>
           </div>
@@ -239,44 +249,47 @@ const s: Record<string, CSSProperties> = {
   loading: { color: 'var(--content-secondary)', display: 'grid', placeItems: 'center', height: '50vh' },
 
   pageHeader: { display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 },
+  // Avatar : disque gris, initiales noires.
   avatarBig: {
     width: 52,
     height: 52,
-    borderRadius: 9999,
+    borderRadius: '50%',
     background: 'var(--bg-neutral)',
-    boxShadow: 'inset 0 0 0 1px var(--border-neutral)',
-    color: 'var(--brand-forest)',
+    color: 'var(--content-primary)',
+    fontFamily: 'var(--font-display)',
+    fontSize: 18,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
     display: 'grid',
     placeItems: 'center',
     flexShrink: 0,
   },
-  pageTitle: { margin: 0, fontSize: 26, fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--content-primary)' },
+  pageTitle: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontSize: 26,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 'var(--lh-title)',
+    color: 'var(--content-primary)',
+  },
   pageSub: { color: 'var(--content-secondary)', fontSize: 14, marginTop: 4 },
 
   infoGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 },
   info: { display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 },
-  infoLabel: { color: 'var(--content-secondary)', fontSize: 12, fontWeight: 600 },
+  infoLabel: { ...label, fontSize: 13 },
   infoValue: { color: 'var(--content-primary)', fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' },
 
   form: { display: 'flex', flexDirection: 'column', gap: 14 },
-  field: { display: 'flex', flexDirection: 'column', gap: 5 },
-  label: { fontSize: 12, color: 'var(--content-secondary)', fontWeight: 600 },
-  input: {
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 10,
-    padding: '10px 12px',
-    color: 'var(--content-primary)',
-    fontSize: 14,
-    width: '100%',
-  },
+  field: { display: 'flex', flexDirection: 'column', gap: 6 },
   actions: { display: 'flex', justifyContent: 'flex-end' },
-  btnDisabled: { ...btnPrimary, opacity: 0.6, cursor: 'default' },
 
+  // Retour de formulaire : bandeau rayon 8, la paire sémantique est posée
+  // par Pill.
   pill: {
-    borderRadius: 10,
+    borderRadius: 8,
     padding: '10px 14px',
     fontSize: 14,
-    fontWeight: 600,
+    fontWeight: 500,
   },
 };

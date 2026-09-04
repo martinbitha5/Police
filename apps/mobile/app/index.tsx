@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useAuth } from '@/auth';
-import { ScreenBackground } from '@/Glass';
 import { getOnboarded } from '@/settings';
-import { colors } from '@/theme';
+import { Screen, useTheme } from '@/ui';
 
 export default function Index() {
+  const theme = useTheme();
   const { session, loading } = useAuth();
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
 
@@ -16,10 +16,11 @@ export default function Index() {
 
   if (loading || onboarded === null) {
     return (
-      <View style={styles.center}>
-        <ScreenBackground />
-        <ActivityIndicator color={colors.primary} size="large" />
-      </View>
+      <Screen>
+        <View style={styles.center}>
+          <ActivityIndicator color={theme.colors.text} size="large" />
+        </View>
+      </Screen>
     );
   }
 
@@ -29,5 +30,5 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });

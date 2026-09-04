@@ -5,20 +5,15 @@ import { AppShell, useSession } from '@/components/AppShell';
 import { flightScope } from '@/lib/scope';
 import { loadFlightStats, sumFlightStats } from '@/lib/flight-stats';
 import { PERIOD_LABEL, PERIOD_ORDER, rangeLabel, resolveRange, type Period } from '@/lib/period';
-import { todayAtAirport } from '@police/shared';
+import { hasFlightDeparted, todayAtAirport } from '@police/shared';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { card, btnPrimary, sectionHeading } from '@/ui/theme';
-import {
-  IconPlane,
-  IconUser,
-  IconPlaneDepart,
-  IconBag,
-  IconAlert,
-  IconDownload,
-} from '@/components/icons';
+import { btnPrimary, input, label as fieldLabel, sectionHeading } from '@/ui/theme';
+import { IconDownload } from '@/components/icons';
+import { Gauge } from '@/components/Gauge';
 
 interface Stats {
   flights: number;
+  departed: number;
   passengers: number;
   boarded: number;
   declared: number;
@@ -69,6 +64,7 @@ function ReportView() {
       const t = sumFlightStats(rows);
       setStats({
         flights: t.flights,
+        departed: rows.filter((r) => hasFlightDeparted(r.status)).length,
         passengers: t.pax,
         boarded: t.boarded,
         declared: t.declared,
@@ -88,7 +84,7 @@ function ReportView() {
 
   const downloadHref = `/api/report/period?from=${from}&to=${to}&label=${encodeURIComponent(PERIOD_LABEL[period])}`;
   const ecart = stats ? stats.declared - stats.confirmed : 0;
-  const boardRate = stats && stats.passengers > 0 ? Math.round((stats.boarded / stats.passengers) * 100) : 0;
+  const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`;
 
   return (
     <div data-rv-auto style={isMobile ? { ...s.content, ...s.contentMobile } : s.content}>
@@ -98,7 +94,7 @@ function ReportView() {
           <div style={s.sub}>{rangeLabel(period, from, to)}</div>
         </div>
         <a style={{ ...btnPrimary, ...(loading ? { opacity: 0.6, pointerEvents: 'none' } : {}) }} href={downloadHref} download>
-          <IconDownload size={16} /> Télécharger Excel
+          <IconDownload size={16} /> Télécharger le rapport
         </a>
       </div>
 
@@ -131,41 +127,50 @@ function ReportView() {
 
       <h2 style={sectionHeading}>Bilan de la période</h2>
 
-      <div style={isMobile ? { ...s.grid, gridTemplateColumns: 'repeat(2, 1fr)' } : s.grid}>
-        <Stat label="Vols traités" value={stats?.flights} icon={<IconPlane size={20} />} loading={loading} />
-        <Stat label="Passagers" value={stats?.passengers} icon={<IconUser size={20} />} loading={loading} />
-        <Stat label="Embarqués" value={stats ? `${stats.boarded} (${boardRate}%)` : undefined} icon={<IconPlaneDepart size={20} />} loading={loading} />
-        <Stat label="Bagages confirmés" value={stats ? `${stats.confirmed} / ${stats.declared}` : undefined} icon={<IconBag size={20} />} loading={loading} />
-        <Stat label="Écart bagages" value={stats ? ecart : undefined} icon={<IconBag size={20} />} danger={ecart !== 0} loading={loading} />
-        <Stat label="Alertes fraude" value={stats?.alerts} icon={<IconAlert size={20} />} danger={(stats?.alerts ?? 0) > 0} loading={loading} />
+      {/* Mêmes jauges que le tableau de bord : le chiffre du centre rapporté à
+          une référence dite en clair dessous. Tant que les compteurs ne sont
+          pas arrivés, l'anneau reste vide plutôt que d'afficher un faux zéro. */}
+      <div style={isMobile ? { ...s.grid, gridTemplateColumns: '1fr' } : s.grid}>
+        <Gauge
+          label="Vols traités"
+          value={stats?.flights ?? 0}
+          total={stats?.flights ?? 0}
+          ratio={stats && stats.flights > 0 ? stats.departed / stats.flights : 0}
+          caption={stats ? (stats.flights > 0 ? `${plural(stats.departed, 'décollé')} sur ${stats.flights}` : 'aucun vol') : undefined}
+          loading={loading || !stats}
+        />
+        <Gauge
+          label="Passagers embarqués"
+          value={stats?.boarded ?? 0}
+          total={stats?.passengers ?? 0}
+          caption={stats ? `sur ${plural(stats.passengers, 'enregistré')}` : undefined}
+          loading={loading || !stats}
+        />
+        <Gauge
+          label="Bagages confirmés"
+          value={stats?.confirmed ?? 0}
+          total={stats?.declared ?? 0}
+          caption={stats ? `sur ${plural(stats.declared, 'déclaré')}` : undefined}
+          loading={loading || !stats}
+        />
+        <Gauge
+          label="Écart bagages"
+          value={ecart}
+          total={stats?.declared ?? 0}
+          caption={stats ? (ecart !== 0 ? `sur ${plural(stats.declared, 'déclaré')}` : 'aucun écart') : undefined}
+          danger={ecart !== 0}
+          loading={loading || !stats}
+        />
+        <Gauge
+          label="Bagages écartés"
+          value={stats?.alerts ?? 0}
+          total={(stats?.declared ?? 0) + (stats?.alerts ?? 0)}
+          caption={stats ? (stats.alerts > 0 ? `sur ${plural(stats.flights, 'vol')}` : 'aucun écart') : undefined}
+          danger={(stats?.alerts ?? 0) > 0}
+          loading={loading || !stats}
+        />
       </div>
 
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  icon,
-  danger,
-  loading,
-}: {
-  label: string;
-  value: number | string | undefined;
-  icon: React.ReactNode;
-  danger?: boolean;
-  loading?: boolean;
-}) {
-  return (
-    <div style={s.stat}>
-      <div style={s.statIcon}>{icon}</div>
-      <div style={{ minWidth: 0 }}>
-        <div style={s.statLabel}>{label}</div>
-        <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', color: danger ? 'var(--negative)' : 'var(--content-primary)', lineHeight: 1.1 }}>
-          {loading ? '…' : (value ?? 'N/A')}
-        </div>
-      </div>
     </div>
   );
 }
@@ -176,50 +181,48 @@ const s: Record<string, CSSProperties> = {
 
   head: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 20, flexWrap: 'wrap' },
   headMobile: { flexDirection: 'column', gap: 12 },
-  title: { margin: 0, fontSize: 26, fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--content-primary)' },
+  title: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontSize: 26,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 1.2,
+    color: 'var(--content-primary)',
+  },
   sub: { color: 'var(--content-secondary)', fontSize: 14, marginTop: 4 },
 
+  // Puces de filtre : pilule bordée, blanche au repos ; l'active est noire.
   tabs: { display: 'flex', gap: 8, marginBottom: 22, flexWrap: 'wrap' },
   tab: {
     flex: '1 1 auto',
     minWidth: 80,
-    background: 'transparent',
+    background: 'var(--bg-elevated)',
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: 'var(--border-neutral)',
-    color: 'var(--content-secondary)',
+    color: 'var(--content-primary)',
     borderRadius: 9999,
-    padding: '10px 16px',
-    fontWeight: 600,
+    padding: '9px 16px',
+    fontWeight: 500,
     fontSize: 14,
   },
-  tabActive: { background: 'var(--interactive-primary)', borderColor: 'var(--interactive-primary)', color: '#fff' },
+  tabActive: {
+    background: 'var(--interactive-accent)',
+    borderColor: 'var(--interactive-accent)',
+    color: 'var(--interactive-control)',
+  },
 
   customRow: { display: 'flex', gap: 12, marginBottom: 22, alignItems: 'flex-end', flexWrap: 'wrap' },
   customField: { display: 'flex', flexDirection: 'column', gap: 6 },
-  customLabel: { fontSize: 13, color: 'var(--content-secondary)', fontWeight: 600 },
+  customLabel: { ...fieldLabel },
   dateInput: {
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    color: 'var(--content-primary)',
-    borderRadius: 10,
-    padding: '10px 13px',
-    fontSize: 14,
+    ...input,
+    // 16 px : en dessous, iOS Safari zoome automatiquement à la mise au point
+    // et l'écran reste décalé après la saisie.
+    fontSize: 16,
+    maxWidth: '100%',
   },
 
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 14, marginBottom: 22 },
-  stat: { ...card, display: 'flex', alignItems: 'center', gap: 14, padding: 18 },
-  statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 9999,
-    background: 'var(--bg-neutral)',
-    boxShadow: 'inset 0 0 0 1px var(--border-neutral)',
-    color: 'var(--brand-forest)',
-    display: 'grid',
-    placeItems: 'center',
-    flexShrink: 0,
-  },
-  statLabel: { color: 'var(--content-secondary)', fontSize: 13, marginBottom: 4 },
-
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, marginBottom: 22 },
 };

@@ -1,12 +1,18 @@
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import LottieView from 'lottie-react-native';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { Suitcase } from 'phosphor-react-native';
 import { useAuth } from '@/auth';
-import { ScreenBackground } from '@/Glass';
 import { markOnboarded } from '@/settings';
-import { colors, radius, spacing, shadow } from '@/theme';
+import { BottomBar, Button, IconBubble, Screen, Text, useTheme } from '@/ui';
 
+/**
+ * Accueil, vu une seule fois.
+ *
+ * Un titre, une phrase qui dit ce que fait l'application, une illustration
+ * sobre et un seul bouton. Rien d'autre : l'agent n'a rien à décider ici.
+ */
 export default function Onboarding() {
+  const theme = useTheme();
   const router = useRouter();
   const { session } = useAuth();
 
@@ -16,47 +22,36 @@ export default function Onboarding() {
   }
 
   return (
-    <View style={styles.container}>
-      <ScreenBackground />
-      <View style={styles.hero}>
-        <LottieView
-          source={require('../assets/lottie/onboarding.json')}
-          autoPlay
-          loop
-          style={styles.lottie}
-        />
-      </View>
-
-      <View style={styles.texts}>
-        <Text style={styles.brand}>Police Bagage</Text>
-        <Text style={styles.title}>Scannez. Vérifiez. Protégez.</Text>
-        <Text style={styles.subtitle}>
-          Contrôle des boarding pass et des étiquettes bagage en temps réel, directement sur le terrain.
+    <Screen>
+      <View
+        style={[
+          styles.body,
+          { paddingHorizontal: theme.screenPadding, paddingTop: theme.spacing['3xl'] },
+        ]}
+      >
+        <Text variant="display">Police Bagage</Text>
+        <Text variant="body" color="textSecondary" style={{ marginTop: theme.spacing.md }}>
+          Scannez les cartes d'embarquement et les étiquettes, et contrôlez chaque bagage avant
+          qu'il parte en soute.
         </Text>
+
+        {/* L'illustration occupe l'espace restant, centrée : elle n'a pas à
+            pousser le bouton, la barre du bas est ancrée. */}
+        <View style={styles.hero}>
+          <IconBubble size={96} tone="neutral">
+            <Suitcase size={42} color={theme.colors.text} weight="fill" />
+          </IconBubble>
+        </View>
       </View>
 
-      <Pressable style={({ pressed }) => [styles.button, shadow(2), pressed && styles.buttonPressed]} onPress={start}>
-        <Text style={styles.buttonText}>Commencer</Text>
-      </Pressable>
-    </View>
+      <BottomBar>
+        <Button label="Commencer" onPress={() => void start()} fullWidth size="lg" />
+      </BottomBar>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: spacing(3), justifyContent: 'space-between' },
+  body: { flex: 1 },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  lottie: { width: 280, height: 280 },
-  texts: { alignItems: 'center', gap: spacing(1) },
-  brand: { color: colors.primary, fontSize: 16, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
-  title: { color: colors.text, fontSize: 28, fontWeight: '800', textAlign: 'center' },
-  subtitle: { color: colors.muted, fontSize: 16, textAlign: 'center', lineHeight: 24, marginTop: spacing(0.5) },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    padding: spacing(2.25),
-    alignItems: 'center',
-    marginTop: spacing(3),
-  },
-  buttonPressed: { opacity: 0.8 },
-  buttonText: { color: colors.onPrimary, fontSize: 18, fontWeight: '800' },
 });

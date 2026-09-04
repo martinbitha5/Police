@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Flight } from '@police/shared';
 import { todayAtAirport } from '@police/shared';
 import { fetchOperatingDay } from './api';
@@ -44,6 +45,12 @@ const UNKNOWN_CLOCK: ClockCheck = { day: '', serverDay: null, deviceDay: '', dri
 interface FlightsState {
   flights: Flight[];
   loading: boolean;
+  /**
+   * Les compteurs de la journée affichée sont connus (cache ou base). Tant que
+   * c'est faux, un écran montre un squelette à la place des chiffres : un zéro
+   * qui n'en est pas un est pire qu'une case vide.
+   */
+  statsReady: boolean;
   /** État de l'horloge à la dernière synchronisation. */
   clock: ClockCheck;
   getFlight: (id: string) => Flight | undefined;
@@ -63,6 +70,54 @@ const FlightsContext = createContext<FlightsState | undefined>(undefined);
 /** Clé de tri des vols : heure de départ croissante, sans horaire en dernier. */
 function departureKey(f: Flight): string {
   return f.departure_time ?? '9999';
+}
+
+/**
+ * Dernière liste connue, gardée sur l'appareil.
+ *
+ * À l'ouverture, l'écran affichait une liste sans compteurs pendant trois
+ * allers-retours réseau (journée serveur, vols, compteurs). Le cache montre
+ * tout de suite ce qu'on savait la dernière fois, et la base corrige ensuite.
+ * Il est lié à l'agent et à la journée : un PDA prêté à un collègue, ou rouvert
+ * le lendemain, n'affiche jamais les vols d'un autre.
+ */
+interface FlightsCache {
+  userId: string;
+  day: string;
+  flights: Flight[];
+  stats: Record<string, FlightStats>;
+}
+
+const CACHE_KEY = 'flights-store.cache';
+
+async function readFlightsCache(userId: string): Promise<FlightsCache | null> {
+  try {
+    const raw = await AsyncStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const cached = JSON.parse(raw) as FlightsCache;
+    return cached.userId === userId ? cached : null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeFlightsCache(cache: FlightsCache): Promise<void> {
+  try {
+    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // Stockage indisponible : l'écran repartira du réseau la prochaine fois.
+  }
+}
+
+/** Vols d'une journée, triés par heure de départ. null si la requête échoue. */
+async function fetchFlights(day: string): Promise<Flight[] | null> {
+  const { data, error } = await supabase
+    .from('flights')
+    .select('*')
+    .eq('date', day)
+    .order('departure_time', { ascending: true });
+  if (error) return null;
+  return (data as Flight[] | null) ?? [];
 }
 
 /** Ligne renvoyée par la RPC flight_stats_for_date. */
@@ -137,12 +192,18 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [stats, setStats] = useState<Record<string, FlightStats>>({});
   const [loading, setLoading] = useState(true);
+  const [statsReady, setStatsReady] = useState(false);
   const [clock, setClock] = useState<ClockCheck>(UNKNOWN_CLOCK);
   // Identifiants des vols connus, pour ne réagir qu'aux événements pertinents.
   const flightIds = useRef<Set<string>>(new Set());
   // Journée affichée, lisible depuis les gestionnaires temps réel sans les
   // réabonner à chaque changement de date.
   const dayRef = useRef<string>('');
+  // Un rafraîchissement à la fois : l'abonnement temps réel et le retour au
+  // premier plan en déclenchent souvent un pendant que celui du login court
+  // encore, et deux jeux de requêtes identiques ne servent à rien.
+  const refreshing = useRef(false);
+  const userId = session?.user.id ?? null;
 
   const refreshStats = useCallback(async (id: string) => {
     const s = await fetchStats(id);
@@ -150,66 +211,108 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
     if (s) setStats((prev) => ({ ...prev, [id]: s }));
   }, []);
 
+  /** Applique une journée chargée à l'état, et la garde sur l'appareil. */
+  const applyDay = useCallback(
+    (day: string, list: Flight[], bulk: Record<string, FlightStats> | null) => {
+      dayRef.current = day;
+      setFlights(list);
+      flightIds.current = new Set(list.map((f) => f.id));
+      setLoading(false);
+      if (bulk) {
+        setStats(bulk);
+        setStatsReady(true);
+        if (userId) void writeFlightsCache({ userId, day, flights: list, stats: bulk });
+      }
+    },
+    [userId],
+  );
+
   const refresh = useCallback(async () => {
-    if (!session) return;
-
-    // Quel jour est-il à l'aéroport ? On demande au serveur, et on garde
-    // l'horloge de l'appareil comme repli, pas comme référence.
-    const deviceDay = todayAtAirport(profile?.airport_code);
-    let serverDay: string | null = null;
-    let driftMs: number | null = null;
+    if (!session || refreshing.current) return;
+    refreshing.current = true;
     try {
-      const answer = await fetchOperatingDay();
-      serverDay = answer.day;
-      driftMs = Date.now() - new Date(answer.serverTime).getTime();
-    } catch {
-      // API injoignable : on continue sur l'horloge locale, comportement d'avant.
+      // Quel jour est-il à l'aéroport ? On demande au serveur, et on garde
+      // l'horloge de l'appareil comme repli, pas comme référence.
+      //
+      // Mais on n'attend pas sa réponse pour charger : la journée de
+      // l'appareil est la bonne dans l'immense majorité des cas, donc vols et
+      // compteurs partent en même temps que la question. Si le serveur
+      // répond une autre journée, on recharge pour celle-là. Trois
+      // allers-retours en série deviennent un seul, et l'écran l'attend
+      // d'autant moins.
+      const deviceDay = todayAtAirport(profile?.airport_code);
+      const [answer, list, bulk] = await Promise.all([
+        fetchOperatingDay().catch(() => null),
+        fetchFlights(deviceDay),
+        fetchAllStats(deviceDay),
+      ]);
+
+      const serverDay = answer?.day ?? null;
+      const driftMs = answer ? Date.now() - new Date(answer.serverTime).getTime() : null;
+      const day = serverDay ?? deviceDay;
+      setClock({ day, serverDay, deviceDay, driftMs });
+
+      let dayList = list;
+      let dayBulk = bulk;
+      if (day !== deviceDay) {
+        [dayList, dayBulk] = await Promise.all([fetchFlights(day), fetchAllStats(day)]);
+      }
+
+      // Liste injoignable : on garde ce qu'on affiche (cache ou état
+      // précédent) plutôt que de vider l'écran.
+      if (!dayList) {
+        setLoading(false);
+        return;
+      }
+      applyDay(day, dayList, dayBulk);
+
+      // Compteurs groupés en échec (réseau qui lâche UNE requête) : repli vol
+      // par vol, et ce qui échoue encore garde son cache.
+      if (!dayBulk) {
+        const perFlight = await Promise.all(
+          dayList.map(async (f) => [f.id, await fetchStats(f.id)] as const),
+        );
+        setStats((prev) => {
+          const next = { ...prev };
+          for (const [id, s] of perFlight) if (s) next[id] = s;
+          return next;
+        });
+        if (perFlight.some(([, s]) => s)) setStatsReady(true);
+      }
+    } finally {
+      refreshing.current = false;
     }
-    const day = serverDay ?? deviceDay;
+  }, [session, profile?.airport_code, applyDay]);
 
-    dayRef.current = day;
-    setClock({ day, serverDay, deviceDay, driftMs });
-
-    const { data } = await supabase
-      .from('flights')
-      .select('*')
-      .eq('date', day)
-      .order('departure_time', { ascending: true });
-    const list = (data as Flight[] | null) ?? [];
-    setFlights(list);
-    flightIds.current = new Set(list.map((f) => f.id));
-    setLoading(false);
-
-    // Toutes les stats du jour en UNE requête (au lieu de 4 × nombre de vols).
-    // Si elle échoue (réseau qui lâche UNE requête), on ne laisse pas des
-    // zéros : repli vol par vol, et ce qui échoue encore garde son cache.
-    const bulk = await fetchAllStats(day);
-    if (bulk) {
-      setStats(bulk);
-    } else {
-      const perFlight = await Promise.all(list.map(async (f) => [f.id, await fetchStats(f.id)] as const));
-      setStats((prev) => {
-        const next = { ...prev };
-        for (const [id, s] of perFlight) if (s) next[id] = s;
-        return next;
-      });
-    }
-  }, [session, profile?.airport_code]);
-
-  // Charge à la connexion, vide à la déconnexion.
+  // Charge à la connexion, vide à la déconnexion. Le cache de l'appareil est
+  // affiché d'abord, s'il porte sur la journée en cours ; la base corrige
+  // ensuite.
   useEffect(() => {
-    if (!session) {
+    if (!session || !userId) {
       setFlights([]);
       setStats({});
+      setStatsReady(false);
       setClock(UNKNOWN_CLOCK);
       flightIds.current = new Set();
       dayRef.current = '';
       setLoading(false);
       return;
     }
+    let cancelled = false;
     setLoading(true);
-    void refresh();
-  }, [session, refresh]);
+    setStatsReady(false);
+    void (async () => {
+      const cached = await readFlightsCache(userId);
+      if (cancelled) return;
+      if (cached && cached.day === todayAtAirport(profile?.airport_code)) {
+        applyDay(cached.day, cached.flights, cached.stats);
+      }
+      await refresh();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session, userId, profile?.airport_code, refresh, applyDay]);
 
   // Realtime : comptage INCRÉMENTAL local (delta), sans jamais re-interroger la
   // base. Un événement = une mise à jour d'état O(1) — supprime l'amplification
@@ -300,6 +403,8 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
       .subscribe((status) => {
         // À la (re)connexion du canal, on réconcilie avec des compteurs
         // autoritatifs (rattrape les événements manqués pendant une coupure).
+        // Au démarrage, le chargement du login est encore en cours et
+        // `refresh` s'écarte de lui-même.
         if (status === 'SUBSCRIBED') void refresh();
       });
 
@@ -329,7 +434,10 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
       if (AppState.currentState !== 'active' || !dayRef.current) return;
       void (async () => {
         const bulk = await fetchAllStats(dayRef.current);
-        if (bulk) setStats(bulk);
+        if (bulk) {
+          setStats(bulk);
+          setStatsReady(true);
+        }
       })();
     }, 60_000);
     return () => clearInterval(id);
@@ -340,7 +448,7 @@ export function FlightsProvider({ children }: { children: ReactNode }) {
 
   return (
     <FlightsContext.Provider
-      value={{ flights, loading, clock, getFlight, statsFor, refresh, refreshStatsFor: refreshStats }}
+      value={{ flights, loading, statsReady, clock, getFlight, statsFor, refresh, refreshStatsFor: refreshStats }}
     >
       {children}
     </FlightsContext.Provider>

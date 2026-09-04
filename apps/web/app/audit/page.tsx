@@ -20,7 +20,7 @@ import {
   type MovementKind,
 } from '@police/shared';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { badge, card, input, sectionHeading } from '@/ui/theme';
+import { badge, btnSecondary, card, input, label, sectionHeading } from '@/ui/theme';
 
 export default function AuditPage() {
   return (
@@ -30,12 +30,15 @@ export default function AuditPage() {
   );
 }
 
-/** Une seule touche de couleur par famille, appliquée au texte de la pastille. */
-const FAMILY_COLOR: Record<MovementFamily, string> = {
-  passenger: 'var(--content-secondary)',
-  baggage: 'var(--brand-forest)',
-  fraud: 'var(--negative)',
-  dispute: 'var(--warning-content)',
+/**
+ * Pastille par famille de mouvement : neutre pour l'exploitation courante,
+ * paire sémantique quand le mouvement est un statut (fraude, litige).
+ */
+const FAMILY_STYLE: Record<MovementFamily, CSSProperties> = {
+  passenger: { ...badge },
+  baggage: { ...badge, color: 'var(--content-primary)' },
+  fraud: { ...badge, background: 'var(--negative-bg)', color: 'var(--negative)' },
+  dispute: { ...badge, background: 'var(--warning-bg)', color: 'var(--warning-content)' },
 };
 
 function AuditView() {
@@ -145,12 +148,12 @@ function AuditView() {
       {period === 'perso' ? (
         <div style={isMobile ? { ...s.customRow, flexDirection: 'column', alignItems: 'stretch' } : s.customRow}>
           <label style={s.field}>
-            <span style={s.fieldLabel}>Du</span>
-            <input type="date" max={today} style={s.dateInput} value={customFrom} onChange={(e) => setCustomFrom(e.target.value || today)} />
+            <span style={label}>Du</span>
+            <input type="date" max={today} style={input} value={customFrom} onChange={(e) => setCustomFrom(e.target.value || today)} />
           </label>
           <label style={s.field}>
-            <span style={s.fieldLabel}>Au</span>
-            <input type="date" max={today} style={s.dateInput} value={customTo} onChange={(e) => setCustomTo(e.target.value || today)} />
+            <span style={label}>Au</span>
+            <input type="date" max={today} style={input} value={customTo} onChange={(e) => setCustomTo(e.target.value || today)} />
           </label>
         </div>
       ) : null}
@@ -159,7 +162,7 @@ function AuditView() {
 
       <div style={isMobile ? { ...s.filterRow, gridTemplateColumns: '1fr' } : s.filterRow}>
         <label style={s.field}>
-          <span style={s.fieldLabel}>Recherche</span>
+          <span style={label}>Recherche</span>
           <input
             style={input}
             placeholder="Passager, PNR, étiquette ou vol"
@@ -168,7 +171,7 @@ function AuditView() {
           />
         </label>
         <label style={s.field}>
-          <span style={s.fieldLabel}>Auteur</span>
+          <span style={label}>Auteur</span>
           <select style={input} value={actorId} onChange={(e) => setActorId(e.target.value)}>
             <option value="">Tous les auteurs</option>
             {actors.map((a) => (
@@ -226,7 +229,7 @@ function AuditView() {
                 <tr key={`${m.at}-${m.kind}-${i}`} style={s.tr}>
                   <td style={{ ...s.td, whiteSpace: 'nowrap', color: 'var(--content-secondary)' }}>{stamp(m.at)}</td>
                   <td style={s.td}>
-                    <span style={{ ...badge, color: FAMILY_COLOR[MOVEMENT_FAMILY[m.kind]] }}>
+                    <span style={FAMILY_STYLE[MOVEMENT_FAMILY[m.kind]]}>
                       {MOVEMENT_LABEL[m.kind]}
                     </span>
                   </td>
@@ -251,17 +254,13 @@ function AuditView() {
             {firstShown} à {lastShown} sur {total.toLocaleString('fr-FR')}
           </span>
           <div style={s.pagerBtns}>
-            <button style={{ ...s.pagerBtn, ...(page === 0 ? s.pagerBtnOff : {}) }} disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+            <button style={s.pagerBtn} disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
               Précédent
             </button>
             <span style={s.pagerPage}>
               Page {page + 1} sur {pageCount}
             </span>
-            <button
-              style={{ ...s.pagerBtn, ...(page + 1 >= pageCount ? s.pagerBtnOff : {}) }}
-              disabled={page + 1 >= pageCount}
-              onClick={() => setPage((p) => p + 1)}
-            >
+            <button style={s.pagerBtn} disabled={page + 1 >= pageCount} onClick={() => setPage((p) => p + 1)}>
               Suivant
             </button>
           </div>
@@ -275,7 +274,7 @@ function MovementCard({ m }: { m: Movement }) {
   return (
     <div style={s.cardItem}>
       <div style={s.cardTop}>
-        <span style={{ ...badge, color: FAMILY_COLOR[MOVEMENT_FAMILY[m.kind]] }}>{MOVEMENT_LABEL[m.kind]}</span>
+        <span style={FAMILY_STYLE[MOVEMENT_FAMILY[m.kind]]}>{MOVEMENT_LABEL[m.kind]}</span>
         <span style={s.cardStamp}>{stamp(m.at)}</span>
       </div>
       <div style={s.cardMain}>{m.passenger_name ?? m.tag_number ?? m.flight_number ?? 'N/A'}</div>
@@ -304,14 +303,31 @@ const s: Record<string, CSSProperties> = {
   contentMobile: { padding: '16px 14px' },
 
   head: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 20, flexWrap: 'wrap' },
-  title: { margin: 0, fontSize: 26, fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--content-primary)' },
+  title: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontSize: 26,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 'var(--lh-title)',
+    color: 'var(--content-primary)',
+  },
   sub: { color: 'var(--content-secondary)', fontSize: 14, marginTop: 4 },
   countBox: { textAlign: 'right' },
-  countValue: { fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--content-primary)', lineHeight: 1.1 },
+  countValue: {
+    fontFamily: 'var(--font-display)',
+    fontSize: 26,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    fontVariantNumeric: 'tabular-nums',
+    color: 'var(--content-primary)',
+    lineHeight: 1.1,
+  },
   countLabel: { color: 'var(--content-secondary)', fontSize: 13 },
 
   denied: { color: 'var(--content-secondary)', fontSize: 15, marginTop: 12, maxWidth: 560, lineHeight: 1.5 },
 
+  // Puces de période et de type : filet gris au repos, encre pleine en actif.
   tabs: { display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' },
   tab: {
     flex: '1 1 auto',
@@ -320,40 +336,48 @@ const s: Record<string, CSSProperties> = {
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: 'var(--border-neutral)',
-    color: 'var(--content-secondary)',
+    color: 'var(--content-primary)',
     borderRadius: 9999,
     padding: '10px 16px',
-    fontWeight: 600,
+    fontWeight: 500,
     fontSize: 14,
   },
-  tabActive: { background: 'var(--interactive-primary)', borderColor: 'var(--interactive-primary)', color: '#fff' },
+  tabActive: {
+    background: 'var(--interactive-accent)',
+    borderColor: 'var(--interactive-accent)',
+    color: 'var(--interactive-control)',
+  },
 
   customRow: { display: 'flex', gap: 12, marginBottom: 18, alignItems: 'flex-end', flexWrap: 'wrap' },
   filterRow: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginBottom: 14 },
   field: { display: 'flex', flexDirection: 'column', gap: 6 },
-  fieldLabel: { fontSize: 13, color: 'var(--content-secondary)', fontWeight: 600 },
-  dateInput: {
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    color: 'var(--content-primary)',
-    borderRadius: 10,
-    padding: '10px 13px',
-    fontSize: 14,
-  },
 
   kindRow: { display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 20 },
   kindChip: {
     background: 'transparent',
-    border: '1px solid var(--border-neutral)',
-    color: 'var(--content-secondary)',
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: 'var(--border-neutral)',
+    color: 'var(--content-primary)',
     borderRadius: 9999,
     padding: '6px 13px',
-    fontSize: 12.5,
-    fontWeight: 600,
+    fontSize: 13,
+    fontWeight: 500,
   },
-  kindChipActive: { borderColor: 'var(--interactive-primary)', color: 'var(--brand-forest)' },
+  kindChipActive: {
+    background: 'var(--interactive-accent)',
+    borderColor: 'var(--interactive-accent)',
+    color: 'var(--interactive-control)',
+  },
 
-  error: { color: 'var(--negative)', fontSize: 14, marginBottom: 14 },
+  error: {
+    background: 'var(--negative-bg)',
+    color: 'var(--negative)',
+    borderRadius: 8,
+    padding: '10px 14px',
+    fontSize: 14,
+    marginBottom: 14,
+  },
   empty: { ...card, color: 'var(--content-secondary)', textAlign: 'center', padding: 36 },
 
   tableWrap: { ...card, padding: 0, overflowX: 'auto' },
@@ -363,13 +387,13 @@ const s: Record<string, CSSProperties> = {
     padding: '13px 16px',
     color: 'var(--content-tertiary)',
     fontSize: 11,
-    fontWeight: 700,
+    fontWeight: 600,
     textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    borderBottom: '1px solid var(--border-neutral)',
+    letterSpacing: 0.5,
+    borderBottom: '1px solid var(--divider)',
     whiteSpace: 'nowrap',
   },
-  tr: { borderBottom: '1px solid var(--border-neutral)' },
+  tr: { borderBottom: '1px solid var(--divider)' },
   td: { padding: '12px 16px', color: 'var(--content-primary)', verticalAlign: 'top' },
   muted: { color: 'var(--content-tertiary)' },
   system: { color: 'var(--content-tertiary)', fontStyle: 'italic' },
@@ -380,20 +404,12 @@ const s: Record<string, CSSProperties> = {
   cardStamp: { color: 'var(--content-tertiary)', fontSize: 12, whiteSpace: 'nowrap' },
   cardMain: { fontWeight: 600, fontSize: 14.5, color: 'var(--content-primary)' },
   cardMeta: { display: 'flex', gap: 10, flexWrap: 'wrap', color: 'var(--content-secondary)', fontSize: 12.5, marginTop: 5 },
-  cardDetail: { color: 'var(--content-secondary)', fontSize: 12.5, marginTop: 7, paddingTop: 7, borderTop: '1px solid var(--border-neutral)' },
+  cardDetail: { color: 'var(--content-secondary)', fontSize: 12.5, marginTop: 7, paddingTop: 7, borderTop: '1px solid var(--divider)' },
 
   pager: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 16, flexWrap: 'wrap' },
-  pagerInfo: { color: 'var(--content-secondary)', fontSize: 13 },
+  pagerInfo: { color: 'var(--content-secondary)', fontSize: 13, fontVariantNumeric: 'tabular-nums' },
   pagerBtns: { display: 'flex', alignItems: 'center', gap: 10 },
-  pagerPage: { color: 'var(--content-secondary)', fontSize: 13, whiteSpace: 'nowrap' },
-  pagerBtn: {
-    background: 'transparent',
-    border: '1px solid var(--border-neutral)',
-    color: 'var(--content-primary)',
-    borderRadius: 9999,
-    padding: '8px 18px',
-    fontWeight: 600,
-    fontSize: 13.5,
-  },
-  pagerBtnOff: { opacity: 0.4 },
+  pagerPage: { color: 'var(--content-secondary)', fontSize: 13, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' },
+  // Petit bouton secondaire ; l'état désactivé est rendu par button:disabled.
+  pagerBtn: { ...btnSecondary, height: 36, padding: '0 16px', fontSize: 13.5 },
 };

@@ -1,11 +1,17 @@
 import type { ReactNode } from 'react';
-import { Inter, Archivo_Black } from 'next/font/google';
+import { Inter, Figtree } from 'next/font/google';
 import './globals.css';
 import { RevealObserver } from '@/components/RevealObserver';
 
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
-// Archivo Black — substitut libre de Wise Sans pour les titres display.
-const archivo = Archivo_Black({ weight: '400', subsets: ['latin'], display: 'swap', variable: '--font-archivo' });
+// Figtree tient le rôle d'UberMove pour les titres : même grotesque
+// géométrique, mêmes proportions en gras. Le texte courant reste sur Inter.
+const figtree = Figtree({
+  weight: ['500', '600', '700', '800'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-figtree',
+});
 
 export const metadata = {
   title: 'Boarding Scanner · Superviseur',
@@ -29,7 +35,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     // Le script de tête ajoute `js-reveal` et `data-scrolled` sur <html> avant
     // l'hydratation : l'écart avec le HTML du serveur est voulu, pas un bug.
-    <html lang="fr" className={`${inter.variable} ${archivo.variable}`} suppressHydrationWarning>
+    <html lang="fr" className={`${inter.variable} ${figtree.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY }} />
         <script dangerouslySetInnerHTML={{ __html: SCROLL_EFFECTS }} />

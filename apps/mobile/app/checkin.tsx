@@ -1,17 +1,38 @@
 import { useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { FLIGHT_LOCK_REASON, isFlightLocked } from '@police/shared';
 import { useAuth } from '@/auth';
 import { useFlights } from '@/flights-store';
 import { scanBoarding, type BoardingScanResponse } from '@/api';
 import { HiddenScanner } from '@/HiddenScanner';
-import { ScanLottie, type ScanState } from '@/ScanLottie';
-import { ScreenBackground, GlassCard, useSafePadding } from '@/Glass';
 import { feedbackSuccess, feedbackWarning } from '@/feedback';
-import { colors, radius, spacing } from '@/theme';
+import {
+  FlightHeader,
+  Header,
+  InlineAlert,
+  LockedStage,
+  ScanResult,
+  ScanStage,
+  Screen,
+  ScreenScroll,
+  Text,
+  useTheme,
+  type ScanState,
+} from '@/ui';
+
+/**
+ * Préfixe d'avertissement (pictogramme U+26A0 et son sélecteur de variante
+ * U+FE0F) que l'API met parfois devant ses messages. Construit à partir des
+ * points de code pour ne pas embarquer d'emoji dans la source.
+ */
+const WARNING_SIGN = String.fromCodePoint(0x26a0);
+const VARIATION_SELECTOR = String.fromCodePoint(0xfe0f);
+const WARNING_PREFIX = new RegExp(`^${WARNING_SIGN}${VARIATION_SELECTOR}?\\s*`);
 
 export default function CheckIn() {
+  const theme = useTheme();
+  const router = useRouter();
   const { flightId } = useLocalSearchParams<{ flightId: string }>();
   const { profile } = useAuth();
   const { getFlight, statsFor, refreshStatsFor } = useFlights();
@@ -21,11 +42,8 @@ export default function CheckIn() {
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const [scanState, setScanState] = useState<ScanState>('scanning');
   const scanSeq = useRef(0);
-  const pad = useSafePadding();
-  const isLocked = flight?.status === 'closed' || flight?.status === 'cancelled';
-  const lockReason = flight?.status === 'cancelled'
-    ? 'Vol annulé — les scans de boarding pass sont désactivés.'
-    : 'Porte fermée — les scans de boarding pass sont désactivés.';
+  const isLocked = flight ? isFlightLocked(flight.status) : false;
+  const lockReason = `${(flight && FLIGHT_LOCK_REASON[flight.status]) ?? 'Vol verrouillé'}. Les scans de boarding pass sont désactivés.`;
 
   async function onScan(raw: string) {
     if (!flightId) return;
@@ -45,190 +63,81 @@ export default function CheckIn() {
   }
 
   const routeText = last
-    ? last.legs.map((l) => l.origin).concat(last.legs.at(-1)?.destination ?? '').join('  →  ')
+    ? last.legs.map((l) => l.origin).concat(last.legs.at(-1)?.destination ?? '').join(' · ')
     : '';
 
+  const errorText = message ? message.text.replace(WARNING_PREFIX, '') : '';
+  const wrongFlight = Boolean(message && message.text.includes('Mauvais vol'));
+
   return (
-    <View style={styles.root}>
-      <ScreenBackground />
-      <ScrollView style={styles.container} contentContainerStyle={[styles.content, pad]}>
+    <Screen>
+      <Header title="Check-in" onBack={() => router.back()} />
+      <ScreenScroll contentContainerStyle={{ gap: theme.spacing.base }}>
         {!isLocked ? <HiddenScanner onScan={onScan} /> : null}
 
-        {/* En-tête vol */}
-        <GlassCard strong contentStyle={styles.header}>
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.flight}>{flight?.flight_number ?? '—'}</Text>
-              <Text style={styles.route}>
-                {flight ? `${flight.origin}  →  ${flight.destination}` : 'Chargement…'}
+        <FlightHeader
+          flightNumber={flight?.flight_number ?? ''}
+          origin={flight?.origin ?? ''}
+          destination={flight?.destination ?? ''}
+          mode="Check-in"
+          right={
+            <View style={styles.counter}>
+              <Text variant="priceLarge" tabular>
+                {count}
+              </Text>
+              <Text variant="caption" color="textSecondary">
+                passagers
               </Text>
             </View>
-            <View style={styles.countPill}>
-              <Text style={styles.countNum}>{count}</Text>
-              <Text style={styles.countLabel}>passagers</Text>
-            </View>
-          </View>
-
-          {/* Instruction : seul ce vol est accepté au check-in. */}
-          <View style={styles.instruction}>
-            <Ionicons name="information-circle" size={16} color={colors.primary} />
-            <Text style={styles.instructionText}>
-              Seuls les boarding pass du vol {flight?.flight_number ?? 'sélectionné'} sont acceptés. Un autre vol est
-              refusé.
-            </Text>
-          </View>
-        </GlassCard>
+          }
+          note={`Seuls les boarding pass du vol ${flight?.flight_number ?? 'sélectionné'} sont acceptés. Un autre vol est refusé.`}
+        />
 
         {isLocked ? (
-          <GlassCard strong rounded={radius.xl} contentStyle={styles.lockedStage}>
-            <Ionicons name="lock-closed" size={52} color={colors.danger} />
-            <Text style={styles.lockedTitle}>Check-in fermé</Text>
-            <Text style={styles.lockedSub}>{lockReason}</Text>
-          </GlassCard>
+          <LockedStage title="Check-in fermé" reason={lockReason} />
         ) : (
           <>
-            {/* Scène de scan animée */}
-            <GlassCard strong rounded={radius.xl} contentStyle={styles.stage}>
-              <ScanLottie state={scanState} replayKey={scanSeq.current} size={210} />
-              <Text style={styles.stageTitle}>
-                {scanState === 'success'
+            <ScanStage
+              state={scanState}
+              replayKey={scanSeq.current}
+              title={
+                scanState === 'success'
                   ? 'Passager enregistré'
                   : scanState === 'error'
                     ? 'Scan refusé'
-                    : 'Scannez un boarding pass'}
-              </Text>
-              <Text style={styles.stageHint}>
-                {scanState === 'scanning' ? 'En attente de lecture…' : 'Prêt pour le prochain scan'}
-              </Text>
-            </GlassCard>
+                    : 'Scannez un boarding pass'
+              }
+              hint={scanState === 'scanning' ? 'En attente de lecture' : 'Prêt pour le prochain scan'}
+            />
 
             {message ? (
-              message.text.includes('Mauvais vol') ? (
-                <View style={styles.wrongFlightBanner}>
-                  <Ionicons name="airplane" size={22} color={colors.danger} />
-                  <View style={styles.wrongFlightTexts}>
-                    <Text style={styles.wrongFlightTitle}>MAUVAIS VOL</Text>
-                    <Text style={styles.wrongFlightText}>{message.text.replace('⚠️ ', '')}</Text>
-                  </View>
-                </View>
+              wrongFlight ? (
+                <ScanResult tone="danger" title="Mauvais vol" message={errorText} />
               ) : (
-                <View style={styles.errorBanner}>
-                  <Text style={styles.errorBannerText}>⚠️  {message.text}</Text>
-                </View>
+                <InlineAlert tone="danger" message={errorText} />
               )
             ) : null}
 
             {last ? (
-              <GlassCard strong contentStyle={styles.lastCard}>
-                <View style={styles.lastTopRow}>
-                  <Text style={styles.lastLabel}>DERNIER SCAN</Text>
-                  <View style={styles.okBadge}>
-                    <Text style={styles.okBadgeText}>✓ OK</Text>
-                  </View>
-                </View>
-                <Text style={styles.lastName}>{last.fullName}</Text>
-                <View style={styles.metaRow}>
-                  <Meta label="Siège" value={last.seat || '—'} />
-                  <Meta label="Classe" value={last.class || '—'} />
-                  <Meta label="Bagages" value={String(last.declaredBaggageCount)} />
-                </View>
-                {routeText ? <Text style={styles.lastRoute}>{routeText}</Text> : null}
-              </GlassCard>
+              <ScanResult
+                tone="success"
+                title={last.fullName}
+                subtitle={last.pnr || undefined}
+                meta={[
+                  { label: 'Siège', value: last.seat || '-' },
+                  { label: 'Classe', value: last.class || '-' },
+                  { label: 'Bagages', value: String(last.declaredBaggageCount) },
+                ]}
+                message={routeText || undefined}
+              />
             ) : null}
           </>
         )}
-      </ScrollView>
-    </View>
-  );
-}
-
-function Meta({ label, value }: { label: string; value: string }): React.JSX.Element {
-  return (
-    <View style={styles.metaItem}>
-      <Text style={styles.metaLabel}>{label}</Text>
-      <Text style={styles.metaValue}>{value}</Text>
-    </View>
+      </ScreenScroll>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  container: { flex: 1 },
-  content: { paddingHorizontal: spacing(2), gap: spacing(2) },
-  header: { padding: spacing(2.5) },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  flight: { color: colors.text, fontSize: 24, fontWeight: '800', letterSpacing: 0.5 },
-  route: { color: colors.muted, fontSize: 15, marginTop: 2, fontWeight: '600' },
-  countPill: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing(2),
-    paddingVertical: spacing(1),
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  countNum: { color: colors.primary, fontSize: 22, fontWeight: '800' },
-  countLabel: { color: colors.muted, fontSize: 11, fontWeight: '600' },
-  instruction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing(1),
-    marginTop: spacing(1.5),
-    paddingTop: spacing(1.5),
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  instructionText: { flex: 1, color: colors.muted, fontSize: 13, fontWeight: '600', lineHeight: 18 },
-  wrongFlightBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing(1.5),
-    backgroundColor: colors.dangerBg,
-    borderRadius: radius.lg,
-    padding: spacing(2),
-    borderWidth: 1,
-    borderColor: colors.dangerBorder,
-  },
-  wrongFlightTexts: { flex: 1 },
-  wrongFlightTitle: { color: colors.danger, fontWeight: '900', fontSize: 15, letterSpacing: 1 },
-  wrongFlightText: { color: colors.danger, fontWeight: '700', fontSize: 14, marginTop: 2 },
-  stage: {
-    paddingVertical: spacing(3),
-    alignItems: 'center',
-  },
-  lockedStage: { paddingVertical: spacing(4), alignItems: 'center', gap: spacing(1.5) },
-  lockedTitle: { color: colors.danger, fontSize: 22, fontWeight: '800', marginTop: spacing(1.5), textAlign: 'center' },
-  lockedSub: { color: colors.muted, fontSize: 14, textAlign: 'center', lineHeight: 20, paddingHorizontal: spacing(2), marginTop: spacing(0.5) },
-  stageTitle: { color: colors.text, fontSize: 19, fontWeight: '700', marginTop: spacing(1) },
-  stageHint: { color: colors.muted, fontSize: 14, marginTop: 2 },
-  errorBanner: {
-    backgroundColor: colors.dangerBg,
-    borderRadius: radius.md,
-    padding: spacing(2),
-    borderWidth: 1,
-    borderColor: colors.dangerBorder,
-  },
-  errorBannerText: { color: colors.danger, fontWeight: '700', textAlign: 'center' },
-  lastCard: {
-    padding: spacing(2.5),
-    borderLeftWidth: 4,
-    borderLeftColor: colors.success,
-  },
-  lastTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  lastLabel: { color: colors.muted, fontSize: 12, fontWeight: '700', letterSpacing: 1 },
-  okBadge: { backgroundColor: colors.successBg, borderRadius: radius.pill, paddingHorizontal: spacing(1.25), paddingVertical: 2 },
-  okBadgeText: { color: colors.success, fontWeight: '800', fontSize: 12 },
-  lastName: { color: colors.text, fontSize: 22, fontWeight: '800', marginTop: spacing(1) },
-  metaRow: { flexDirection: 'row', gap: spacing(1.5), marginTop: spacing(1.5) },
-  metaItem: {
-    flex: 1,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.md,
-    paddingVertical: spacing(1),
-    alignItems: 'center',
-  },
-  metaLabel: { color: colors.muted, fontSize: 11, fontWeight: '600', textTransform: 'uppercase' },
-  metaValue: { color: colors.text, fontSize: 17, fontWeight: '700', marginTop: 2 },
-  lastRoute: { color: colors.primary, fontWeight: '700', fontSize: 15, marginTop: spacing(1.5), textAlign: 'center' },
+  counter: { alignItems: 'flex-end' },
 });

@@ -5,7 +5,7 @@ import type { Baggage } from '@police/shared';
 import { SOUTE_LABEL } from '@police/shared';
 import { createClient } from '@/supabase/client';
 import { useSession } from '@/components/AppShell';
-import { card, btnPrimary, btnGhost, badge, sectionHeading } from '@/ui/theme';
+import { card, btnPrimary, btnSecondary, btnText, badge, sectionHeading, eyebrow, input as inputStyle, label as labelStyle } from '@/ui/theme';
 
 const TAG_RE = /^\d{10}$/;
 
@@ -20,7 +20,7 @@ function formatTime(ts: string | null): string {
  * Deux modes :
  *  • full (page Bagages)    : formulaire d'annonce + les trois groupes
  *    (annoncés, à valider, suivi). C'est ici que le superviseur travaille.
- *  • compact (dashboard)    : l'essentiel pour réagir vite — les scannés en
+ *  • compact (dashboard)    : l'essentiel pour réagir vite, les scannés en
  *    attente avec Autoriser / Refuser, et un lien vers la page Bagages.
  *
  * L'annonce vaut validation anticipée : la ligne est créée en rush_status
@@ -217,7 +217,7 @@ export function RushPanel({
         <button style={btnPrimary} disabled={busyId === b.id} onClick={() => decide(b, 'approved')}>
           Autoriser
         </button>
-        <button style={{ ...btnGhost, color: 'var(--negative)' }} disabled={busyId === b.id} onClick={() => decide(b, 'denied')}>
+        <button style={{ ...btnSecondary, color: 'var(--negative)' }} disabled={busyId === b.id} onClick={() => decide(b, 'denied')}>
           Refuser
         </button>
       </div>
@@ -318,7 +318,7 @@ export function RushPanel({
           </div>
           {formError ? <div style={{ color: 'var(--negative)', fontSize: 13 }}>{formError}</div> : null}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-            <button style={btnGhost} disabled={saving} onClick={() => setShowForm(false)}>
+            <button style={btnSecondary} disabled={saving} onClick={() => setShowForm(false)}>
               Annuler
             </button>
             <button style={btnPrimary} disabled={saving} onClick={() => void announce()}>
@@ -340,7 +340,7 @@ export function RushPanel({
           {list(expected, (b) =>
             canManage ? (
               <button
-                style={{ ...btnGhost, color: 'var(--negative)' }}
+                style={{ ...btnSecondary, color: 'var(--negative)' }}
                 disabled={busyId === b.id}
                 onClick={() => cancelAnnouncement(b)}
               >
@@ -369,10 +369,12 @@ export function RushPanel({
 }
 
 const ps: Record<string, CSSProperties> = {
-  manageLink: { color: 'var(--content-link)', fontSize: 14, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '0.3em', whiteSpace: 'nowrap' },
-  groupTitle: { margin: '16px 0 8px', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--content-secondary)', fontWeight: 600 },
+  // Lien vers la page Bagages : lien-bouton tertiaire, à hauteur du titre.
+  manageLink: { ...btnText, height: 'auto', padding: 0, fontSize: 14 },
+  // Sous-groupes sous le titre de section : l'eyebrow, pas un second titre.
+  groupTitle: { ...eyebrow, margin: '16px 0 8px' },
   formRow: { display: 'flex', gap: 12, flexWrap: 'wrap' },
   field: { display: 'flex', flexDirection: 'column', gap: 5, flex: 1, minWidth: 200 },
-  label: { fontSize: 12, color: 'var(--content-secondary)', fontWeight: 600 },
-  input: { background: 'var(--bg-elevated)', border: '1px solid var(--border-neutral)', borderRadius: 10, padding: '10px 12px', color: 'var(--content-primary)', fontSize: 14 },
+  label: { ...labelStyle },
+  input: { ...inputStyle },
 };

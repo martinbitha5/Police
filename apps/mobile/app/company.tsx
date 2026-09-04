@@ -1,123 +1,138 @@
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { ScreenBackground, GlassCard, useSafePadding } from '@/Glass';
-import { colors, radius, spacing } from '@/theme';
+import {
+  Airplane,
+  Buildings,
+  Desktop,
+  FileText,
+  ForkKnife,
+  Package,
+  ShieldCheck,
+  Sparkle,
+  SuitcaseRolling,
+  Users,
+  Wrench,
+} from 'phosphor-react-native';
+import {
+  Divider,
+  Header,
+  IconBubble,
+  ListRow,
+  Screen,
+  ScreenScroll,
+  Spacer,
+  Surface,
+  Text,
+  useTheme,
+} from '@/ui';
 
-const SERVICES: { icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
-  { icon: 'airplane', label: 'Assistance au sol' },
-  { icon: 'cube', label: 'Cargo & Fret' },
-  { icon: 'bag-handle', label: 'Manutention bagages' },
-  { icon: 'shield-checkmark', label: 'Sûreté aéroportuaire' },
-  { icon: 'people', label: 'Passage' },
-  { icon: 'document-text', label: 'Contrôle documents' },
-  { icon: 'construct', label: 'Maintenance' },
-  { icon: 'desktop', label: 'Support informatique' },
-  { icon: 'sparkles', label: 'Cleaning aéronefs' },
-  { icon: 'restaurant', label: 'Catering' },
+type ServiceIcon = React.ComponentType<{ size?: number; color?: string }>;
+
+const SERVICES: { Icon: ServiceIcon; label: string }[] = [
+  { Icon: Airplane, label: 'Assistance au sol' },
+  { Icon: Package, label: 'Cargo & Fret' },
+  { Icon: SuitcaseRolling, label: 'Manutention bagages' },
+  { Icon: ShieldCheck, label: 'Sûreté aéroportuaire' },
+  { Icon: Users, label: 'Passage' },
+  { Icon: FileText, label: 'Contrôle documents' },
+  { Icon: Wrench, label: 'Maintenance' },
+  { Icon: Desktop, label: 'Support informatique' },
+  { Icon: Sparkle, label: 'Cleaning aéronefs' },
+  { Icon: ForkKnife, label: 'Catering' },
 ];
 
 export default function Company() {
+  const theme = useTheme();
   const router = useRouter();
-  const pad = useSafePadding();
+
+  // Lecture longue : interligne relâché, plutôt que le 1,5 du courant.
+  const paragraph = { lineHeight: Math.round(theme.fontSize.base * theme.lineHeight.relaxed) };
 
   return (
-    <View style={styles.root}>
-      <ScreenBackground />
-      <ScrollView style={styles.container} contentContainerStyle={[styles.content, pad]}>
-        <Pressable style={styles.back} onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="chevron-back" size={22} color={colors.primary} />
-          <Text style={styles.backText}>Retour</Text>
-        </Pressable>
+    <Screen>
+      <Header title="Entreprise" onBack={() => router.back()} />
 
+      <ScreenScroll>
         {/* Identité */}
-        <GlassCard strong rounded={radius.xl} contentStyle={styles.hero}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>ATS</Text>
-          </View>
-          <Text style={styles.name}>African Transport Systems</Text>
-          <Text style={styles.tagline}>ATS Handling · Services aéroportuaires en RDC</Text>
-        </GlassCard>
+        <View style={[styles.identity, { paddingVertical: theme.spacing.lg }]}>
+          <IconBubble size={72} tone="neutral">
+            <Buildings size={theme.iconSize.xl} color={theme.colors.text} />
+          </IconBubble>
+          <Spacer size="base" />
+          <Text variant="h1" align="center">
+            African Transport Systems
+          </Text>
+          <Text
+            variant="body"
+            color="textSecondary"
+            align="center"
+            style={{ marginTop: theme.spacing.xxs }}
+          >
+            ATS Handling · Services aéroportuaires en RDC
+          </Text>
+        </View>
+
+        <Spacer size="lg" />
 
         {/* Mission */}
-        <Text style={styles.sectionTitle}>Mission</Text>
-        <GlassCard contentStyle={styles.card}>
-          <Text style={styles.quote}>
-            « Allier technicités et technologies modernes pour des services aéroportuaires aux standards modernes »
-          </Text>
-        </GlassCard>
+        <Text variant="label" color="textMuted" uppercase>
+          Mission
+        </Text>
+        <Spacer size="sm" />
+        <Text variant="bodyStrong" style={paragraph}>
+          « Allier technicités et technologies modernes pour des services aéroportuaires aux
+          standards modernes »
+        </Text>
+
+        <Spacer size="xl" />
 
         {/* À propos */}
-        <Text style={styles.sectionTitle}>À propos</Text>
-        <GlassCard contentStyle={styles.card}>
-          <Text style={styles.body}>
-            African Transport Systems est un prestataire de services aéroportuaires et de manutention présent dans les
-            principaux aéroports de la République Démocratique du Congo. La société innove continuellement dans le
-            secteur du handling pour offrir des prestations fiables et sécurisées.
-          </Text>
-        </GlassCard>
+        <Text variant="label" color="textMuted" uppercase>
+          À propos
+        </Text>
+        <Spacer size="sm" />
+        <Text variant="body" style={paragraph}>
+          African Transport Systems est un prestataire de services aéroportuaires et de manutention
+          présent dans les principaux aéroports de la République Démocratique du Congo. La société
+          innove continuellement dans le secteur du handling pour offrir des prestations fiables et
+          sécurisées.
+        </Text>
+
+        <Spacer size="xl" />
 
         {/* Services */}
-        <Text style={styles.sectionTitle}>Nos services</Text>
-        <GlassCard contentStyle={styles.servicesCard}>
-          {SERVICES.map((s, i) => (
-            <View key={s.label} style={[styles.serviceRow, i < SERVICES.length - 1 && styles.serviceDivider]}>
-              <View style={styles.serviceIcon}>
-                <Ionicons name={s.icon} size={18} color={colors.primary} />
-              </View>
-              <Text style={styles.serviceLabel}>{s.label}</Text>
-            </View>
+        <Text variant="label" color="textMuted" uppercase>
+          Nos services
+        </Text>
+        <Spacer size="sm" />
+        <Surface
+          elevation={0}
+          bordered
+          padding="none"
+          style={{ paddingHorizontal: theme.spacing.base }}
+        >
+          {SERVICES.map(({ Icon, label }, index) => (
+            <React.Fragment key={label}>
+              {index > 0 ? <Divider /> : null}
+              <ListRow
+                title={label}
+                icon={<Icon size={theme.iconSize.sm} color={theme.colors.text} />}
+              />
+            </React.Fragment>
           ))}
-        </GlassCard>
+        </Surface>
 
-        <Text style={styles.footer}>Système anti-fraude bagages · Police Bagage</Text>
-      </ScrollView>
-    </View>
+        <Spacer size="2xl" />
+
+        <Text variant="caption" color="textMuted" align="center">
+          Système anti-fraude bagages · Police Bagage
+        </Text>
+      </ScreenScroll>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  container: { flex: 1 },
-  content: { paddingHorizontal: spacing(2), gap: spacing(1.5) },
-  back: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', paddingVertical: spacing(0.5) },
-  backText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
-  hero: { padding: spacing(3), alignItems: 'center', marginTop: spacing(0.5) },
-  logo: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.lg,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing(1.5),
-  },
-  logoText: { color: colors.onPrimary, fontSize: 24, fontWeight: '900', letterSpacing: 1 },
-  name: { color: colors.text, fontSize: 22, fontWeight: '800', textAlign: 'center' },
-  tagline: { color: colors.muted, fontSize: 14, fontWeight: '600', textAlign: 'center', marginTop: spacing(0.5) },
-  sectionTitle: {
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: spacing(1),
-    marginLeft: spacing(0.5),
-  },
-  card: { padding: spacing(2.5) },
-  quote: { color: colors.text, fontSize: 16, fontWeight: '700', lineHeight: 24, fontStyle: 'italic' },
-  body: { color: colors.text, fontSize: 15, lineHeight: 23, fontWeight: '500' },
-  servicesCard: { paddingHorizontal: spacing(2) },
-  serviceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing(2), paddingVertical: spacing(1.5) },
-  serviceDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
-  serviceIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  serviceLabel: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  footer: { color: colors.muted, fontSize: 12, textAlign: 'center', marginTop: spacing(2) },
+  identity: { alignItems: 'center' },
 });

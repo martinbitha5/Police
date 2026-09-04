@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/auth';
 import { FlightsProvider } from '@/flights-store';
-import { GlassBar } from '@/Glass';
 import { loadSettings } from '@/settings';
-import { colors } from '@/theme';
+import { FONT_ASSETS, ToastProvider, useTheme } from '@/ui';
 
 /** Renvoie vers le login dès que la session disparaît (déconnexion globale). */
 function AuthGate() {
@@ -25,49 +25,43 @@ function AuthGate() {
 }
 
 export default function RootLayout() {
+  const theme = useTheme();
+  const [fontsLoaded, fontError] = useFonts(FONT_ASSETS);
+
   useEffect(() => {
     void loadSettings();
   }, []);
 
+  // Rien tant que les polices ne sont pas prêtes : un premier rendu en police
+  // système suivi d'un remplacement ferait sauter tout l'écran.
+  if (!fontsLoaded && !fontError) return null;
+
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <FlightsProvider>
-          <AuthGate />
-          <StatusBar style="dark" />
-          <Stack
-            screenOptions={{
-              headerTransparent: true,
-              headerBackground: () => <GlassBar />,
-              headerTintColor: colors.primary,
-              headerTitleStyle: { fontWeight: '800', color: colors.text },
-              headerShadowVisible: false,
-              headerBackButtonDisplayMode: 'minimal',
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          >
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            {/* Écrans de travail : pas d'en-tête fixe — retour par balayage / bouton système. */}
-            <Stack.Screen name="flight" options={{ headerShown: false }} />
-            <Stack.Screen name="checkin" options={{ headerShown: false }} />
-            <Stack.Screen name="baggage" options={{ headerShown: false }} />
-            <Stack.Screen name="embarquement" options={{ headerShown: false }} />
-            <Stack.Screen name="dolly" options={{ headerShown: false }} />
-            <Stack.Screen name="charger" options={{ headerShown: false }} />
-            <Stack.Screen name="rush" options={{ headerShown: false }} />
-            <Stack.Screen name="expedition-rush" options={{ headerShown: false }} />
-            <Stack.Screen name="soute" options={{ headerShown: false }} />
-            <Stack.Screen name="arrivee" options={{ headerShown: false }} />
-            <Stack.Screen name="company" options={{ headerShown: false }} />
-            <Stack.Screen name="contact" options={{ headerShown: false }} />
-            <Stack.Screen name="legal" options={{ headerShown: false }} />
-            <Stack.Screen name="profile-edit" options={{ headerShown: false }} />
-          </Stack>
-        </FlightsProvider>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <FlightsProvider>
+            <AuthGate />
+            <StatusBar style="dark" />
+            {/* Chaque écran rend son propre `Header` : aucun en-tête natif. */}
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: theme.colors.background },
+                animation: 'slide_from_right',
+              }}
+            >
+              {/* Les écrans d'entrée se remplacent en fondu ; les écrans de
+                  travail glissent depuis la droite, car on y entre par un
+                  geste et on en revient. */}
+              <Stack.Screen name="index" options={{ animation: 'fade' }} />
+              <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
+              <Stack.Screen name="login" options={{ animation: 'fade' }} />
+              <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+            </Stack>
+          </FlightsProvider>
+        </AuthProvider>
+      </ToastProvider>
     </SafeAreaProvider>
   );
 }

@@ -15,14 +15,65 @@ export const SOUTE_LABEL: Record<SoutePosition, string> = {
   arriere: 'Soute arrière',
 } as const;
 
-export type FlightStatus = 'scheduled' | 'boarding' | 'closed' | 'cancelled';
+/**
+ * Cycle de vie d'un vol.
+ *
+ *   scheduled → boarding → closed → departed → arrived
+ *
+ * `closed` signifie seulement que l'embarquement est terminé (porte fermée) :
+ * l'avion peut rester au sol. `departed` et `arrived` disent la suite.
+ * `delayed` et `cancelled` sont des écarts posés par le superviseur.
+ */
+export type FlightStatus =
+  | 'scheduled'
+  | 'delayed'
+  | 'boarding'
+  | 'closed'
+  | 'departed'
+  | 'arrived'
+  | 'cancelled';
+
+/** Ordre d'affichage des statuts dans un sélecteur : le parcours, puis les écarts. */
+export const FLIGHT_STATUS_ORDER: readonly FlightStatus[] = [
+  'scheduled',
+  'boarding',
+  'closed',
+  'departed',
+  'arrived',
+  'delayed',
+  'cancelled',
+] as const;
 
 /** Libellés français des statuts de vol (partagés web / public / mobile). */
 export const FLIGHT_STATUS_LABEL: Record<FlightStatus, string> = {
   scheduled: 'Programmé',
+  delayed: 'Retardé',
   boarding: 'Embarquement',
-  closed: 'Porte fermée',
+  closed: 'Embarquement terminé',
+  departed: 'Décollé',
+  arrived: 'Arrivé',
   cancelled: 'Annulé',
+} as const;
+
+/**
+ * Les scans de check-in et d'embarquement sont-ils fermés pour ce statut ?
+ * Dès la porte fermée, et pour tout ce qui suit ou annule le vol.
+ */
+export function isFlightLocked(status: FlightStatus): boolean {
+  return status === 'closed' || status === 'departed' || status === 'arrived' || status === 'cancelled';
+}
+
+/** L'avion a quitté le sol (ou est déjà arrivé). */
+export function hasFlightDeparted(status: FlightStatus): boolean {
+  return status === 'departed' || status === 'arrived';
+}
+
+/** Raison affichée à l'agent quand un vol est verrouillé, par statut. */
+export const FLIGHT_LOCK_REASON: Partial<Record<FlightStatus, string>> = {
+  closed: 'Embarquement terminé',
+  departed: 'Vol décollé',
+  arrived: 'Vol arrivé',
+  cancelled: 'Vol annulé',
 } as const;
 
 /**

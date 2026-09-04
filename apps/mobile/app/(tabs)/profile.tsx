@@ -1,10 +1,27 @@
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { CalendarBlank, CaretRight, Envelope, MapPin, PencilSimple, SignOut } from 'phosphor-react-native';
 import type { UserRole } from '@police/shared';
 import { useAuth } from '@/auth';
-import { ScreenBackground, GlassCard, useContentPadding } from '@/Glass';
-import { colors, radius, spacing, shadow } from '@/theme';
+import { PERIOD_LABEL, STAT_PERIODS, useAgentStats, type StatPeriod } from '@/agent-stats';
+import {
+  Avatar,
+  Button,
+  Divider,
+  Gauge,
+  Header,
+  InlineAlert,
+  ListRow,
+  Screen,
+  ScreenScroll,
+  Skeleton,
+  Spacer,
+  Surface,
+  Text,
+  useTabBarPadding,
+  useTheme,
+} from '@/ui';
 
 const ROLE_LABEL: Record<UserRole, string> = {
   agent: 'Agent terrain',
@@ -22,145 +39,215 @@ function initials(name: string): string {
 }
 
 function formatDate(ts: string | undefined): string {
-  if (!ts) return '—';
+  if (!ts) return 'Inconnue';
   return new Date(ts).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+/**
+ * Le profil de l'agent : une carte d'identité, puis des sections titrées.
+ *
+ * Le nom complet, pas le seul prénom : c'est le contrôle « suis-je sur le bon
+ * compte » sur un PDA partagé entre plusieurs agents.
+ */
 export default function Profile() {
+  const theme = useTheme();
+  const tabBarPadding = useTabBarPadding();
   const { profile, session, signOut } = useAuth();
   const router = useRouter();
   const name = profile?.full_name ?? 'Agent';
-  const email = session?.user.email ?? '—';
-  const pad = useContentPadding(true);
+  const email = session?.user.email ?? 'Non renseigné';
+
+  const activity = useAgentStats();
+  const [period, setPeriod] = useState<StatPeriod>('day');
+  const [refreshing, setRefreshing] = useState(false);
+  const current = activity.stats?.[period] ?? null;
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await activity.refresh();
+    setRefreshing(false);
+  };
+
+  const identityLine = profile
+    ? profile.gate
+      ? `${ROLE_LABEL[profile.role]} · ${profile.gate}`
+      : ROLE_LABEL[profile.role]
+    : null;
 
   return (
-    <View style={styles.root}>
-      <ScreenBackground />
-      <ScrollView style={styles.container} contentContainerStyle={[styles.content, pad]}>
-        {/* En-tête identité */}
-        <GlassCard strong rounded={radius.xl} contentStyle={styles.hero}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials(name)}</Text>
-          </View>
-          <Text style={styles.name}>{name}</Text>
-          {profile ? (
-            <View style={styles.roleBadge}>
-              <Ionicons name="shield-checkmark" size={14} color={colors.primary} />
-              <Text style={styles.roleText}>{ROLE_LABEL[profile.role]}</Text>
+    <Screen>
+      <Header title="Profil" large />
+
+      <ScreenScroll
+        bottomInset={tabBarPadding}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            tintColor={theme.colors.text}
+            colors={[theme.colors.text]}
+          />
+        }
+      >
+        {/* --- Carte d'identité ------------------------------------------- */}
+        <Surface padding="base" elevation={0} bordered>
+          <View style={styles.identityRow}>
+            <Avatar initials={initials(name)} size={64} />
+            <View style={{ flex: 1, marginLeft: theme.spacing.base }}>
+              <Text variant="h1" numberOfLines={1}>
+                {name}
+              </Text>
+              {identityLine ? (
+                <Text variant="caption" color="textSecondary" style={{ marginTop: theme.spacing.xxs }}>
+                  {identityLine}
+                </Text>
+              ) : null}
             </View>
+          </View>
+        </Surface>
+
+        <Spacer size="xl" />
+
+        {/* --- Activité ------------------------------------------------------
+            Trois jauges : la part de l'agent dans ce que sa station a traité
+            sur la période. Le chiffre est le sien, l'anneau le rapporte au
+            total, pour qu'un « 12 » ait un sens sans tableau à côté. */}
+        <Text variant="label" color="textMuted" uppercase>
+          Activité
+        </Text>
+        <Spacer size="sm" />
+
+        <Surface padding="base" elevation={0} bordered>
+          <View style={[styles.periodRow, { gap: theme.spacing.sm }]}>
+            {STAT_PERIODS.map((p) => (
+              <Button
+                key={p}
+                label={PERIOD_LABEL[p]}
+                size="sm"
+                variant={p === period ? 'primary' : 'secondary'}
+                onPress={() => setPeriod(p)}
+                accessibilityLabel={`Période : ${PERIOD_LABEL[p]}`}
+              />
+            ))}
+          </View>
+
+          <Spacer size="lg" />
+
+          {activity.loading ? (
+            <View style={styles.gaugeRow}>
+              {[0, 1, 2].map((i) => (
+                <View key={i} style={styles.gaugeCell}>
+                  <Skeleton width={96} height={96} radius={48} />
+                  <Skeleton width={56} height={14} style={{ marginTop: theme.spacing.sm }} />
+                </View>
+              ))}
+            </View>
+          ) : current ? (
+            <View style={styles.gaugeRow}>
+              <View style={styles.gaugeCell}>
+                <Gauge value={current.flightsMine} total={current.flightsTotal} label="Vols" />
+              </View>
+              <View style={styles.gaugeCell}>
+                <Gauge value={current.paxMine} total={current.paxTotal} label="Passagers" />
+              </View>
+              <View style={styles.gaugeCell}>
+                <Gauge value={current.bagsMine} total={current.bagsTotal} label="Bagages" />
+              </View>
+            </View>
+          ) : (
+            <InlineAlert
+              tone="warning"
+              message="Statistiques indisponibles pour le moment."
+              actionLabel="Réessayer"
+              onAction={() => void activity.refresh()}
+            />
+          )}
+
+          {current ? (
+            <Text
+              variant="caption"
+              color="textSecondary"
+              align="center"
+              style={{ marginTop: theme.spacing.lg }}
+            >
+              Votre part de ce que la station a traité{' '}
+              {period === 'day'
+                ? "aujourd'hui"
+                : period === 'week'
+                  ? 'cette semaine'
+                  : period === 'month'
+                    ? 'ce mois-ci'
+                    : 'cette année'}
+              {activity.error ? '. Chiffres du dernier chargement.' : '.'}
+            </Text>
           ) : null}
+        </Surface>
 
-          <Pressable
-            style={({ pressed }) => [styles.editBtn, pressed && styles.editBtnPressed]}
+        <Spacer size="xl" />
+
+        {/* --- Compte ------------------------------------------------------- */}
+        <Text variant="label" color="textMuted" uppercase>
+          Compte
+        </Text>
+        <Spacer size="sm" />
+
+        <Surface padding="none" elevation={0} bordered style={{ paddingHorizontal: theme.spacing.base }}>
+          <ListRow
+            title="Modifier le profil"
+            subtitle="Nom complet, mot de passe"
+            icon={<PencilSimple size={theme.iconSize.sm} color={theme.colors.text} />}
             onPress={() => router.push('/profile-edit')}
-          >
-            <Ionicons name="create-outline" size={16} color={colors.primary} />
-            <Text style={styles.editText}>Modifier</Text>
-          </Pressable>
-        </GlassCard>
+            right={<CaretRight size={theme.iconSize.sm} color={theme.colors.textMuted} />}
+          />
+        </Surface>
 
-        {/* Informations */}
-        <GlassCard contentStyle={styles.card}>
-          <Row icon="mail" label="Email" value={email} />
+        <Spacer size="xl" />
+
+        {/* --- Informations ------------------------------------------------- */}
+        <Text variant="label" color="textMuted" uppercase>
+          Informations
+        </Text>
+        <Spacer size="sm" />
+
+        <Surface padding="none" elevation={0} bordered style={{ paddingHorizontal: theme.spacing.base }}>
+          <ListRow
+            title="Email"
+            subtitle={email}
+            icon={<Envelope size={theme.iconSize.sm} color={theme.colors.text} />}
+          />
           <Divider />
-          <Row icon="location" label="Gate assignée" value={profile?.gate ?? 'Non assignée'} />
+          <ListRow
+            title="Gate assignée"
+            subtitle={profile?.gate ?? 'Non assignée'}
+            icon={<MapPin size={theme.iconSize.sm} color={theme.colors.text} />}
+          />
           <Divider />
-          <Row icon="calendar" label="Membre depuis" value={formatDate(profile?.created_at)} />
-        </GlassCard>
+          <ListRow
+            title="Membre depuis"
+            subtitle={formatDate(profile?.created_at)}
+            icon={<CalendarBlank size={theme.iconSize.sm} color={theme.colors.text} />}
+          />
+        </Surface>
 
-        <Pressable style={({ pressed }) => [styles.logout, pressed && styles.logoutPressed]} onPress={signOut}>
-          <Ionicons name="log-out-outline" size={20} color={colors.danger} />
-          <Text style={styles.logoutText}>Déconnexion</Text>
-        </Pressable>
-      </ScrollView>
-    </View>
+        <Spacer size="2xl" />
+
+        {/* --- Déconnexion -------------------------------------------------- */}
+        <Surface padding="none" elevation={0} bordered style={{ paddingHorizontal: theme.spacing.base }}>
+          <ListRow
+            title="Déconnexion"
+            icon={<SignOut size={theme.iconSize.sm} color={theme.colors.danger} />}
+            onPress={() => void signOut()}
+            destructive
+          />
+        </Surface>
+      </ScreenScroll>
+    </Screen>
   );
-}
-
-function Row({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
-  return (
-    <View style={styles.row}>
-      <View style={styles.rowIcon}>
-        <Ionicons name={icon} size={18} color={colors.primary} />
-      </View>
-      <View style={styles.rowTexts}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        <Text style={styles.rowValue}>{value}</Text>
-      </View>
-    </View>
-  );
-}
-
-function Divider() {
-  return <View style={styles.divider} />;
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  container: { flex: 1 },
-  content: { paddingHorizontal: spacing(2), gap: spacing(2) },
-  hero: { padding: spacing(3), alignItems: 'center' },
-  avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing(1.5),
-    ...shadow(2),
-  },
-  avatarText: { color: colors.onPrimary, fontSize: 32, fontWeight: '800' },
-  name: { color: colors.text, fontSize: 22, fontWeight: '800' },
-  roleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing(0.5),
-    backgroundColor: colors.surfaceAlt,
-    paddingHorizontal: spacing(1.5),
-    paddingVertical: spacing(0.75),
-    borderRadius: radius.pill,
-    marginTop: spacing(1),
-  },
-  roleText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
-  editBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing(0.5),
-    marginTop: spacing(2),
-    paddingHorizontal: spacing(2),
-    paddingVertical: spacing(1),
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  editBtnPressed: { opacity: 0.6 },
-  editText: { color: colors.primary, fontWeight: '800', fontSize: 14 },
-  card: { paddingHorizontal: spacing(2) },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing(2), paddingVertical: spacing(2) },
-  rowIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rowTexts: { flex: 1 },
-  rowLabel: { color: colors.muted, fontSize: 12, fontWeight: '600', textTransform: 'uppercase' },
-  rowValue: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 2 },
-  divider: { height: 1, backgroundColor: colors.border },
-  logout: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing(1),
-    backgroundColor: colors.dangerBg,
-    borderRadius: radius.lg,
-    padding: spacing(2),
-    borderWidth: 1,
-    borderColor: colors.dangerBorder,
-  },
-  logoutPressed: { opacity: 0.7 },
-  logoutText: { color: colors.danger, fontWeight: '800', fontSize: 16 },
+  identityRow: { flexDirection: 'row', alignItems: 'center' },
+  periodRow: { flexDirection: 'row', flexWrap: 'wrap' },
+  gaugeRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  gaugeCell: { flex: 1, alignItems: 'center' },
 });

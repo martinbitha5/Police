@@ -3,42 +3,10 @@
   "configurations": [
     {
       "name": "web",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "-w", "apps/web"],
-      "port": 3000,
-      "autoPort": true
-    },
-    {
-      "name": "webprod",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start", "-w", "apps/web"],
-      "port": 3000
-    },
-    {
-      "name": "webdeploy",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "C:/Users/GOBLAIRE/Desktop/police-web-repo", "run", "start"],
-      "port": 3000
-    },
-    {
-      "name": "tracking",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "-w", "apps/tracking"],
-      "port": 3002,
-      "autoPort": true
-    },
-    {
-      "name": "litige",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "-w", "apps/litige"],
-      "port": 3003
-    },
-    {
-      "name": "vols",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "-w", "apps/vols"],
-      "port": 3004,
-      "autoPort": true
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "-p", "3011"],
+      "cwd": "apps/web",
+      "port": 3011
     }
   ]
 }

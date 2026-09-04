@@ -84,7 +84,14 @@ export function PublicTopbar({ hub = false }: { hub?: boolean }) {
 const s: Record<string, CSSProperties> = {
   brandBox: { display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' },
   brandLogo: { width: 32, height: 32, borderRadius: 8, objectFit: 'cover' as const, display: 'block', flexShrink: 0 },
-  brandName: { fontWeight: 700, fontSize: 16, letterSpacing: -0.2, color: 'var(--content-primary)', whiteSpace: 'nowrap' },
+  brandName: {
+    fontFamily: 'var(--font-display)',
+    fontWeight: 700,
+    fontSize: 16,
+    letterSpacing: '-0.02em',
+    color: 'var(--content-primary)',
+    whiteSpace: 'nowrap',
+  },
   topNav: { display: 'flex', alignItems: 'center', gap: 12 },
   // `display` volontairement absent : il est porté par la classe .hub-chip, afin
   // que la media query mobile puisse masquer la pastille (un style inline
@@ -95,8 +102,7 @@ const s: Record<string, CSSProperties> = {
     borderRadius: 9999,
     padding: '6px 14px',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 500,
     color: 'var(--content-primary)',
-    letterSpacing: 0.2,
   },
 };

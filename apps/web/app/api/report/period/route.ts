@@ -186,7 +186,15 @@ export async function GET(request: NextRequest) {
   const paxNoBag = activePassengers.filter((p) => p.declared_baggage_count === 0).length;
   const totAlerts = alerts.length;
 
-  const byStatus = { scheduled: 0, boarding: 0, closed: 0, cancelled: 0 } as Record<string, number>;
+  const byStatus = {
+    scheduled: 0,
+    delayed: 0,
+    boarding: 0,
+    closed: 0,
+    departed: 0,
+    arrived: 0,
+    cancelled: 0,
+  } as Record<string, number>;
   for (const f of flights) byStatus[f.status] = (byStatus[f.status] ?? 0) + 1;
 
   const periodStr = from === to ? from : `${from} au ${to}`;
@@ -299,6 +307,9 @@ export async function GET(request: NextRequest) {
         { label: FLIGHT_STATUS_LABEL.scheduled, value: byStatus.scheduled },
         { label: FLIGHT_STATUS_LABEL.boarding, value: byStatus.boarding, tone: byStatus.boarding > 0 ? 'positive' : undefined },
         { label: FLIGHT_STATUS_LABEL.closed, value: byStatus.closed },
+        { label: FLIGHT_STATUS_LABEL.departed, value: byStatus.departed, tone: byStatus.departed > 0 ? 'positive' : undefined },
+        { label: FLIGHT_STATUS_LABEL.arrived, value: byStatus.arrived, tone: byStatus.arrived > 0 ? 'positive' : undefined },
+        { label: FLIGHT_STATUS_LABEL.delayed, value: byStatus.delayed, tone: byStatus.delayed > 0 ? 'negative' : undefined },
         { label: FLIGHT_STATUS_LABEL.cancelled, value: byStatus.cancelled, tone: byStatus.cancelled > 0 ? 'negative' : undefined },
       ],
       COLS,

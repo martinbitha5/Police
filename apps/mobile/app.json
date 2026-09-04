@@ -12,7 +12,8 @@
     ],
     "icon": "./assets/icon.png",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-font"
     ],
     "android": {
       "package": "com.airport.boardingscanner",

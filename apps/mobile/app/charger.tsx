@@ -1,23 +1,38 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Package } from 'phosphor-react-native';
 import type { BaggageLoadAllResult } from '@police/shared';
 import { useAuth } from '@/auth';
 import { useFlights } from '@/flights-store';
 import { loadAllBaggage } from '@/api';
-import { ScreenBackground, GlassCard, useSafePadding } from '@/Glass';
 import { feedbackSuccess, feedbackWarning } from '@/feedback';
-import { colors, radius, spacing } from '@/theme';
+import {
+  BottomBar,
+  Button,
+  FlightHeader,
+  Header,
+  IconBubble,
+  ScanResult,
+  Screen,
+  ScreenScroll,
+  Text,
+  useTheme,
+} from '@/ui';
 
+/**
+ * Écran Charger : pousse en soute, d'un seul geste, tous les bagages
+ * enregistrés non rush du vol. Pas de scan ici, une seule action.
+ */
 export default function Charger() {
+  const theme = useTheme();
+  const router = useRouter();
   const { flightId } = useLocalSearchParams<{ flightId: string }>();
   const { profile } = useAuth();
   const { getFlight } = useFlights();
   const flight = flightId ? getFlight(flightId) : undefined;
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<BaggageLoadAllResult | null>(null);
-  const pad = useSafePadding();
 
   async function onLoad() {
     if (!flightId || busy) return;
@@ -35,109 +50,83 @@ export default function Charger() {
     }
   }
 
+  const accepted = result?.status === 'accepted' ? result : null;
+  const loadedLabel = accepted
+    ? `${accepted.loaded} bagage${accepted.loaded > 1 ? 's' : ''} chargé${accepted.loaded > 1 ? 's' : ''} en soute`
+    : '';
+
   return (
-    <View style={styles.root}>
-      <ScreenBackground />
-      <ScrollView style={styles.container} contentContainerStyle={[styles.content, pad]}>
-        <GlassCard strong contentStyle={styles.header}>
-          <View>
-            <Text style={styles.flight}>{flight?.flight_number ?? '—'}</Text>
-            <Text style={styles.route}>
-              {flight ? `${flight.origin}  →  ${flight.destination}` : 'Chargement…'}
-            </Text>
-          </View>
-          <View style={styles.modePill}>
-            <Text style={styles.modeText}>SOUTE</Text>
-          </View>
-        </GlassCard>
+    <Screen>
+      <Header title="Charger" onBack={() => router.back()} />
+      <ScreenScroll contentContainerStyle={{ gap: theme.spacing.base }}>
+        <FlightHeader
+          flightNumber={flight?.flight_number ?? ''}
+          origin={flight?.origin ?? ''}
+          destination={flight?.destination ?? ''}
+          mode="Charger"
+          note="Scannez d'abord les bagages rush (restants). Ensuite, chargez en soute d'un seul geste tous les bagages enregistrés restants."
+        />
 
-        <GlassCard contentStyle={styles.infoCard}>
-          <Ionicons name="information-circle" size={20} color={colors.primary} />
-          <Text style={styles.infoText}>
-            Scannez d'abord les bagages <Text style={{ fontWeight: '800', color: colors.warning }}>Rush</Text> (restants).
-            Ensuite, chargez en soute tous les bagages enregistrés restants d'un seul geste.
+        {/* Scène : pas de scanner, une action groupée. */}
+        <View
+          style={[
+            styles.stage,
+            {
+              backgroundColor: theme.colors.surfaceSunken,
+              borderRadius: theme.radius.md,
+              paddingVertical: theme.spacing['2xl'],
+              paddingHorizontal: theme.spacing.xl,
+            },
+          ]}
+        >
+          <IconBubble size={96} tone={accepted ? 'success' : 'neutral'}>
+            <Package
+              size={42}
+              color={accepted ? theme.colors.success : theme.colors.text}
+              weight={accepted ? 'fill' : 'regular'}
+            />
+          </IconBubble>
+          <Text variant="h2" align="center" style={{ marginTop: theme.spacing.lg }}>
+            Charger en soute
           </Text>
-        </GlassCard>
-
-        <GlassCard strong rounded={radius.xl} contentStyle={styles.stage}>
-          <View style={styles.bigIcon}>
-            <Ionicons name="cube" size={48} color={colors.accent} />
-          </View>
-          <Text style={styles.stageTitle}>Charger en soute</Text>
-          <Text style={styles.stageHint}>Tous les bagages enregistrés non-rush</Text>
-
-          <Pressable
-            style={({ pressed }) => [styles.button, busy && styles.buttonDisabled, pressed && styles.buttonPressed]}
-            onPress={onLoad}
-            disabled={busy}
-          >
-            {busy ? (
-              <ActivityIndicator color={colors.onPrimary} />
-            ) : (
-              <Text style={styles.buttonText}>Charger les bagages</Text>
-            )}
-          </Pressable>
-        </GlassCard>
+          <Text variant="body" color="textSecondary" align="center" style={{ marginTop: theme.spacing.xs }}>
+            Tous les bagages enregistrés non rush
+          </Text>
+        </View>
 
         {result ? (
-          result.status === 'accepted' ? (
-            <GlassCard strong contentStyle={[styles.result, { borderLeftWidth: 4, borderLeftColor: colors.success }]}>
-              <Text style={styles.resultBig}>{result.loaded}</Text>
-              <Text style={styles.resultLabel}>bagage(s) chargé(s) en soute</Text>
-              <View style={styles.resultRow}>
-                <ResultStat label="Déjà chargés" value={result.alreadyLoaded} />
-                <ResultStat label="Rush exclus" value={result.rushed} tint={colors.warning} />
-                <ResultStat label="Enregistrés" value={result.confirmed} />
-              </View>
-              <Text style={styles.resultMsg}>{result.message}</Text>
-            </GlassCard>
+          accepted ? (
+            <ScanResult
+              tone="success"
+              badgeLabel="Chargé"
+              title={loadedLabel}
+              meta={[
+                { label: 'Déjà chargés', value: String(accepted.alreadyLoaded) },
+                { label: 'Rush exclus', value: String(accepted.rushed) },
+                { label: 'Enregistrés', value: String(accepted.confirmed) },
+              ]}
+              message={accepted.message}
+            />
           ) : (
-            <View style={[styles.result, styles.resultWarn]}>
-              <Text style={styles.resultBadge}>⚠️ {result.message}</Text>
-            </View>
+            <ScanResult tone="danger" title="Chargement refusé" message={result.message} />
           )
         ) : null}
-      </ScrollView>
-    </View>
-  );
-}
+      </ScreenScroll>
 
-function ResultStat({ label, value, tint }: { label: string; value: number; tint?: string }) {
-  return (
-    <View style={styles.rStat}>
-      <Text style={[styles.rStatValue, tint ? { color: tint } : null]}>{value}</Text>
-      <Text style={styles.rStatLabel}>{label}</Text>
-    </View>
+      <BottomBar>
+        <Button
+          label="Charger les bagages"
+          onPress={() => void onLoad()}
+          loading={busy}
+          disabled={busy}
+          fullWidth
+          size="lg"
+        />
+      </BottomBar>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  container: { flex: 1 },
-  content: { paddingHorizontal: spacing(2), gap: spacing(2) },
-  header: { padding: spacing(2.5), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  flight: { color: colors.text, fontSize: 24, fontWeight: '800', letterSpacing: 0.5 },
-  route: { color: colors.muted, fontSize: 15, marginTop: 2, fontWeight: '600' },
-  modePill: { borderWidth: 1.5, borderColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: spacing(1.5), paddingVertical: spacing(0.5) },
-  modeText: { fontSize: 13, fontWeight: '800', letterSpacing: 1, color: colors.accent },
-  infoCard: { flexDirection: 'row', gap: spacing(1.5), padding: spacing(2), alignItems: 'flex-start' },
-  infoText: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '500' },
-  stage: { paddingVertical: spacing(3), alignItems: 'center', gap: spacing(0.5) },
-  bigIcon: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center', marginBottom: spacing(1) },
-  stageTitle: { color: colors.text, fontSize: 20, fontWeight: '800' },
-  stageHint: { color: colors.muted, fontSize: 14, marginBottom: spacing(1.5) },
-  button: { backgroundColor: colors.primary, borderRadius: radius.md, paddingVertical: spacing(2), paddingHorizontal: spacing(4), alignItems: 'center', justifyContent: 'center', minWidth: 220, minHeight: 54 },
-  buttonDisabled: { opacity: 0.6 },
-  buttonPressed: { backgroundColor: colors.primaryDark },
-  buttonText: { color: colors.onPrimary, fontSize: 16, fontWeight: '800' },
-  result: { padding: spacing(2.5), alignItems: 'center' },
-  resultWarn: { backgroundColor: colors.warningBg, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.warningBorder },
-  resultBig: { color: colors.success, fontSize: 44, fontWeight: '900', lineHeight: 48 },
-  resultLabel: { color: colors.text, fontSize: 15, fontWeight: '700', marginTop: 2 },
-  resultRow: { flexDirection: 'row', gap: spacing(2), marginTop: spacing(2) },
-  rStat: { alignItems: 'center', minWidth: 72 },
-  rStatValue: { color: colors.text, fontSize: 20, fontWeight: '800' },
-  rStatLabel: { color: colors.muted, fontSize: 11, fontWeight: '600', marginTop: 2 },
-  resultMsg: { color: colors.muted, fontSize: 13, fontWeight: '600', marginTop: spacing(1.5), textAlign: 'center' },
-  resultBadge: { color: colors.warning, fontWeight: '800', fontSize: 15, textAlign: 'center' },
+  stage: { alignItems: 'center' },
 });

@@ -5,37 +5,55 @@ import { flightScope, scopeFlightQuery } from '@/lib/scope';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useUrlParam } from '@/hooks/useUrlParam';
 import type { Flight, FraudAlert, Baggage, PassengerLeg } from '@police/shared';
-import { formatRoute, SOUTE_LABEL, todayAtAirport } from '@police/shared';
+import {
+  FLIGHT_STATUS_LABEL,
+  FLIGHT_STATUS_ORDER,
+  formatRoute,
+  hasFlightDeparted,
+  SOUTE_LABEL,
+  todayAtAirport,
+} from '@police/shared';
 import { createClient } from '@/supabase/client';
 import { useFlightData, type PassengerRow } from '@/useFlightData';
+import { loadFlightStats, sumFlightStats, type FlightStatsTotals } from '@/lib/flight-stats';
 import { AppShell, useSession } from '@/components/AppShell';
+import { Gauge } from '@/components/Gauge';
 import { RushPanel } from '@/components/RushPanel';
-import { card, btnPrimary, btnGhost, sectionHeading, badge, modalOverlay, modalPanel } from '@/ui/theme';
+import {
+  card,
+  btnPrimary,
+  btnSecondary,
+  btnText,
+  sectionHeading,
+  eyebrow,
+  badge,
+  input as inputStyle,
+  label as labelStyle,
+  modalOverlay,
+  modalPanel,
+} from '@/ui/theme';
 import {
   IconPlane,
   IconPlaneDepart,
   IconPlaneArrive,
   IconAlert,
-  IconBag,
-  IconUser,
   IconPlus,
   IconBack,
   IconDownload,
   IconClose,
 } from '@/components/icons';
 
-const STATUS_LABEL: Record<Flight['status'], string> = {
-  scheduled: 'Programmé',
-  boarding: 'Embarquement',
-  closed: 'Porte fermée',
-  cancelled: 'Annulé',
-};
-// Pastilles de statut — pilules sémantiques Wise (fond + texte).
+const STATUS_LABEL = FLIGHT_STATUS_LABEL;
+// Pastilles de statut, pilules sémantiques (fond + texte) : vert quand le vol
+// avance, ambre quand il attend, rouge quand il est annulé.
 const STATUS_STYLE: Record<Flight['status'], { bg: string; color: string }> = {
   scheduled: { bg: 'var(--bg-neutral)', color: 'var(--content-secondary)' },
+  delayed: { bg: 'var(--warning-bg)', color: 'var(--warning-content)' },
   boarding: { bg: 'var(--positive-bg)', color: 'var(--positive)' },
-  closed: { bg: 'var(--negative-bg)', color: 'var(--negative)' },
-  cancelled: { bg: 'var(--warning-bg)', color: 'var(--warning-content)' },
+  closed: { bg: 'var(--bg-neutral)', color: 'var(--content-primary)' },
+  departed: { bg: 'var(--positive-bg)', color: 'var(--positive)' },
+  arrived: { bg: 'var(--positive-bg)', color: 'var(--positive)' },
+  cancelled: { bg: 'var(--negative-bg)', color: 'var(--negative)' },
 };
 
 // La journée d'exploitation bascule à minuit à l'aéroport du superviseur.
@@ -69,6 +87,10 @@ function Dashboard() {
   const airportCode = scope.airport;
   const [flights, setFlights] = useState<Flight[]>([]);
   const [alertsByFlight, setAlertsByFlight] = useState<Record<string, number>>({});
+  // Passagers et bagages du jour, agrégés par la vue flight_stats : les jauges
+  // de la vue d'ensemble rapportent l'embarqué à l'enregistré et le confirmé
+  // au déclaré, sans rapatrier une seule ligne de passager.
+  const [totals, setTotals] = useState<FlightStatsTotals | null>(null);
   // Le vol ouvert vit dans l'URL (?vol=<id>) : F5 rouvre le même vol au lieu
   // de renvoyer à la vue d'ensemble, et Retour referme le détail.
   const [selectedId, setSelectedId] = useUrlParam('vol');
@@ -76,21 +98,30 @@ function Dashboard() {
 
   async function loadFlights() {
     const supabase = createClient();
+    const today = todayAtAirport(airportCode);
     // Périmètre du profil : son aéroport ET sa compagnie. Sans le filtre
     // transporteur, un profil KQ voyait les vols ET du même aéroport.
     const { data: fl } = await scopeFlightQuery(
-      supabase.from('flights').select('*').eq('date', todayAtAirport(airportCode)),
+      supabase.from('flights').select('*').eq('date', today),
       scope,
     ).order('departure_time', { ascending: true });
     const list = (fl as Flight[] | null) ?? [];
     setFlights(list);
 
+    // Compteurs du jour. Un échec ne vide pas la vue : les jauges de
+    // passagers et de bagages attendent simplement le prochain chargement.
+    try {
+      setTotals(sumFlightStats(await loadFlightStats({ from: today, to: today }, scope)));
+    } catch {
+      // Les jauges de vols restent affichées, elles ne dépendent pas de la vue.
+    }
+
     const ids = list.map((f) => f.id);
     if (ids.length > 0) {
       // Seul le compteur par vol est affiché ici : on ne rapatrie que flight_id,
       // pas les lignes complètes. Sur un vol à forte fraude (des centaines
-      // d'alertes), charger tout le détail — noms passagers et étiquettes
-      // compris — pour n'afficher qu'un nombre serait inutile et coûteux.
+      // d'alertes), charger tout le détail, noms passagers et étiquettes
+      // compris, pour n'afficher qu'un nombre serait inutile et coûteux.
       const { data: al } = await supabase
         .from('fraud_alerts')
         .select('flight_id')
@@ -126,6 +157,7 @@ function Dashboard() {
           flights={flights}
           departures={departures}
           arrivals={arrivals}
+          totals={totals}
           totalAlerts={totalAlerts}
           alerts={alertsByFlight}
           canManage={canManage}
@@ -159,6 +191,7 @@ function Overview({
   flights,
   departures,
   arrivals,
+  totals,
   totalAlerts,
   alerts,
   canManage,
@@ -170,6 +203,7 @@ function Overview({
   flights: Flight[];
   departures: Flight[];
   arrivals: Flight[];
+  totals: FlightStatsTotals | null;
   totalAlerts: number;
   alerts: Record<string, number>;
   canManage: boolean;
@@ -177,6 +211,9 @@ function Overview({
   onSelect: (id: string) => void;
   onAdd: () => void;
 }) {
+  const departed = flights.filter((f) => hasFlightDeparted(f.status)).length;
+  const flightsWithAlerts = Object.values(alerts).filter((n) => n > 0).length;
+
   return (
     <div>
       <div style={isMobile ? { ...s.pageHeader, ...s.pageHeaderMobile } : s.pageHeader}>
@@ -191,14 +228,38 @@ function Overview({
         ) : null}
       </div>
 
-      <div style={isMobile ? { ...s.statGrid, gridTemplateColumns: 'repeat(2, 1fr)' } : s.statGrid}>
-        <Stat label="Vols du jour" value={String(flights.length)} icon={<IconPlane size={20} />} />
-        <Stat label="Départs" value={String(departures.length)} icon={<IconPlaneDepart size={20} />} />
-        <Stat label="Arrivées" value={String(arrivals.length)} icon={<IconPlaneArrive size={20} />} />
-        <Stat
+      {/* Chaque jauge rapporte le chiffre du centre à une référence dite en
+          clair dessous : un « 8 » seul ne dit rien, « 8 dont 3 fermés » dit où
+          en est la journée. */}
+      <div style={isMobile ? { ...s.statGrid, gridTemplateColumns: '1fr' } : s.statGrid}>
+        <Gauge
+          label="Vols du jour"
+          value={flights.length}
+          total={flights.length}
+          ratio={flights.length > 0 ? departed / flights.length : 0}
+          caption={flights.length > 0 ? `${departed} décollé${departed > 1 ? 's' : ''} sur ${flights.length}` : 'aucun vol'}
+        />
+        <Gauge
+          label="Passagers embarqués"
+          value={totals?.boarded ?? 0}
+          total={totals?.pax ?? 0}
+          caption={totals ? `sur ${totals.pax} enregistrés` : 'en attente des compteurs'}
+        />
+        <Gauge
+          label="Bagages confirmés"
+          value={totals?.confirmed ?? 0}
+          total={totals?.declared ?? 0}
+          caption={totals ? `sur ${totals.declared} déclarés` : 'en attente des compteurs'}
+        />
+        <Gauge
           label="Bagages écartés"
-          value={String(totalAlerts)}
-          icon={<IconAlert size={20} />}
+          value={totalAlerts}
+          total={flights.length}
+          caption={
+            totalAlerts > 0
+              ? `${flightsWithAlerts} vol${flightsWithAlerts > 1 ? 's' : ''} concerné${flightsWithAlerts > 1 ? 's' : ''}`
+              : 'aucun écart'
+          }
           danger={totalAlerts > 0}
         />
       </div>
@@ -212,7 +273,7 @@ function Overview({
           <IconPlane size={34} />
           <div style={{ fontWeight: 600, marginTop: 10 }}>Aucun vol programmé aujourd&apos;hui</div>
           <div style={{ color: 'var(--content-secondary)', marginTop: 4 }}>
-            {canManage ? 'Crée un premier vol pour commencer le suivi.' : 'Aucun vol à afficher pour le moment.'}
+            {canManage ? 'Créez un premier vol pour commencer le suivi.' : 'Aucun vol à afficher pour le moment.'}
           </div>
           {canManage ? (
             <button style={{ ...btnPrimary, marginTop: 16 }} onClick={onAdd}>
@@ -223,7 +284,12 @@ function Overview({
       ) : (
         <>
           <FlightSection hub={hub} title="Départs" icon={<IconPlaneDepart size={16} />} flights={departures} alerts={alerts} onSelect={onSelect} />
-          <FlightSection hub={hub} title="Arrivées" icon={<IconPlaneArrive size={16} />} flights={arrivals} alerts={alerts} onSelect={onSelect} />
+          {/* La section Arrivées n'apparaît que s'il y a un vol à réceptionner :
+              un titre suivi de « Aucun vol » n'apporte rien à un poste qui ne
+              fait que des départs. */}
+          {arrivals.length > 0 ? (
+            <FlightSection hub={hub} title="Arrivées" icon={<IconPlaneArrive size={16} />} flights={arrivals} alerts={alerts} onSelect={onSelect} />
+          ) : null}
         </>
       )}
     </div>
@@ -343,14 +409,14 @@ function FlightDetail({
 
   return (
     <div>
-      <button style={s.backBtn} onClick={onBack}>
+      <button type="button" style={s.backBtn} onClick={onBack}>
         <IconBack size={16} /> Tableau de bord
       </button>
 
       <div style={isMobile ? { ...s.detailHeader, ...s.detailHeaderMobile } : s.detailHeader}>
         <div>
           <div style={s.detailRoute}>
-            <h1 style={{ margin: 0, fontSize: 28 }}>{flight.flight_number}</h1>
+            <h1 style={s.pageTitle}>{flight.flight_number}</h1>
             <span style={s.routeChip}>{formatRoute(flight)}</span>
             <StatusBadge status={flight.status} />
           </div>
@@ -361,54 +427,86 @@ function FlightDetail({
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           {canManage ? (
             <select style={s.statusSelect} value={flight.status} onChange={(e) => changeStatus(e.target.value as Flight['status'])}>
-              <option value="scheduled">Programmé</option>
-              <option value="boarding">Embarquement</option>
-              <option value="closed">Porte fermée</option>
-              <option value="cancelled">Annulé</option>
+              {FLIGHT_STATUS_ORDER.map((st) => (
+                <option key={st} value={st}>
+                  {FLIGHT_STATUS_LABEL[st]}
+                </option>
+              ))}
             </select>
           ) : null}
-          <a href={`/api/report?flightId=${flight.id}`} style={btnGhost}>
+          <a href={`/api/report?flightId=${flight.id}`} style={btnSecondary}>
             <IconDownload size={16} /> Rapport
           </a>
         </div>
       </div>
 
-      <div style={isMobile ? { ...s.statGrid, gridTemplateColumns: 'repeat(2, 1fr)' } : s.statGrid}>
-        <Stat label="Passagers" value={String(activePax)} icon={<IconUser size={20} />} />
-        <Stat label="Embarqués" value={`${boardedCount} / ${activePax}`} icon={<IconPlaneDepart size={20} />} />
-        <Stat label="Bagages confirmés" value={`${baggageConfirmed} / ${baggageDeclared}`} icon={<IconBag size={20} />} />
-        <Stat label="Chargés en soute" value={`${baggageInHold} / ${baggageConfirmed}`} icon={<IconBag size={20} />} />
+      <div style={isMobile ? { ...s.statGrid, gridTemplateColumns: '1fr' } : s.statGrid}>
+        <Gauge
+          label="Passagers embarqués"
+          value={boardedCount}
+          total={activePax}
+          caption={`sur ${activePax} enregistré${activePax > 1 ? 's' : ''}`}
+        />
+        <Gauge
+          label="Bagages confirmés"
+          value={baggageConfirmed}
+          total={baggageDeclared}
+          caption={`sur ${baggageDeclared} déclaré${baggageDeclared > 1 ? 's' : ''}`}
+        />
+        <Gauge
+          label="Chargés en soute"
+          value={baggageInHold}
+          total={baggageConfirmed}
+          caption={`sur ${baggageConfirmed} confirmé${baggageConfirmed > 1 ? 's' : ''}`}
+        />
         {/* Réception à destination. En alerte seulement une fois le déchargement
             commencé : avant ça, 0 sur N est normal, pas un manquant. */}
-        <Stat
+        <Gauge
           label="Arrivés à destination"
-          value={`${baggageArrived} / ${baggageExpected}`}
-          icon={<IconPlaneArrive size={20} />}
+          value={baggageArrived}
+          total={baggageExpected}
+          caption={`sur ${baggageExpected} attendu${baggageExpected > 1 ? 's' : ''}`}
           danger={baggageArrived > 0 && baggageArrived < baggageExpected}
         />
-        <Stat label="Restants (à réacheminer)" value={String(baggageRush)} icon={<IconBag size={20} />} danger={baggageRush > 0} />
-        <Stat
+        <Gauge
+          label="Restants à réacheminer"
+          value={baggageRush}
+          total={baggageDeclared}
+          caption={baggageRush > 0 ? `sur ${baggageDeclared} déclaré${baggageDeclared > 1 ? 's' : ''}` : 'aucun restant'}
+          danger={baggageRush > 0}
+        />
+        <Gauge
           label="Expédition rush"
-          value={
+          value={rushActive.length}
+          total={rushActive.length + rushExpected.length}
+          caption={
             rushPending.length > 0
-              ? `${rushActive.length} · ${rushPending.length} à valider`
+              ? `${rushPending.length} à valider`
               : rushExpected.length > 0
-                ? `${rushActive.length} · ${rushExpected.length} attendu${rushExpected.length > 1 ? 's' : ''}`
-                : String(rushActive.length)
+                ? `${rushExpected.length} attendu${rushExpected.length > 1 ? 's' : ''}`
+                : rushActive.length > 0
+                  ? 'tous présents'
+                  : 'aucun bagage sans passager'
           }
-          icon={<IconBag size={20} />}
           danger={rushPending.length > 0}
         />
         {offloadedCount > 0 ? (
-          <Stat label="Débarqués" value={String(offloadedCount)} icon={<IconUser size={20} />} danger />
+          <Gauge
+            label="Débarqués"
+            value={offloadedCount}
+            total={passengers.length}
+            caption={`sur ${passengers.length} passager${passengers.length > 1 ? 's' : ''}`}
+            danger
+          />
         ) : null}
         {/* Les alertes levées (check-in scanné après le bagage) ne comptent plus
             comme des écartés : sinon une inversion d'ordre de scan gonfle le
             compteur de fraude et noie les vrais rejets. */}
-        <Stat
+        <Gauge
           label="Bagages écartés"
-          value={String(activeAlerts.length)}
-          icon={<IconAlert size={20} />}
+          value={activeAlerts.length}
+          total={baggageDeclared + activeAlerts.length}
+          caption={activeAlerts.length > 0 ? 'à intercepter sur le tapis' : 'aucun écart'}
           danger={activeAlerts.length > 0}
         />
       </div>
@@ -597,7 +695,7 @@ function PullBanner({ bags }: { bags: Baggage[] }) {
   return (
     <div style={{ ...s.alert, marginBottom: 24, alignItems: 'flex-start' }}>
       <span style={s.alertTag}>
-        <IconAlert size={15} /> À RETIRER
+        <IconAlert size={15} /> À retirer
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <strong>
@@ -619,7 +717,7 @@ function PullBanner({ bags }: { bags: Baggage[] }) {
 function FraudAlerts({ alerts, active }: { alerts: FraudAlert[]; active: FraudAlert[] }) {
   // Repliée par défaut : une vingtaine de rejets empilés remplissaient l'écran
   // et repoussaient la liste des passagers hors de vue. Le détail reste à un
-  // clic — sur un système anti-fraude, on ne masque pas un rejet sans recours.
+  // clic : sur un système anti-fraude, on ne masque pas un rejet sans recours.
   const [open, setOpen] = useState(false);
   const cleared = alerts.filter((a) => a.resolved);
   const last = active[0] ?? alerts[0];
@@ -633,7 +731,7 @@ function FraudAlerts({ alerts, active }: { alerts: FraudAlert[]; active: FraudAl
         aria-expanded={open}
       >
         <span style={s.alertTag}>
-          <IconAlert size={15} /> ÉCARTÉ +{active.length}
+          <IconAlert size={15} /> Écarté +{active.length}
         </span>
         <span style={s.alertSummaryText}>
           {active.length} bagage{active.length > 1 ? 's' : ''} écarté{active.length > 1 ? 's' : ''}
@@ -665,8 +763,8 @@ function AlertRow({ alert: a }: { alert: FraudAlert }) {
 
   return (
     <div style={a.resolved ? { ...s.alert, background: 'var(--bg-neutral)' } : s.alert}>
-      <span style={a.resolved ? { ...s.alertTag, background: 'var(--content-secondary)' } : s.alertTag}>
-        <IconAlert size={15} /> {a.resolved ? 'LEVÉ' : 'ÉCARTÉ'}
+      <span style={a.resolved ? { ...s.alertTag, ...s.alertTagCleared } : s.alertTag}>
+        <IconAlert size={15} /> {a.resolved ? 'Levé' : 'Écarté'}
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <strong>Étiquette {a.tag_number ?? 'N/A'}</strong>
@@ -823,7 +921,7 @@ function PassengerDetailModal({
       >
         <div style={s.modalHead}>
           <div style={{ minWidth: 0 }}>
-            <h2 style={{ margin: 0, fontSize: isMobile ? 17 : 20, letterSpacing: '-0.03em', overflowWrap: 'anywhere' }}>
+            <h2 style={{ ...sectionHeading, margin: 0, fontSize: isMobile ? 17 : 20, overflowWrap: 'anywhere' }}>
               {p.full_name}
             </h2>
             <div style={s.paxModalSub}>
@@ -907,7 +1005,7 @@ function PassengerDetailModal({
 
         {confirm ? (
           <section style={{ ...s.paxSection, gap: 10 }}>
-            <h3 style={{ ...s.paxSectionTitle, color: 'var(--negative)' }}>
+            <h3 style={s.confirmTitle}>
               {confirm.kind === 'bag'
                 ? confirm.bag.in_hold
                   ? `Débarquer le bagage ${confirm.bag.tag_number} de la soute ?`
@@ -928,7 +1026,7 @@ function PassengerDetailModal({
               onChange={(e) => setReason(e.target.value)}
             />
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button type="button" style={btnGhost} disabled={busy} onClick={() => { setConfirm(null); setReason(''); }}>
+              <button type="button" style={btnSecondary} disabled={busy} onClick={() => { setConfirm(null); setReason(''); }}>
                 Retour
               </button>
               <button
@@ -953,7 +1051,7 @@ function PassengerDetailModal({
           <section style={s.paxSection}>
             <button
               type="button"
-              style={{ ...btnGhost, color: 'var(--negative)', alignSelf: 'flex-start' }}
+              style={{ ...btnSecondary, color: 'var(--negative)', alignSelf: 'flex-start' }}
               onClick={() => { setConfirm({ kind: 'offload' }); setReason(''); }}
             >
               Débarquer le passager
@@ -1009,7 +1107,7 @@ function BaggageDetailRow({ b, isMobile, onCancel }: { b: Baggage; isMobile: boo
         // s'« annule ». C'est le vocabulaire du terrain, pas deux états.
         <button
           type="button"
-          style={{ background: 'transparent', border: 'none', color: 'var(--negative)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0, textDecoration: 'underline', textUnderlineOffset: '0.3em' }}
+          style={s.bagActionBtn}
           onClick={onCancel}
         >
           {b.in_hold ? 'Débarquer' : 'Annuler'}
@@ -1026,18 +1124,6 @@ function StatusBadge({ status }: { status: Flight['status'] }) {
       <span style={{ ...s.statusDot, background: 'currentColor' }} />
       {STATUS_LABEL[status]}
     </span>
-  );
-}
-
-function Stat({ label, value, icon, danger }: { label: string; value: string; icon: React.ReactNode; danger?: boolean }) {
-  return (
-    <div style={s.stat}>
-      <div style={s.statIcon}>{icon}</div>
-      <div>
-        <div style={s.statLabel}>{label}</div>
-        <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: danger ? 'var(--negative)' : 'var(--content-primary)', lineHeight: 1.1 }}>{value}</div>
-      </div>
-    </div>
   );
 }
 
@@ -1109,7 +1195,7 @@ function FlightFormModal({ hub, onClose, onCreated }: { hub: string; onClose: ()
     <div style={s.overlay} onClick={onClose}>
       <form style={s.modal} onClick={(e) => e.stopPropagation()} onSubmit={submit}>
         <div style={s.modalHead}>
-          <h2 style={{ margin: 0, fontSize: 20 }}>Nouveau vol au départ de {hub}</h2>
+          <h2 style={{ ...sectionHeading, margin: 0 }}>Nouveau vol au départ de {hub}</h2>
           <button type="button" style={s.modalClose} onClick={onClose} aria-label="Fermer">
             <IconClose size={18} />
           </button>
@@ -1133,7 +1219,7 @@ function FlightFormModal({ hub, onClose, onCreated }: { hub: string; onClose: ()
             </button>
           </div>
           {form.stops.length === 0 ? (
-            <div style={s.stopsHint}>Vol direct. Ajoute une escale pour un vol avec transit.</div>
+            <div style={s.stopsHint}>Vol direct. Ajoutez une escale pour un vol avec transit.</div>
           ) : (
             form.stops.map((stop, i) => (
               <div key={i} style={s.stopRow}>
@@ -1169,17 +1255,18 @@ function FlightFormModal({ hub, onClose, onCreated }: { hub: string; onClose: ()
         <div style={s.field}>
           <label style={s.label}>Statut</label>
           <select style={s.input} value={form.status} onChange={(e) => set('status', e.target.value as Flight['status'])}>
-            <option value="scheduled">Programmé</option>
-            <option value="boarding">Embarquement</option>
-            <option value="closed">Porte fermée</option>
-            <option value="cancelled">Annulé</option>
+            {FLIGHT_STATUS_ORDER.map((st) => (
+              <option key={st} value={st}>
+                {FLIGHT_STATUS_LABEL[st]}
+              </option>
+            ))}
           </select>
         </div>
 
         {error ? <p style={{ color: 'var(--negative)', margin: 0 }}>{error}</p> : null}
 
         <div style={s.modalActions}>
-          <button type="button" style={btnGhost} onClick={onClose}>
+          <button type="button" style={btnSecondary} onClick={onClose}>
             Annuler
           </button>
           <button type="submit" style={btnPrimary} disabled={busy}>
@@ -1197,23 +1284,13 @@ const s: Record<string, CSSProperties> = {
 
   pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 16, flexWrap: 'wrap' },
   pageHeaderMobile: { flexDirection: 'column', gap: 12, marginBottom: 16 },
-  pageTitle: { margin: 0, fontSize: 26, fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--content-primary)' },
+  // Titre de page et numéro de vol : Figtree 700, même dessin que les héros
+  // du portail public, en 28 px.
+  pageTitle: { margin: 0, fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--content-primary)' },
   pageSub: { color: 'var(--content-secondary)', fontSize: 14, marginTop: 4 },
 
-  statGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 14, marginBottom: 24 },
-  stat: { ...card, display: 'flex', alignItems: 'center', gap: 14, padding: 18 },
-  statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 9999,
-    background: 'var(--bg-neutral)',
-    boxShadow: 'inset 0 0 0 1px var(--border-neutral)',
-    color: 'var(--brand-forest)',
-    display: 'grid',
-    placeItems: 'center',
-    flexShrink: 0,
-  },
-  statLabel: { color: 'var(--content-secondary)', fontSize: 13, marginBottom: 4 },
+  // Jauges : trois par rangée sur un écran de bureau, une sur téléphone.
+  statGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, marginBottom: 24 },
 
   countPill: { background: 'var(--bg-neutral)', border: 'none', borderRadius: 9999, padding: '1px 10px', fontSize: 12, fontWeight: 700, color: 'var(--content-secondary)' },
   sectionEmpty: { color: 'var(--content-tertiary)', fontSize: 14, fontStyle: 'italic', marginBottom: 18 },
@@ -1228,43 +1305,49 @@ const s: Record<string, CSSProperties> = {
     cursor: 'pointer',
   },
   flightCardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  flightCardNumber: { fontWeight: 700, fontSize: 18, letterSpacing: '-0.03em' },
+  flightCardNumber: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, letterSpacing: '-0.02em', color: 'var(--content-primary)' },
   flightCardRoute: { fontSize: 15 },
   flightCardFoot: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 },
   alertPill: { display: 'inline-flex', alignItems: 'center', gap: 4, background: 'var(--negative-bg)', color: 'var(--negative)', borderRadius: 9999, padding: '2px 10px', fontSize: 12, fontWeight: 600 },
 
-  emptyCard: { ...card, borderStyle: 'dashed', padding: '44px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'var(--content-primary)' },
+  emptyCard: { ...card, padding: '44px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'var(--content-primary)' },
 
   statusDot: { width: 8, height: 8, borderRadius: '50%', flexShrink: 0, display: 'inline-block' },
 
-  backBtn: { display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: 'var(--content-link)', padding: 0, marginBottom: 16, fontSize: 14, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '0.3em' },
+  backBtn: { ...btnText, height: 'auto', padding: 0, marginBottom: 16, fontSize: 14, cursor: 'pointer' },
   detailHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22, gap: 16, flexWrap: 'wrap' },
   detailHeaderMobile: { flexDirection: 'column', gap: 12, marginBottom: 14 },
   detailRoute: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
   routeChip: { background: 'var(--bg-neutral)', border: 'none', borderRadius: 9999, padding: '4px 14px', fontSize: 14, color: 'var(--content-primary)' },
-  statusSelect: { background: 'var(--bg-elevated)', border: '1px solid var(--border-neutral)', color: 'var(--content-primary)', borderRadius: 10, padding: '9px 12px' },
+  statusSelect: { ...inputStyle, width: 'auto', fontWeight: 500 },
 
   alertsBox: { display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 },
-  alert: { display: 'flex', alignItems: 'center', gap: 12, background: 'var(--negative-bg)', border: 'none', borderRadius: 16, padding: 14 },
-  alertTag: { display: 'inline-flex', alignItems: 'center', gap: 5, color: '#fff', background: 'var(--negative)', borderRadius: 9999, padding: '4px 12px', fontSize: 12, fontWeight: 700, letterSpacing: 0.5, whiteSpace: 'nowrap', flexShrink: 0 },
-  alertSummary: { display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'var(--negative-bg)', border: 'none', borderRadius: 16, padding: 14, font: 'inherit', color: 'inherit', cursor: 'pointer', textAlign: 'left' },
+  // Bandeau d'alerte : aplat rouge pâle, rayon 8, texte à l'encre ; seule la
+  // pastille porte le rouge plein.
+  alert: { display: 'flex', alignItems: 'center', gap: 12, background: 'var(--negative-bg)', color: 'var(--content-primary)', border: 'none', borderRadius: 8, padding: 14 },
+  alertTag: { display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--interactive-control)', background: 'var(--negative)', borderRadius: 9999, padding: '4px 12px', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 },
+  // Alerte levée : la pastille passe en gris, le libellé suffit.
+  alertTagCleared: { background: 'var(--bg-neutral-hover)', color: 'var(--content-primary)' },
+  alertSummary: { display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'var(--negative-bg)', border: 'none', borderRadius: 8, padding: 14, font: 'inherit', color: 'var(--content-primary)', cursor: 'pointer', textAlign: 'left' },
   alertSummaryText: { flex: 1, minWidth: 0, fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  alertSummaryAction: { color: 'var(--negative)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 },
+  alertSummaryAction: { color: 'var(--content-primary)', fontSize: 13, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '0.3em', whiteSpace: 'nowrap', flexShrink: 0 },
 
   tableWrap: { ...card, padding: 0, overflowX: 'auto' },
 
   paxCardList: { display: 'flex', flexDirection: 'column', gap: 10 },
   paxCard: { ...card, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 },
   paxCardHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  paxCardName: { fontWeight: 600, fontSize: 15, letterSpacing: '-0.03em' },
+  paxCardName: { fontWeight: 600, fontSize: 15, letterSpacing: '-0.02em' },
   paxCardRoute: { color: 'var(--content-secondary)', fontSize: 13, fontWeight: 600 },
   paxCardMeta: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 },
   paxMeta: { display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 },
-  paxMetaLabel: { color: 'var(--content-secondary)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.4, fontWeight: 600 },
+  // Libellé de méta (« Siège », « PNR ») : l'eyebrow, ramené à 11 px pour
+  // tenir à quatre par ligne sur un écran de 320 px.
+  paxMetaLabel: { ...eyebrow, margin: 0, fontSize: 11 },
   paxMetaValue: { fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   table: { width: '100%', borderCollapse: 'collapse', background: 'transparent' },
-  th: { textAlign: 'left', padding: 14, color: 'var(--content-secondary)', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid var(--border-neutral)' },
-  td: { padding: 14, color: 'var(--content-primary)', borderBottom: '1px solid var(--border-neutral)' },
+  th: { textAlign: 'left', padding: 14, color: 'var(--content-tertiary)', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid var(--divider)' },
+  td: { padding: 14, color: 'var(--content-primary)', borderBottom: '1px solid var(--divider)' },
   tdEmpty: { padding: '32px 14px', textAlign: 'center', color: 'var(--content-secondary)' },
 
   // Pas de soulignement ni de couleur d'accent : sur une centaine de lignes ça
@@ -1278,10 +1361,14 @@ const s: Record<string, CSSProperties> = {
   // Téléphone : la fiche prend toute la largeur disponible et respire moins.
   // Sur un écran de 320 px, 24 px de marge de chaque côté mangeaient un sixième
   // de la ligne.
-  paxModalMobile: { width: '100%', padding: 16, gap: 16, maxHeight: '92vh', borderRadius: 18 },
+  paxModalMobile: { width: '100%', padding: 16, gap: 16, maxHeight: '92vh' },
   paxModalSub: { color: 'var(--content-secondary)', fontSize: 13, marginTop: 4 },
-  paxSection: { display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid var(--border-neutral)', paddingTop: 16 },
-  paxSectionTitle: { margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--content-secondary)', fontWeight: 600 },
+  paxSection: { display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid var(--divider)', paddingTop: 16 },
+  paxSectionTitle: { ...eyebrow, margin: 0 },
+  // Question de confirmation : une vraie phrase, pas un eyebrow en capitales.
+  confirmTitle: { margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--negative)' },
+  // Lien d'action d'une ligne de bagage (« Annuler », « Débarquer »).
+  bagActionBtn: { ...btnText, height: 'auto', padding: 0, fontSize: 13, fontWeight: 600, color: 'var(--negative)', cursor: 'pointer' },
   paxLine: { display: 'flex', gap: 12, alignItems: 'baseline', flexWrap: 'wrap' },
   paxLineMobile: { flexDirection: 'column', gap: 1, alignItems: 'stretch' },
   paxLineLabel: { color: 'var(--content-secondary)', fontSize: 13, minWidth: 110 },
@@ -1298,17 +1385,16 @@ const s: Record<string, CSSProperties> = {
   modalClose: { background: 'transparent', border: 'none', color: 'var(--content-secondary)', display: 'grid', placeItems: 'center', width: 40, height: 40, flexShrink: 0, cursor: 'pointer' },
   row: { display: 'flex', gap: 12 },
   field: { display: 'flex', flexDirection: 'column', gap: 5, flex: 1 },
-  label: { fontSize: 12, color: 'var(--content-secondary)', fontWeight: 600 },
-  input: { background: 'var(--bg-elevated)', border: '1px solid var(--border-neutral)', borderRadius: 10, padding: '10px 12px', color: 'var(--content-primary)', fontSize: 14 },
+  label: { ...labelStyle },
+  input: { ...inputStyle },
   stopsHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  addStopBtn: { display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid var(--interactive-primary)', color: 'var(--interactive-primary)', borderRadius: 9999, padding: '4px 12px', fontSize: 12, fontWeight: 600 },
+  // Petit bouton secondaire (32 px) : ajouter une escale n'est pas l'action
+  // principale du formulaire.
+  addStopBtn: { ...btnSecondary, height: 32, padding: '0 12px', fontSize: 12, cursor: 'pointer' },
   stopsHint: { color: 'var(--content-secondary)', fontSize: 13, fontStyle: 'italic' },
   stopRow: { display: 'flex', alignItems: 'center', gap: 8 },
   stopIndex: { width: 24, height: 24, borderRadius: '50%', background: 'var(--bg-neutral)', border: 'none', display: 'grid', placeItems: 'center', fontSize: 12, color: 'var(--content-secondary)', flexShrink: 0 },
-  removeStopBtn: { background: 'transparent', border: '1px solid var(--border-neutral)', color: 'var(--negative)', borderRadius: 9999, padding: '8px 9px', flexShrink: 0, display: 'grid', placeItems: 'center' },
-  routePreview: { background: 'var(--bg-neutral)', border: 'none', borderRadius: 10, padding: '8px 12px', fontSize: 14, marginTop: 2 },
-  toggle: { display: 'flex', gap: 8 },
-  toggleBtn: { flex: 1, background: 'var(--bg-neutral)', border: 'none', color: 'var(--content-primary)', borderRadius: 9999, padding: '10px', fontSize: 13, fontWeight: 600 },
-  toggleBtnActive: { background: 'var(--interactive-primary)', color: '#fff' },
+  removeStopBtn: { background: 'var(--bg-neutral)', border: 'none', color: 'var(--content-secondary)', borderRadius: 9999, width: 36, height: 36, flexShrink: 0, display: 'grid', placeItems: 'center', cursor: 'pointer' },
+  routePreview: { background: 'var(--bg-neutral)', border: 'none', borderRadius: 8, padding: '8px 12px', fontSize: 14, marginTop: 2 },
   modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 },
 };
