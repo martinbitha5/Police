@@ -231,7 +231,7 @@ function Overview({
       {/* Chaque jauge rapporte le chiffre du centre à une référence dite en
           clair dessous : un « 8 » seul ne dit rien, « 8 dont 3 fermés » dit où
           en est la journée. */}
-      <div style={isMobile ? { ...s.statGrid, gridTemplateColumns: '1fr' } : s.statGrid}>
+      <div style={isMobile ? { ...s.statGrid, gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 } : s.statGrid}>
         <Gauge
           label="Vols du jour"
           value={flights.length}
@@ -440,7 +440,7 @@ function FlightDetail({
         </div>
       </div>
 
-      <div style={isMobile ? { ...s.statGrid, gridTemplateColumns: '1fr' } : s.statGrid}>
+      <div style={isMobile ? { ...s.statGrid, gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 } : s.statGrid}>
         <Gauge
           label="Passagers embarqués"
           value={boardedCount}

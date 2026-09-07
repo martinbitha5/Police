@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, StyleSheet, View, type TextInput } from 'react-na
 import { Redirect } from 'expo-router';
 import { Envelope, LockKey, Suitcase } from 'phosphor-react-native';
 import { useAuth } from '@/auth';
+import { Intro } from '@/Intro';
 import {
   Button,
   IconBubble,
@@ -20,10 +21,16 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const EMAIL_INVALID = 'Adresse email invalide (ex. agent@aeroport.com).';
 
+// L'intro se joue une fois par lancement de l'application, pas à chaque
+// retour sur cet écran : un agent qui se déconnecte pour laisser la place à
+// un collègue ne doit pas la revoir.
+let introPlayed = false;
+
 export default function Login() {
   const theme = useTheme();
   const { session, signIn } = useAuth();
   const passwordRef = useRef<TextInput>(null);
+  const [showIntro, setShowIntro] = useState(() => !introPlayed);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -154,6 +161,17 @@ export default function Login() {
           </Text>
         </ScreenScroll>
       </KeyboardAvoidingView>
+
+      {/* Posée par-dessus le formulaire : à la fin du fondu, l'écran de
+          connexion est déjà là, sans navigation ni écran blanc. */}
+      {showIntro ? (
+        <Intro
+          onDone={() => {
+            introPlayed = true;
+            setShowIntro(false);
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }

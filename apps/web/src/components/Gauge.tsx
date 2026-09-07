@@ -2,6 +2,7 @@
 
 import type { CSSProperties, ReactNode } from 'react';
 import { card } from '@/ui/theme';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 export interface GaugeProps {
   /** Le chiffre mis en avant, au centre de l'anneau. */
@@ -48,10 +49,16 @@ export function Gauge({
   ratio: ratioProp,
   danger = false,
   loading = false,
-  size = 84,
+  size: sizeProp = 84,
   style,
 }: GaugeProps) {
-  const radius = (size - STROKE) / 2;
+  // Sous 768 px, la carte se resserre d'elle-même : anneau plus petit, textes
+  // centrés dessous, pour tenir à deux par rangée sur un téléphone. Les pages
+  // n'ont rien à passer, elles posent juste deux colonnes.
+  const compact = useIsMobile();
+  const size = compact ? Math.min(sizeProp, 68) : sizeProp;
+  const stroke = compact ? 6 : STROKE;
+  const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const raw = ratioProp ?? (total > 0 ? value / total : 0);
   const ratio = loading ? 0 : Number.isFinite(raw) ? Math.min(1, Math.max(0, raw)) : 0;
@@ -62,7 +69,7 @@ export function Gauge({
     <div
       role="img"
       aria-label={loading ? `${label} : chargement` : `${label} : ${value} sur ${total}`}
-      style={{ ...card, ...s.wrap, ...style }}
+      style={{ ...card, ...(compact ? s.wrapCompact : s.wrap), ...style }}
     >
       <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
@@ -72,7 +79,7 @@ export function Gauge({
             r={radius}
             fill="none"
             stroke="var(--bg-neutral-hover)"
-            strokeWidth={STROKE}
+            strokeWidth={stroke}
           />
           <circle
             cx={size / 2}
@@ -80,7 +87,7 @@ export function Gauge({
             r={radius}
             fill="none"
             stroke={color}
-            strokeWidth={STROKE}
+            strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
@@ -88,14 +95,20 @@ export function Gauge({
             style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.2s ease' }}
           />
         </svg>
-        <div style={{ ...s.center, color: danger && !loading ? 'var(--negative)' : 'var(--content-primary)' }}>
+        <div
+          style={{
+            ...s.center,
+            fontSize: compact ? 18 : 22,
+            color: danger && !loading ? 'var(--negative)' : 'var(--content-primary)',
+          }}
+        >
           {loading ? '…' : value}
         </div>
       </div>
 
-      <div style={{ minWidth: 0 }}>
-        <div style={s.label}>{label}</div>
-        <div style={s.caption}>
+      <div style={{ minWidth: 0, textAlign: compact ? 'center' : 'left' }}>
+        <div style={{ ...s.label, fontSize: compact ? 13 : 14 }}>{label}</div>
+        <div style={{ ...s.caption, fontSize: compact ? 12 : 13 }}>
           {loading ? 'chargement' : (caption ?? (total > 0 ? `sur ${total}` : 'aucun'))}
         </div>
       </div>
@@ -105,6 +118,7 @@ export function Gauge({
 
 const s: Record<string, CSSProperties> = {
   wrap: { display: 'flex', alignItems: 'center', gap: 16, padding: 16 },
+  wrapCompact: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: 14, minWidth: 0 },
   center: {
     position: 'absolute',
     inset: 0,

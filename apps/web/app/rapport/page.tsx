@@ -130,7 +130,7 @@ function ReportView() {
       {/* Mêmes jauges que le tableau de bord : le chiffre du centre rapporté à
           une référence dite en clair dessous. Tant que les compteurs ne sont
           pas arrivés, l'anneau reste vide plutôt que d'afficher un faux zéro. */}
-      <div style={isMobile ? { ...s.grid, gridTemplateColumns: '1fr' } : s.grid}>
+      <div style={isMobile ? { ...s.grid, gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 } : s.grid}>
         <Gauge
           label="Vols traités"
           value={stats?.flights ?? 0}

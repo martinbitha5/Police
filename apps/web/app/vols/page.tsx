@@ -126,7 +126,7 @@ function FlightsView() {
 
       {/* Mêmes jauges que le tableau de bord et les rapports : le chiffre du
           centre rapporté à une référence dite en clair dessous. */}
-      <div style={isMobile ? { ...s.grid, gridTemplateColumns: '1fr' } : s.grid}>
+      <div style={isMobile ? { ...s.grid, gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 } : s.grid}>
         <Gauge
           label="Vols"
           value={rows.length}
