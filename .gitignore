@@ -12,6 +12,11 @@ coverage/
 # Archives de déploiement (zips/tgz générés pour Hostinger)
 deploy/
 
+# Sauvegardes de base (contiennent des données personnelles — jamais committées)
+backups/
+*.dump
+*.dump.enc
+
 # Documentation : artefacts de generation
 docs/.capture-profile/
 docs/.capture-profile-mobile/

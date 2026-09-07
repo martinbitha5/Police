@@ -1,0 +1,59 @@
+name: CI
+
+# F-13 / F-32 : intégration continue. Vérifie chaque poussée et chaque PR :
+# types, tests, vulnérabilités de dépendances, secrets. Ne déploie rien.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Typecheck & tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Tests
+        run: npm run test
+
+  audit:
+    name: Audit des dépendances (production)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # On audite les dépendances de PRODUCTION (les vulnérabilités dev/build ne
+      # sont pas embarquées dans les artefacts déployés). Bloquant à partir de
+      # « high ». Passer à « moderate » quand le socle sera propre.
+      - name: npm audit
+        run: npm audit --omit=dev --audit-level=high
+
+  secrets:
+    name: Scan de secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # gitleaks est gratuit sur un dépôt de compte personnel. Pour une
+      # organisation, définir le secret GITLEAKS_LICENSE.
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

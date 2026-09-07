@@ -14,6 +14,9 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
  * par date et par TTL, quel que soit le nombre de visiteurs simultanés.
  */
 const CACHE_TTL_MS = 20_000;
+// F-05 : borne du nombre d'entrées. La date est choisie par l'appelant ; sans
+// éviction, itérer sur des dates distinctes fait croître la map indéfiniment.
+const CACHE_MAX_ENTRIES = 500;
 
 interface CacheEntry {
   at: number;
@@ -55,7 +58,11 @@ async function getFlights(date: string): Promise<PublicFlight[]> {
 
   const p = fetchFlights(date)
     .then((flights) => {
-      cache.set(date, { at: Date.now(), flights });
+      // F-05 : purge des entrées périmées, puis borne dure sur la taille.
+      const now = Date.now();
+      for (const [k, v] of cache) if (now - v.at >= CACHE_TTL_MS) cache.delete(k);
+      if (cache.size >= CACHE_MAX_ENTRIES) cache.clear();
+      cache.set(date, { at: now, flights });
       return flights;
     })
     .finally(() => {

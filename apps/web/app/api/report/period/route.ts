@@ -103,9 +103,21 @@ export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const from = sp.get('from') ?? '';
   const to = sp.get('to') ?? '';
-  const label = sp.get('label') ?? 'Période';
+  // M-02 : le label finit dans le nom de fichier (Content-Disposition). On retire
+  // guillemets, sauts de ligne et caractères de contrôle pour empêcher toute
+  // injection d'en-tête / usurpation de nom de fichier, et on borne la longueur.
+  const label = (sp.get('label') ?? 'Période').replace(/[^\p{L}\p{N} _.-]/gu, '').slice(0, 60) || 'Période';
   if (!DATE_RE.test(from) || !DATE_RE.test(to)) {
     return NextResponse.json({ error: 'from et to (YYYY-MM-DD) requis' }, { status: 400 });
+  }
+  // M-03 : borner la plage. Sans limite, une plage démesurée (ex. 1900→2100)
+  // pagine des milliers de lignes sur 4 tables et sature la mémoire.
+  const spanDays = (Date.parse(to) - Date.parse(from)) / 86_400_000;
+  if (Number.isNaN(spanDays) || spanDays < 0) {
+    return NextResponse.json({ error: 'Plage de dates invalide.' }, { status: 400 });
+  }
+  if (spanDays > 366) {
+    return NextResponse.json({ error: 'Plage trop large (365 jours maximum).' }, { status: 400 });
   }
 
   const supabase = await createClient();

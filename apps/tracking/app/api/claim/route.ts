@@ -16,12 +16,6 @@ interface BagRow {
   passenger_id: string;
 }
 
-interface DisputeRow {
-  id: string;
-  notes: string | null;
-  reason: string | null;
-}
-
 export async function POST(request: NextRequest) {
   // Anti-spam : plafonne les envois de réclamation par IP.
   if (!rateLimit(`claim:${clientIp(request)}`, 8, 60_000)) {
@@ -48,13 +42,18 @@ export async function POST(request: NextRequest) {
   const categoryLabel = CLAIM_CATEGORY_LABEL[category as ClaimCategory];
   const supabase = createAdminClient();
 
-  // Le bagage doit exister pour rattacher la réclamation au bon vol/passager.
-  const { data: bag, error: bagErr } = await supabase
+  // Le bagage doit exister. tag_number n'est unique que par (flight_id, tag_number) :
+  // on prend la ligne passager la plus récente pour ce tag (E-02 : jamais
+  // maybeSingle sur une colonne non unique, qui plantait sur une série recyclée).
+  const { data: bagRows, error: bagErr } = await supabase
     .from('baggage')
     .select('id, flight_id, passenger_id')
     .eq('tag_number', tag)
-    .maybeSingle<BagRow>();
+    .eq('kind', 'passenger')
+    .order('scanned_at', { ascending: false })
+    .limit(1);
   if (bagErr) return reject('Erreur lors de la recherche du bagage.', 500);
+  const bag = (bagRows as BagRow[] | null)?.[0];
   if (!bag) return reject('Aucun bagage trouvé pour ce numéro d’étiquette.', 404);
 
   // Bloc de réclamation horodaté, ajouté aux notes du dossier.
@@ -62,29 +61,29 @@ export async function POST(request: NextRequest) {
   const contactLine = contact ? `Contact : ${contact}\n` : '';
   const claimBlock = `[Réclamation passager du ${stamp}]\n${contactLine}Type : ${categoryLabel}\n${message}`;
 
-  // Un litige existe déjà sur ce bagage ? On le rouvre et on y ajoute la réclamation.
-  const { data: existing, error: existErr } = await supabase
+  // E-02 : ne JAMAIS rouvrir un litige résolu depuis le canal public ni effacer
+  // qui l'a résolu. On rattache la réclamation à un litige ACTIF s'il en existe
+  // un (notes bornées), sinon on crée un nouveau dossier. Un superviseur ayant
+  // résolu un litige ne le voit pas défait par une réclamation publique.
+  const MAX_NOTES = 8000;
+  const { data: active, error: activeErr } = await supabase
     .from('baggage_disputes')
-    .select('id, notes, reason')
+    .select('id, notes')
     .eq('baggage_id', bag.id)
+    .in('status', ['open', 'investigating'])
     .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle<DisputeRow>();
-  if (existErr) return reject('Erreur lors de l’enregistrement.', 500);
+    .limit(1);
+  if (activeErr) return reject('Erreur lors de l’enregistrement.', 500);
 
-  if (existing) {
-    const newNotes = existing.notes ? `${existing.notes}\n\n${claimBlock}` : claimBlock;
+  const activeDispute = (active as { id: string; notes: string | null }[] | null)?.[0];
+  if (activeDispute) {
+    const merged = activeDispute.notes ? `${activeDispute.notes}\n\n${claimBlock}` : claimBlock;
+    // Borne la taille des notes : on conserve la fin (les réclamations récentes).
+    const newNotes = merged.length > MAX_NOTES ? merged.slice(merged.length - MAX_NOTES) : merged;
     const { error } = await supabase
       .from('baggage_disputes')
-      .update({
-        notes: newNotes,
-        reason: existing.reason ?? categoryLabel,
-        status: 'open',
-        from_passenger: true,
-        resolved_at: null,
-        resolved_by: null,
-      })
-      .eq('id', existing.id);
+      .update({ notes: newNotes, from_passenger: true })
+      .eq('id', activeDispute.id);
     if (error) return reject('Erreur lors de l’enregistrement.', 500);
   } else {
     const { error } = await supabase.from('baggage_disputes').insert({
@@ -94,7 +93,7 @@ export async function POST(request: NextRequest) {
       tag_number: tag,
       status: 'open',
       reason: categoryLabel,
-      notes: claimBlock,
+      notes: claimBlock.slice(0, MAX_NOTES),
       from_passenger: true,
       created_by: null,
     });

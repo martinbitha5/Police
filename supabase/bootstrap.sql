@@ -1,4 +1,17 @@
 -- ═══════════════════════════════════════════════════════════════
+-- ⚠️ OBSOLÈTE — NE PAS EXÉCUTER (F-14 / I-04, audit 2026-09-07)
+--
+-- Ce fichier est un instantané PÉRIMÉ des toutes premières migrations. Il ne
+-- reflète plus le schéma réel : policies RLS en `using (true)`, sans partition
+-- par compagnie, sans les colonnes et durcissements ajoutés depuis. L'exécuter
+-- sur une base réelle RÉTROGRADERAIT la sécurité.
+--
+-- La source de vérité est la chaîne `supabase/migrations/`. Pour repartir de
+-- zéro : `supabase db reset` (applique les migrations dans l'ordre).
+-- Conservé uniquement pour référence historique.
+-- ═══════════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════════
 -- BOOTSTRAP — Boarding Pass Scanner / anti-fraude bagages
 -- À coller dans Supabase Dashboard → SQL Editor → Run.
 -- Concatène les 4 migrations + le seed dans l'ordre.

@@ -13,6 +13,11 @@ import { supabase, signOutLocal } from './supabase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api-police.brsats.com';
 
+// F-06 : l'identité du scanneur est TOUJOURS dérivée du JWT côté API, jamais du
+// corps. On ne transmet donc plus `scannedBy` sur le fil (champ attaquable et
+// ignoré par le serveur). Les paramètres restent acceptés pour compatibilité des
+// appelants existants, mais ne sont pas envoyés.
+
 /** Message unique quand la session n'est plus exploitable sur cet appareil. */
 const SESSION_LOST = 'Session expirée. Reconnectez-vous.';
 
@@ -115,7 +120,7 @@ export function fetchOperatingDay(): Promise<OperatingDay> {
 }
 
 export function scanBoarding(raw: string, flightId: string, scannedBy?: string): Promise<BoardingScanResponse> {
-  return request<BoardingScanResponse>('/scan/boarding', { raw, flightId, scannedBy });
+  return request<BoardingScanResponse>('/scan/boarding', { raw, flightId });
 }
 
 export function scanBaggage(
@@ -124,7 +129,7 @@ export function scanBaggage(
   gate?: string | null,
   scannedBy?: string,
 ): Promise<BaggageScanResult> {
-  return request<BaggageScanResult>('/scan/baggage', { tag, flightId, gate, scannedBy });
+  return request<BaggageScanResult>('/scan/baggage', { tag, flightId, gate });
 }
 
 export function scanEmbarquement(
@@ -132,12 +137,12 @@ export function scanEmbarquement(
   flightId: string,
   scannedBy?: string,
 ): Promise<BoardingGateResult> {
-  return request<BoardingGateResult>('/scan/embarquement', { raw, flightId, scannedBy });
+  return request<BoardingGateResult>('/scan/embarquement', { raw, flightId });
 }
 
 /** Restants : marque le bagage restant pour réacheminement sur le prochain vol. */
 export function rushBaggage(tag: string, flightId: string, scannedBy?: string): Promise<BaggageActionResult> {
-  return request<BaggageActionResult>('/scan/rush', { tag, flightId, scannedBy });
+  return request<BaggageActionResult>('/scan/rush', { tag, flightId });
 }
 
 /**
@@ -156,17 +161,17 @@ export function expeditionRush(
 
 /** Charger : pousse en soute tous les bagages enregistrés non-rush (groupé, sans scan). */
 export function loadAllBaggage(flightId: string, scannedBy?: string): Promise<BaggageLoadAllResult> {
-  return request<BaggageLoadAllResult>('/scan/load-all', { flightId, scannedBy });
+  return request<BaggageLoadAllResult>('/scan/load-all', { flightId });
 }
 
 /** Dolly : contrôle rayon X — n'admet que les bagages enregistrés, renvoie la progression. */
 export function scanDolly(tag: string, flightId: string, scannedBy?: string): Promise<DollyScanResult> {
-  return request<DollyScanResult>('/scan/dolly', { tag, flightId, scannedBy });
+  return request<DollyScanResult>('/scan/dolly', { tag, flightId });
 }
 
 /** Arrivée : réception à destination — confirme qu'un bagage chargé est bien arrivé. */
 export function scanArrivee(tag: string, flightId: string, scannedBy?: string): Promise<ArrivalScanResult> {
-  return request<ArrivalScanResult>('/scan/arrivee', { tag, flightId, scannedBy });
+  return request<ArrivalScanResult>('/scan/arrivee', { tag, flightId });
 }
 
 /** Soute : identifie dans quel compartiment (avant/arrière) le bagage est chargé. */
@@ -176,5 +181,5 @@ export function scanSoute(
   soute: SoutePosition,
   scannedBy?: string,
 ): Promise<BaggageActionResult> {
-  return request<BaggageActionResult>('/scan/soute', { tag, flightId, soute, scannedBy });
+  return request<BaggageActionResult>('/scan/soute', { tag, flightId, soute });
 }
