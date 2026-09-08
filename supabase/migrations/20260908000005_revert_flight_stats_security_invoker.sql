@@ -1,0 +1,13 @@
+-- Revert de M-09 (migration 20260908000003).
+--
+-- Le passage de flight_stats en security_invoker faisait réévaluer la RLS
+-- (flight_in_scope, SECURITY DEFINER) par ligne et par sous-requête, sur toute
+-- la vue. Sur un rapport de longue période (année), cela dépassait le
+-- statement_timeout et PostgREST renvoyait un 500 : les rapports ne se
+-- chargeaient plus en production.
+--
+-- On revient au comportement d'origine (droits du créateur). L'advisor Supabase
+-- "security_definer_view" réapparaît donc sur flight_stats : à traiter autrement,
+-- sans casser les performances (par exemple une fonction dédiée qui applique le
+-- périmètre explicitement, ou une justification documentée dans la SoA).
+alter view public.flight_stats set (security_invoker = false);
