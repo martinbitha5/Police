@@ -7,6 +7,16 @@
 - Contrôle ISO : Clause 6.1.3 d)
 - Statut : projet à valider
 
+## Comment utiliser ce document
+
+C'est la liste complète des 93 mesures de la norme et votre position sur chacune. Elle sert surtout de référence à l'auditeur.
+
+**À faire :**
+- L'utiliser comme une liste de contrôle, sans chercher à tout remplir d'un coup.
+- Planifier progressivement les lignes marquées « à faire ».
+
+**Prochaine étape :** choisir trois à cinq mesures « à faire » à traiter ce trimestre.
+
 ## Légende
 
 - **Applicable** : O (oui) / N (non, avec justification).

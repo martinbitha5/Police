@@ -6,6 +6,17 @@
 - Contrôle ISO/IEC 27001:2022 : Clause 6.1.2, 6.1.3, 8.2, 8.3
 - Statut : projet à valider
 
+## Comment utiliser ce document
+
+C'est la liste de vos risques, avec leur gravité et leur état de traitement. C'est le document que vous consulterez le plus souvent.
+
+**À faire :**
+- Relire les risques et confirmer ceux que vous acceptez tels quels.
+- Pour les risques encore ouverts (portail public, double authentification, appareil mobile perdu), décider quoi faire et fixer une date.
+- Le mettre à jour après chaque correctif ou incident.
+
+**Prochaine étape :** traiter en priorité les trois risques les plus élevés encore ouverts.
+
 ## Méthode
 
 Chaque risque est coté sur **Vraisemblance (V)** et **Impact (I)** de 1 (faible)

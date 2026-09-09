@@ -6,6 +6,17 @@
 - Contrôle ISO/IEC 27001:2022 : A.5.24, A.5.25, A.5.26, A.5.27, A.5.28, A.6.8
 - Statut : projet à valider
 
+## Comment utiliser ce document
+
+C'est la marche à suivre quand un problème de sécurité survient (compte compromis, appareil volé, fuite).
+
+**À faire :**
+- Le faire lire à toute l'équipe pour que les bons réflexes soient connus.
+- Définir clairement le canal de signalement : qui appeler, comment.
+- Faire une fois un exercice sur table, par exemple « un PDA a été volé ».
+
+**Prochaine étape :** désigner qui reçoit les signalements et commencer à tenir le registre des incidents.
+
 ## 1. Objet
 
 Définir comment un événement de sécurité est signalé, évalué, traité, tracé, puis

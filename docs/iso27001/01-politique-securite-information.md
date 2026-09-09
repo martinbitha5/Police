@@ -11,6 +11,16 @@
 > document est un premier jet destiné à être revu, complété puis approuvé
 > formellement (date, signataire).
 
+## Comment utiliser ce document
+
+Ce document est l'engagement de la direction sur la sécurité. C'est le texte de référence dont tous les autres découlent.
+
+**À faire :**
+- La direction le lit et complète les champs « à définir », surtout : qui est responsable de la sécurité.
+- La direction l'approuve et le date en dernière page.
+
+**Prochaine étape :** nommer la personne responsable de la sécurité, puis faire approuver ce document.
+
 ## 1. Objet
 
 Cette politique fixe l'engagement de Police Bagage à protéger la confidentialité,

@@ -6,6 +6,16 @@
 - Contrôle ISO/IEC 27001:2022 : Clause 9.3
 - Statut : procédure à valider + modèle de compte rendu
 
+## Comment utiliser ce document
+
+C'est la réunion par laquelle la direction pilote la sécurité et prend les décisions.
+
+**À faire :**
+- Planifier et tenir une première vraie réunion (l'ordre du jour est fourni à la fin).
+- En rédiger un compte rendu daté.
+
+**Prochaine étape :** fixer la date de la première revue de direction. Le compte rendu daté est une preuve que l'auditeur demande.
+
 ## 1. Objet
 
 La direction revoit le SMSI à intervalle planifié pour s'assurer qu'il reste

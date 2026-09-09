@@ -7,6 +7,17 @@
 - Constat lié : F-15 / R-14
 - Statut : projet à valider + procédure à exécuter et dater
 
+## Comment utiliser ce document
+
+C'est comment sauvegarder vos données et les restaurer en cas d'incident.
+
+**À faire :**
+- Mettre en place les sauvegardes (l'offre Supabase Pro est conseillée pour les sauvegardes quotidiennes).
+- Lancer une sauvegarde, puis tester une restauration dans une copie isolée, jamais sur la production.
+- Noter le résultat daté dans le journal du document.
+
+**Prochaine étape :** réaliser et dater un premier test de restauration. C'est la preuve clé exigée pour la certification.
+
 ## 1. Objet
 
 Garantir que les données de Police Bagage peuvent être restaurées après un

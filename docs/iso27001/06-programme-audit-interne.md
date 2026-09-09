@@ -6,6 +6,16 @@
 - Contrôle ISO/IEC 27001:2022 : Clause 9.2
 - Statut : procédure à valider + premier plan
 
+## Comment utiliser ce document
+
+C'est le contrôle interne planifié qui vérifie que tout fonctionne réellement, pas seulement sur le papier.
+
+**À faire :**
+- Faire auditer un domaine par une personne qui n'en est pas responsable.
+- Consigner les écarts trouvés et les corriger.
+
+**Prochaine étape :** réaliser un premier audit interne avant de contacter un certificateur. Si l'indépendance est difficile en interne, prévoir un auditeur externe.
+
 ## 1. Objet
 
 Vérifier, de façon planifiée et objective, que le SMSI est conforme à la norme et
