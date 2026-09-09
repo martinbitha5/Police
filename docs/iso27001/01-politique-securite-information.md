@@ -76,8 +76,8 @@ la première revue de direction, voir RD-05).
 | Rôle | Responsabilité sécurité | Titulaire |
 |---|---|---|
 | Direction | Approuve la politique, fournit les ressources, revue de direction | à définir |
-| Responsable SMSI (RSSI de fait) | Pilote le SMSI, le registre des risques, les audits | à définir |
-| Administrateur système | Gestion des comptes, configuration Supabase/Hostinger | à définir |
+| Responsable SMSI (RSSI de fait) | Pilote le SMSI, le registre des risques, les audits | Martin Bitha |
+| Administrateur système | Gestion des comptes, configuration Supabase/Hostinger, exploitation de la plateforme web | Martin Bitha |
 | Développeur | Développement sécurisé, correctifs, migrations | Martin Bitha |
 | Superviseur | Traitement des alertes, gestion des litiges | équipe supervision |
 | Agent | Scan terrain, signalement des incidents | équipe agents |
