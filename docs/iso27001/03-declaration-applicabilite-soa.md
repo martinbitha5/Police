@@ -1,5 +1,6 @@
-# Déclaration d'Applicabilité (SoA) — Police Bagage
+# Déclaration d'Applicabilité (SoA)
 
+- Organisation : Police Bagage
 - Référence : SOA-03
 - Version : 0.1 (projet)
 - Date : 2026-09-07

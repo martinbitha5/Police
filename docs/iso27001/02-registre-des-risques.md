@@ -1,5 +1,6 @@
-# Registre des risques — Police Bagage
+# Registre des risques
 
+- Organisation : Police Bagage
 - Référence : RR-02
 - Version : 0.1 (projet)
 - Date : 2026-09-07
@@ -22,7 +23,7 @@ C'est la liste de vos risques, avec leur gravité et leur état de traitement. C
 Chaque risque est coté sur **Vraisemblance (V)** et **Impact (I)** de 1 (faible)
 à 5 (élevé). Le **niveau de risque = V × I** (1 à 25).
 
-- 1 à 6 : faible — 7 à 12 : moyen — 13 à 19 : élevé — 20 à 25 : critique.
+- 1 à 6 : faible ; 7 à 12 : moyen ; 13 à 19 : élevé ; 20 à 25 : critique.
 
 **Appétit au risque (proposé, à valider par la direction) :** aucun risque
 résiduel supérieur à 9 n'est accepté sans plan de traitement daté. Options de
@@ -35,7 +36,7 @@ Les cotations « après » reflètent l'état une fois les correctifs de l'audit
 
 | Actif | Sensibilité | Support |
 |---|---|---|
-| Données passagers (nom, PNR, itinéraire) | PII — confidentialité | table `passengers`, Supabase |
+| Données passagers (nom, PNR, itinéraire) | PII (confidentialité) | table `passengers`, Supabase |
 | Données anti-fraude (alertes, bagages) | Intégrité forte | tables `baggage`, `fraud_alerts` |
 | Comptes et rôles | Contrôle d'accès | table `profiles`, Supabase Auth |
 | Jetons de session | Confidentialité | PDA (AsyncStorage), navigateurs |
@@ -69,9 +70,9 @@ Les cotations « après » reflètent l'état une fois les correctifs de l'audit
 
 ## Risques ouverts prioritaires (résiduel élevé)
 
-- **R-05** (16) — PII portail public. Décision produit attendue.
-- **R-09** (15) — MFA absente. Réglage console.
-- **R-08** (12) — PDA volé. Test appareil requis.
+- **R-05** (16) : PII portail public. Décision produit attendue.
+- **R-09** (15) : MFA absente. Réglage console.
+- **R-08** (12) : PDA volé. Test appareil requis.
 
 Ces trois dépassent l'appétit proposé et doivent recevoir un plan de traitement daté.
 

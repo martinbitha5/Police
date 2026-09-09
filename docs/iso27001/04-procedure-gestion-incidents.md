@@ -1,5 +1,6 @@
-# Procédure de gestion des incidents de sécurité — Police Bagage
+# Procédure de gestion des incidents de sécurité
 
+- Organisation : Police Bagage
 - Référence : PGI-04
 - Version : 0.1 (projet)
 - Date : 2026-09-07

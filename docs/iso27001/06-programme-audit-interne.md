@@ -1,5 +1,6 @@
-# Programme d'audit interne du SMSI — Police Bagage
+# Programme d'audit interne du SMSI
 
+- Organisation : Police Bagage
 - Référence : AI-06
 - Version : 0.1 (projet)
 - Date : 2026-09-07

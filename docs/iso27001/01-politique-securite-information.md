@@ -1,5 +1,6 @@
-# Politique de sécurité de l'information — Police Bagage
+# Politique de sécurité de l'information
 
+- Organisation : Police Bagage
 - Référence : PSI-01
 - Version : 0.1 (projet)
 - Date : 2026-09-07

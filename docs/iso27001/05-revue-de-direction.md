@@ -1,5 +1,6 @@
-# Revue de direction du SMSI — Police Bagage
+# Revue de direction du SMSI
 
+- Organisation : Police Bagage
 - Référence : RD-05
 - Version : 0.1 (projet)
 - Date : 2026-09-07
@@ -57,7 +58,7 @@ Au moins une fois par an, et après tout incident critique ou changement majeur
 ## 6. Modèle de compte rendu
 
 ```
-Revue de direction SMSI — [date]
+Revue de direction SMSI ([date])
 Participants : [...]
 
 1. Suivi des actions précédentes : [...]
@@ -86,7 +87,7 @@ Participants : [...]
 | Incidents critiques non clôturés | 0 |
 | Couverture CI (typecheck + tests) sur les poussées | 100 % |
 
-## 8. Première revue — ordre du jour suggéré
+## 8. Première revue : ordre du jour suggéré
 
 1. Approuver la politique (PSI-01) et nommer le responsable SMSI.
 2. Valider l'appétit au risque et le registre (RR-02).

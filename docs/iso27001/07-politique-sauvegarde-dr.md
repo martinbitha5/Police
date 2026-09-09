@@ -1,5 +1,6 @@
-# Politique de sauvegarde et de reprise (DR) — Police Bagage
+# Politique de sauvegarde et de reprise (DR)
 
+- Organisation : Police Bagage
 - Référence : DR-07
 - Version : 0.1 (projet)
 - Date : 2026-09-08
@@ -104,9 +105,9 @@ ou job CI programmé avec le secret stocké côté plateforme). Conserver au moi
 Ne **jamais** tester une restauration sur la base de production. Restaurer dans
 une cible isolée :
 
-- **Option A — branche Supabase.** Créer une branche du projet (isolée), y
+- **Option A. Branche Supabase.** Créer une branche du projet (isolée), y
   restaurer la sauvegarde, vérifier, puis supprimer la branche.
-- **Option B — PostgreSQL local / conteneur.** Restaurer dans une base jetable.
+- **Option B. PostgreSQL local ou conteneur.** Restaurer dans une base jetable.
 
 Étapes :
 
