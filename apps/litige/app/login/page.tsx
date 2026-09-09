@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/supabase/client';
+import { input, label } from '@/ui/theme';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,9 +30,9 @@ export default function LoginPage() {
 
   return (
     <div style={styles.page}>
-      {/* Panneau gauche — identité (desktop) */}
+      {/* Panneau gauche : identité sur fond d'encre (desktop). Le fond est posé
+          par .lg-side dans globals.css, le texte blanc est explicite ici. */}
       <aside className="lg-side">
-        <SideArt />
         <div style={styles.sideTop}>
           <div style={styles.brandBox}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -63,17 +64,17 @@ export default function LoginPage() {
         <div style={styles.sideFoot}>Litige Bagage · ATS Handling</div>
       </aside>
 
-      {/* Panneau droit — formulaire */}
+      {/* Panneau droit : formulaire */}
       <main style={styles.main}>
         <form onSubmit={onSubmit} className="lg-card">
           <h1 style={styles.title}>Connexion</h1>
           <p style={styles.subtitle}>Accédez à votre espace superviseur.</p>
 
           <div style={styles.field}>
-            <label style={styles.label} htmlFor="email">Email</label>
+            <label style={label} htmlFor="email">Email</label>
             <input
               id="email"
-              style={styles.input}
+              style={input}
               type="email"
               placeholder="nom@entreprise.com"
               value={email}
@@ -84,10 +85,10 @@ export default function LoginPage() {
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label} htmlFor="password">Mot de passe</label>
+            <label style={label} htmlFor="password">Mot de passe</label>
             <input
               id="password"
-              style={styles.input}
+              style={input}
               type="password"
               placeholder="••••••••"
               value={password}
@@ -112,36 +113,8 @@ export default function LoginPage() {
   );
 }
 
-/** Filigrane de routes aériennes du panneau gauche — palette Wise. */
-function SideArt() {
-  return (
-    <svg
-      viewBox="0 0 440 900"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-    >
-      <g fill="none" stroke="rgba(14,15,12,0.08)" strokeWidth="1">
-        <line x1="0" y1="225" x2="440" y2="225" />
-        <line x1="0" y1="450" x2="440" y2="450" />
-        <line x1="0" y1="675" x2="440" y2="675" />
-        <line x1="220" y1="0" x2="220" y2="900" />
-      </g>
-      <g fill="none" stroke="#163300" strokeWidth="1.4">
-        <path d="M -20 700 Q 200 420 460 520" opacity="0.35" />
-        <path d="M -30 520 Q 180 260 470 300" opacity="0.25" />
-        <path d="M -10 860 Q 240 640 460 740" opacity="0.2" strokeDasharray="2 7" />
-      </g>
-      <g fill="#65CF21">
-        <circle cx="80" cy="615" r="3" />
-        <circle cx="330" cy="492" r="3.5" />
-        <circle cx="160" cy="378" r="3" />
-      </g>
-      <circle cx="330" cy="492" r="9" fill="none" stroke="#65CF21" strokeWidth="1" opacity="0.6" />
-    </svg>
-  );
-}
-
+// Le panneau d'encre est le seul endroit du site où une couleur est écrite en
+// clair : du blanc, et ses transparences, posés sur le noir de .lg-side.
 const styles: Record<string, React.CSSProperties> = {
   page: { minHeight: '100vh', display: 'flex', background: 'var(--bg-screen)' },
 
@@ -154,45 +127,50 @@ const styles: Record<string, React.CSSProperties> = {
     objectFit: 'cover' as const,
     display: 'block',
   },
-  brandName: { fontWeight: 700, fontSize: 16, color: 'var(--content-primary)' },
+  brandName: {
+    fontFamily: 'var(--font-display)',
+    fontWeight: 700,
+    fontSize: 16,
+    letterSpacing: '-0.02em',
+    color: '#fff',
+  },
   sideBody: { margin: 'auto 0', paddingBottom: 40, position: 'relative' },
   sideTitle: {
     margin: 0,
     fontFamily: 'var(--font-display)',
-    fontWeight: 400,
-    fontSize: 30,
-    lineHeight: 1.05,
-    letterSpacing: 0,
-    color: 'var(--content-primary)',
+    fontWeight: 700,
+    fontSize: 'clamp(1.75rem, 2.2vw, 2.375rem)',
+    lineHeight: 'var(--lh-display)',
+    letterSpacing: '-0.02em',
+    color: '#fff',
   },
-  sideText: { margin: '16px 0 0', color: 'var(--content-secondary)', fontSize: 15, lineHeight: 1.6, maxWidth: 330 },
+  sideText: { margin: '18px 0 0', color: 'rgba(255,255,255,0.7)', fontSize: 15, lineHeight: 1.6, maxWidth: 330 },
   sidePoints: { marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 },
-  sidePoint: { display: 'flex', alignItems: 'center', gap: 10, color: 'var(--content-primary)', fontSize: 14, fontWeight: 500 },
-  sideDot: { width: 6, height: 6, borderRadius: '50%', background: '#65CF21', flexShrink: 0 },
-  sideFoot: { color: 'var(--content-secondary)', fontSize: 13, fontWeight: 600, position: 'relative' },
+  sidePoint: { display: 'flex', alignItems: 'center', gap: 10, color: '#fff', fontSize: 14, fontWeight: 500 },
+  sideDot: { width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.6)', flexShrink: 0 },
+  sideFoot: { color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 500, position: 'relative' },
 
-  // minWidth: 0 — sans lui, ce flex item garde `min-width: auto` et refuse de
+  // minWidth: 0 : sans lui, ce flex item garde `min-width: auto` et refuse de
   // descendre sous la largeur mini de son contenu (carte 400px + padding),
   // soit 448px : la carte était rognée sur un écran de 375px.
   main: { flex: 1, minWidth: 0, display: 'grid', placeItems: 'center', padding: 24 },
-  title: { margin: 0, fontSize: 26, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1 },
-  subtitle: { margin: '-8px 0 6px', color: 'var(--content-secondary)', fontSize: 15 },
+  title: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontSize: 26,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 'var(--lh-title)',
+    color: 'var(--content-primary)',
+  },
+  subtitle: { margin: '-10px 0 6px', color: 'var(--content-secondary)', fontSize: 14 },
 
   field: { display: 'flex', flexDirection: 'column', gap: 6 },
-  label: { fontSize: 14, fontWeight: 600, color: 'var(--content-primary)' },
-  input: {
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 10,
-    padding: '11px 13px',
-    color: 'var(--content-primary)',
-    fontSize: 15,
-  },
   error: {
     color: 'var(--negative)',
     background: 'var(--negative-bg)',
     border: 'none',
-    borderRadius: 10,
+    borderRadius: 8,
     padding: '10px 14px',
     margin: 0,
     fontSize: 14,
@@ -201,7 +179,7 @@ const styles: Record<string, React.CSSProperties> = {
   backLink: {
     color: 'var(--content-link)',
     fontSize: 14,
-    fontWeight: 600,
+    fontWeight: 500,
     textDecoration: 'underline',
     textUnderlineOffset: '0.3em',
   },

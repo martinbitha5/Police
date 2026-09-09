@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 import { Footer } from '@/components/Footer';
 import { SITE_APPS } from '@/lib/site-apps';
+import { eyebrow } from '@/ui/theme';
 import { IconHome as NavHome, IconSearch as NavSearch, IconPlane as NavPlane, IconLogin as NavLogin } from '@/components/icons';
 
 const HUB = process.env.NEXT_PUBLIC_HUB ?? 'FIH';
@@ -35,31 +36,32 @@ const CAPABILITIES: { icon: ReactNode; title: string; desc: string }[] = [
 ];
 
 const STEPS = [
-  { n: 'ÉTAPE 1', title: 'Signalement', desc: 'Un bagage est marqué en litige sur le terrain, ou un passager dépose une réclamation.' },
-  { n: 'ÉTAPE 2', title: 'Qualification', desc: 'Ouvrez le dossier : motif, chargement en soute, bagages déclarés.' },
-  { n: 'ÉTAPE 3', title: 'Enquête', desc: 'Consignez vos notes internes et suivez l’état du bagage au fil du temps.' },
-  { n: 'ÉTAPE 4', title: 'Résolution', desc: 'Clôturez le litige, horodaté et inclus dans le rapport du jour.' },
+  { n: 'Étape 1', title: 'Signalement', desc: 'Un bagage est marqué en litige sur le terrain, ou un passager dépose une réclamation.' },
+  { n: 'Étape 2', title: 'Qualification', desc: 'Ouvrez le dossier : motif, chargement en soute, bagages déclarés.' },
+  { n: 'Étape 3', title: 'Enquête', desc: 'Consignez vos notes internes et suivez l’état du bagage au fil du temps.' },
+  { n: 'Étape 4', title: 'Résolution', desc: 'Clôturez le litige, horodaté et inclus dans le rapport du jour.' },
 ];
 
 export default function Landing() {
   return (
     <div style={s.page}>
-      {/* Barre de navigation */}
-      <header className="lp-topbar pb-topbar">
+      {/* Barre de navigation : bascule en rangée d'icônes au défilement sur
+          téléphone (classes .pb-* de globals.css). */}
+      <header className="lp-topbar">
         <div className="lp-topbar-inner pb-full">
-          <div style={s.brandBox}>
+          <Link href="/" style={s.brandBox}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Litige Bagage" style={s.brandLogo} />
             <span style={s.brandName}>Litige Bagage</span>
-          </div>
+          </Link>
           <nav style={s.topNav}>
-            <span className="lp-nav-pill">Hub {HUB}</span>
+            <span className="hub-chip" style={s.hubChip}>Hub {HUB}</span>
             <Link href="/login" className="lp-login-btn">Connexion</Link>
           </nav>
         </div>
 
         {/* Rangée de raccourcis, téléphone et défilement seulement */}
-        <nav className="pb-icons lp-topbar-icons" aria-label="Raccourcis">
+        <nav className="lp-topbar-icons pb-icons" aria-label="Raccourcis">
           <Link href="/" className="pb-icon pb-icon-on" aria-label="Accueil">
             <NavHome size={21} />
           </Link>
@@ -83,62 +85,47 @@ export default function Landing() {
         </nav>
       </header>
 
-      {/* Héros — 2 colonnes */}
+      {/* Héro : 2 colonnes, titre display, visuel arrondi */}
       <section className="lp-hero">
-        <div className="lp-hero-inner">
-          <div>
-            <div className="lp-kicker">Espace superviseur · litiges bagage</div>
+        <div className="lp-hero-grid">
+          <div className="lp-hero-copy rv">
             <h1 className="lp-title">Chaque bagage suivi. Chaque litige résolu.</h1>
             <p className="lp-tagline">
-              Le portail pour déclarer, suivre et résoudre vos litiges et réclamations bagage
-              comme un pro. Sans paperasse inutile.
+              Le portail pour déclarer, suivre et résoudre vos litiges et réclamations
+              bagage. Du signalement à la clôture, chaque dossier est tracé.
             </p>
             <div className="lp-actions">
               <Link href="/login" className="lp-cta">Ouvrir un dossier</Link>
-              <a href="#fonctionnement" className="lp-cta-ghost">Voir comment ça marche</a>
+              <a href="#fonctionnement" className="lp-cta-link">Voir le déroulé</a>
+            </div>
+
+            <div className="lp-stats" data-rv-auto>
+              <div className="lp-stat">
+                <div className="lp-stat-value">Par jour</div>
+                <div className="lp-stat-label">Litiges filtrés par date, vol et statut de chargement</div>
+              </div>
+              <div className="lp-stat">
+                <div className="lp-stat-value">Horodaté</div>
+                <div className="lp-stat-label">Motif, notes et résolution conservés pour chaque bagage</div>
+              </div>
+              <div className="lp-stat">
+                <div className="lp-stat-value">Excel</div>
+                <div className="lp-stat-label">Le rapport des litiges de la journée en un clic</div>
+              </div>
             </div>
           </div>
-          <HeroArt />
-        </div>
 
-        {/* Tuiles de faits */}
-        <div className="lp-facts" data-rv-auto>
-          <div className="lp-fact">
-            <div className="lp-fact-value">Par jour</div>
-            <div className="lp-fact-label">Filtrez vos litiges par date, vol et statut de chargement.</div>
-          </div>
-          <div className="lp-fact">
-            <div className="lp-fact-value">Passager</div>
-            <div className="lp-fact-label">Recevez les réclamations directement dans votre file.</div>
-          </div>
-          <div className="lp-fact">
-            <div className="lp-fact-value">Horodaté</div>
-            <div className="lp-fact-label">Conservez motif, notes et résolution pour chaque bagage.</div>
-          </div>
-          <div className="lp-fact">
-            <div className="lp-fact-value">Excel</div>
-            <div className="lp-fact-label">Exportez le rapport des litiges de la journée en un clic.</div>
+          <div className="lp-hero-media rv" style={{ transitionDelay: '120ms' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/IMG_9478.jpeg" alt="Avion au contact et chargement des bagages sur le tarmac" />
           </div>
         </div>
       </section>
 
-      {/* Bandeau vert vif */}
-      <section className="lp-band">
-        <div className="lp-band-inner rv">
-          <h2 className="lp-band-title">Aucun bagage ne reste sans suite.</h2>
-          <p className="lp-band-text">
-            Du signalement à la résolution, chaque litige est tracé, documenté et clôturé,
-            pour le passager comme pour l’exploitation.
-          </p>
-          <Link href="/login" className="lp-band-btn">Ouvrir un dossier</Link>
-        </div>
-      </section>
-
-      {/* Capacités */}
+      {/* Capacités : cartes blanches, icônes en disque gris */}
       <section className="lp-section">
         <div className="lp-section-inner">
-          <div className="lp-section-kicker">Capacités</div>
-          <h2 className="lp-section-title rv">Faites tout, au même endroit.</h2>
+          <h2 className="lp-section-title rv">Faites tout, au même endroit</h2>
           <div className="lp-cap-grid" data-rv-auto>
             {CAPABILITIES.map((c) => (
               <div key={c.title} className="lp-cap">
@@ -151,11 +138,10 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Déroulé opérationnel */}
-      <section id="fonctionnement" className="lp-section" style={{ paddingTop: 0 }}>
+      {/* Déroulé opérationnel : section teintée */}
+      <section id="fonctionnement" className="lp-section lp-section-tinted">
         <div className="lp-section-inner">
-          <div className="lp-section-kicker">Fonctionnement</div>
-          <h2 className="lp-section-title rv">Résolvez en quatre étapes.</h2>
+          <h2 className="lp-section-title rv">Un litige, quatre étapes</h2>
           <div className="lp-steps" data-rv-auto>
             {STEPS.map((st) => (
               <div key={st.n} className="lp-step">
@@ -168,6 +154,20 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Bandeau d'encre : appel à l'action inversé */}
+      <section className="lp-section">
+        <div className="lp-section-inner">
+          <div className="lp-band rv">
+            <h2 className="lp-band-title">Aucun bagage ne reste sans suite.</h2>
+            <p className="lp-band-text">
+              Du signalement à la résolution, chaque litige est tracé, documenté et clôturé,
+              pour le passager comme pour l’exploitation.
+            </p>
+            <Link href="/login" className="lp-band-btn">Ouvrir un dossier</Link>
+          </div>
+        </div>
+      </section>
+
       {/* Bande partenaires */}
       <section className="rv" style={s.partnerBand}>
         <span style={s.partnerLabel}>Partenaire opérationnel</span>
@@ -176,66 +176,13 @@ export default function Landing() {
         <img src="/air.png" alt="Air Congo" style={s.partnerLogo} />
       </section>
 
-      {/* Pied de page — bloc commun à toute l'application */}
+      {/* Pied de page : bloc commun à toute l'application */}
       <Footer />
-
     </div>
   );
 }
 
-/** Routes aériennes stylisées — palette Wise (verts et neutres). */
-function HeroArt() {
-  return (
-    <svg className="lp-hero-art" viewBox="0 0 560 460" aria-hidden>
-      {/* Fond arrondi teinté */}
-      <rect width="560" height="460" rx="32" fill="rgba(22,51,0,0.08)" />
-
-      <g stroke="rgba(14,15,12,0.10)" strokeWidth="1">
-        <line x1="0" y1="115" x2="560" y2="115" />
-        <line x1="0" y1="230" x2="560" y2="230" />
-        <line x1="0" y1="345" x2="560" y2="345" />
-        <line x1="140" y1="0" x2="140" y2="460" />
-        <line x1="280" y1="0" x2="280" y2="460" />
-        <line x1="420" y1="0" x2="420" y2="460" />
-      </g>
-
-      <g fill="none" stroke="#163300" strokeWidth="2" opacity="0.55">
-        <path d="M 40 350 Q 200 90 400 160" />
-        <path d="M 90 400 Q 300 200 520 250" />
-        <path d="M 15 225 Q 180 45 355 100" />
-      </g>
-      <g fill="none" stroke="#163300" strokeWidth="1.4" strokeDasharray="2 7" opacity="0.35">
-        <path d="M 65 390 Q 250 150 470 210" />
-        <path d="M 30 285 Q 215 105 430 130" />
-      </g>
-
-      <g fill="#65CF21">
-        <circle cx="40" cy="350" r="4" />
-        <circle cx="400" cy="160" r="4" />
-        <circle cx="15" cy="225" r="3.5" />
-        <circle cx="355" cy="100" r="3.5" />
-        <circle cx="520" cy="250" r="4" />
-        <circle cx="90" cy="400" r="3.5" />
-      </g>
-      <g fill="none" stroke="#65CF21" strokeWidth="1.4" opacity="0.7">
-        <circle cx="400" cy="160" r="10" />
-        <circle cx="40" cy="350" r="10" />
-        <circle cx="520" cy="250" r="10" />
-      </g>
-
-      {/* Étiquette bagage stylisée */}
-      <g transform="translate(360, 290)">
-        <rect x="0" y="0" width="150" height="94" rx="16" fill="#9FE870" />
-        <circle cx="26" cy="26" r="9" fill="none" stroke="#163300" strokeWidth="2.5" />
-        <line x1="42" y1="24" x2="124" y2="24" stroke="#163300" strokeWidth="4" strokeLinecap="round" />
-        <line x1="18" y1="52" x2="132" y2="52" stroke="#163300" strokeWidth="4" strokeLinecap="round" opacity="0.65" />
-        <line x1="18" y1="70" x2="96" y2="70" stroke="#163300" strokeWidth="4" strokeLinecap="round" opacity="0.4" />
-      </g>
-    </svg>
-  );
-}
-
-// ── Icônes ───────────────────────────────────────────────────
+// Icônes : trait 1.8, couleur héritée du disque qui les porte.
 
 function IconBag() {
   return (
@@ -278,26 +225,42 @@ function IconChart() {
 const s: Record<string, CSSProperties> = {
   page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-screen)' },
 
-  brandBox: { display: 'flex', alignItems: 'center', gap: 10 },
+  brandBox: { display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' },
   brandLogo: { width: 32, height: 32, borderRadius: 8, objectFit: 'cover' as const, display: 'block', flexShrink: 0 },
-  brandName: { fontWeight: 700, fontSize: 17, letterSpacing: -0.2, color: 'var(--content-primary)', whiteSpace: 'nowrap' },
-  topNav: { display: 'flex', alignItems: 'center', gap: 8 },
+  brandName: {
+    fontFamily: 'var(--font-display)',
+    fontWeight: 700,
+    fontSize: 16,
+    letterSpacing: '-0.02em',
+    color: 'var(--content-primary)',
+    whiteSpace: 'nowrap',
+  },
+  topNav: { display: 'flex', alignItems: 'center', gap: 12 },
+  // `display` volontairement absent : il est porté par la classe .hub-chip, afin
+  // que la media query mobile puisse masquer la pastille.
+  hubChip: {
+    alignItems: 'center',
+    background: 'var(--bg-neutral)',
+    borderRadius: 9999,
+    padding: '6px 14px',
+    fontSize: 13,
+    fontWeight: 500,
+    color: 'var(--content-primary)',
+  },
 
-  /* Bande partenaires */
+  /* Bande partenaires : un filet, un libellé en capitales, le logo sur fond
+     blanc (il est dessiné pour le blanc). */
   partnerBand: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
+    flexWrap: 'wrap' as const,
     padding: '28px 24px',
     background: 'var(--bg-screen)',
     borderTop: '1px solid var(--border-neutral)',
   },
-  partnerLabel: {
-    fontSize: 13,
-    fontWeight: 600,
-    color: 'var(--content-secondary)',
-  },
+  partnerLabel: { ...eyebrow, margin: 0 },
   partnerDivider: {
     width: 1,
     height: 28,

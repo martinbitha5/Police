@@ -160,7 +160,7 @@ function BurgerIcon({ open }: { open: boolean }) {
 const m: Record<string, CSSProperties> = {
   headerShell: {
     background: 'var(--bg-screen)',
-    borderBottom: '1px solid var(--border-neutral)',
+    borderBottom: '1px solid var(--divider)',
     color: 'var(--content-primary)',
     position: 'sticky',
     top: 0,
@@ -178,7 +178,8 @@ const m: Record<string, CSSProperties> = {
   burger: { background: 'transparent', border: 'none', color: 'var(--content-primary)', padding: 4, display: 'grid', placeItems: 'center' },
   drawer: {
     background: 'var(--bg-screen)',
-    borderBottom: '1px solid var(--border-neutral)',
+    borderBottom: '1px solid var(--divider)',
+    boxShadow: 'var(--shadow-card)',
     display: 'flex',
     flexDirection: 'column',
     gap: 4,
@@ -198,8 +199,8 @@ const m: Record<string, CSSProperties> = {
     padding: '12px 16px',
     fontSize: 15,
     fontWeight: 600,
-    color: 'var(--interactive-primary)',
-    background: 'var(--bg-neutral)',
+    color: 'var(--content-primary)',
+    background: 'var(--bg-neutral-hover)',
     borderRadius: 'var(--radius-full)',
   },
 };

@@ -20,12 +20,13 @@ import { IconSearch, IconBag, IconAlert, IconCheck } from '@/components/icons';
 
 const TAG_RE = /^\d{10}$/;
 
-// Statut bagage : pastilles pilule Wise — trouvé/livré en vert, en cours en
-// jaune, problème en rouge, attente en neutre.
+// Statut bagage : pastilles sémantiques. Livré = réussi, en transit = accent
+// (le bagage avance), enregistré = en attente, problème = refusé, attente =
+// neutre.
 const STATUS_PILL: Record<string, { bg: string; fg: string }> = {
   rush: { bg: 'var(--negative-bg)', fg: 'var(--negative)' },
   arrived: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
-  in_transit: { bg: 'var(--brand-blue)', fg: 'var(--brand-forest)' },
+  in_transit: { bg: 'var(--accent-soft)', fg: 'var(--accent)' },
   registered: { bg: 'var(--warning-bg)', fg: 'var(--warning-content)' },
   pending: { bg: 'var(--bg-neutral)', fg: 'var(--content-secondary)' },
 };
@@ -35,7 +36,7 @@ const CLAIM_PILL: Record<string, { bg: string; fg: string }> = {
   resolved: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
 };
 
-// Étapes du parcours bagage — timeline claire, points vert forêt.
+// Étapes du parcours bagage : frise de points, l'accent marque le chemin parcouru.
 const STEP_ORDER = ['pending', 'registered', 'in_transit', 'arrived'] as const;
 
 export default function TrackingPage() {
@@ -93,9 +94,9 @@ export default function TrackingPage() {
       <Breadcrumb current={t.breadcrumb.tracking} />
 
       <main data-rv-auto style={isMobile ? { ...shared.main, ...shared.mainMobile } : shared.main}>
-        {/* Héros Wise : H1 display énorme + sous-titre sobre */}
+        {/* Héros : titre display Figtree 700, sous-titre sobre */}
         <div style={s.hero}>
-          <h1 style={isMobile ? { ...s.title, fontSize: 'clamp(2.25rem, 9vw, 3rem)' } : s.title}>{t.home.title}</h1>
+          <h1 style={isMobile ? { ...s.title, fontSize: 40, lineHeight: '48px' } : s.title}>{t.home.title}</h1>
           <p style={s.subtitle}>{t.home.hint}</p>
         </div>
 
@@ -264,7 +265,8 @@ function PassengerCard({ pax, tagFilter }: { pax: TrackedPassenger; tagFilter?: 
   );
 }
 
-// Timeline d'étapes : points vert forêt reliés, remplis jusqu'à l'étape atteinte.
+// Frise d'étapes : points reliés, l'accent remplit le chemin déjà parcouru
+// (même rôle que l'arc des jauges du back-office).
 function StepDots({ status }: { status: TrackedBag['status'] }) {
   const idx = STEP_ORDER.indexOf(status as (typeof STEP_ORDER)[number]);
   if (idx < 0) return null; // « rush » sort du parcours nominal
@@ -273,13 +275,13 @@ function StepDots({ status }: { status: TrackedBag['status'] }) {
       {STEP_ORDER.map((st, i) => (
         <Fragment key={st}>
           {i > 0 ? (
-            <span style={{ ...s.stepBar, background: i <= idx ? 'var(--interactive-primary)' : 'var(--border-neutral)' }} />
+            <span style={{ ...s.stepBar, background: i <= idx ? 'var(--accent)' : 'var(--bg-neutral-hover)' }} />
           ) : null}
           <span
             style={{
               ...s.stepDot,
-              background: i <= idx ? 'var(--interactive-primary)' : 'var(--bg-elevated)',
-              boxShadow: i <= idx ? 'none' : 'inset 0 0 0 1.5px var(--border-neutral)',
+              background: i <= idx ? 'var(--accent)' : 'var(--bg-elevated)',
+              boxShadow: i <= idx ? 'none' : 'inset 0 0 0 1.5px var(--border-strong)',
             }}
           />
         </Fragment>
@@ -446,35 +448,42 @@ function ClaimForm({
 
 const s: Record<string, CSSProperties> = {
   hero: { display: 'flex', flexDirection: 'column', gap: 14, margin: '28px 0 10px', maxWidth: 860 },
+  // Même gabarit que le héros de la vitrine web : Figtree 700, 52/64,
+  // resserré de -0.02em.
   title: {
     margin: 0,
     fontFamily: 'var(--font-display)',
-    fontWeight: 400,
-    fontSize: 'clamp(2.625rem, 5vw + 1rem, 5rem)',
-    lineHeight: 'var(--lh-display)',
-    letterSpacing: 0,
+    fontWeight: 700,
+    fontSize: 52,
+    lineHeight: '64px',
+    letterSpacing: '-0.02em',
     color: 'var(--content-primary)',
+    maxWidth: 640,
   },
   subtitle: { margin: 0, fontSize: 18, lineHeight: 1.5, color: 'var(--content-secondary)', maxWidth: 640 },
 
   panel: {
     ...glass,
-    borderRadius: 'var(--radius-md)',
+    borderRadius: 8,
     padding: 26,
     display: 'flex',
     flexDirection: 'column',
     gap: 18,
   },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 18 },
-  field: { display: 'flex', flexDirection: 'column', gap: 8 },
-  fieldLabel: { fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--content-primary)' },
+  field: { display: 'flex', flexDirection: 'column', gap: 6 },
+  fieldLabel: { fontSize: 14, fontWeight: 500, color: 'var(--content-secondary)' },
+  // Champ : gris au repos, bordure transparente ; le filet noir du focus est
+  // posé par globals.css.
   input: {
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 'var(--radius-sm)',
-    padding: '13px 16px',
+    background: 'var(--bg-neutral)',
+    border: '1px solid transparent',
+    borderRadius: 8,
+    padding: '10px 14px',
+    minHeight: 44,
     color: 'var(--content-primary)',
     fontSize: 16,
+    colorScheme: 'light',
   },
 
   actionRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 },
@@ -483,7 +492,7 @@ const s: Record<string, CSSProperties> = {
 
   loader: {
     ...glass,
-    borderRadius: 'var(--radius-md)',
+    borderRadius: 8,
     padding: '36px 20px',
     display: 'flex',
     flexDirection: 'column',
@@ -495,8 +504,8 @@ const s: Record<string, CSSProperties> = {
     width: 38,
     height: 38,
     borderRadius: '50%',
-    border: '3px solid var(--bg-neutral)',
-    borderTopColor: 'var(--interactive-primary)',
+    border: '3px solid var(--bg-neutral-active)',
+    borderTopColor: 'var(--content-primary)',
     animation: 'spin 0.8s linear infinite',
     display: 'inline-block',
   },
@@ -505,20 +514,21 @@ const s: Record<string, CSSProperties> = {
     background: 'var(--negative-bg)',
     color: 'var(--negative)',
     border: 'none',
-    borderRadius: 'var(--radius-md)',
+    borderRadius: 8,
     padding: '14px 18px',
     margin: 0,
-    fontWeight: 600,
+    fontWeight: 500,
   },
   notFound: {
     ...glass,
     display: 'flex',
     alignItems: 'center',
     gap: 14,
-    borderRadius: 'var(--radius-md)',
+    borderRadius: 8,
     padding: '18px 20px',
     color: 'var(--content-secondary)',
   },
+  // Icône en disque gris, trait noir : la même que les tuiles de la vitrine.
   iconCircle: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -528,17 +538,25 @@ const s: Record<string, CSSProperties> = {
     flexShrink: 0,
     borderRadius: 'var(--radius-full)',
     background: 'var(--bg-neutral)',
-    color: 'var(--interactive-primary)',
-    boxShadow: 'inset 0 0 0 1px var(--border-neutral)',
+    color: 'var(--content-primary)',
   },
 
-  resultCard: { ...glass, borderRadius: 'var(--radius-md)', padding: 24 },
+  resultCard: { ...glass, borderRadius: 8, padding: 24 },
   resultHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 14 },
-  paxName: { fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--content-primary)' },
+  paxName: {
+    fontFamily: 'var(--font-display)',
+    fontSize: 20,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 'var(--lh-title)',
+    color: 'var(--content-primary)',
+  },
   paxMeta: { color: 'var(--content-secondary)', fontSize: 13, marginTop: 3 },
   summary: {
+    fontFamily: 'var(--font-display)',
     fontSize: 28,
     fontWeight: 700,
+    letterSpacing: '-0.02em',
     lineHeight: 1,
     display: 'flex',
     flexDirection: 'column',
@@ -546,9 +564,10 @@ const s: Record<string, CSSProperties> = {
     fontVariantNumeric: 'tabular-nums',
   },
   summaryLabel: {
+    fontFamily: 'var(--font-body)',
     fontSize: 11,
     fontWeight: 600,
-    color: 'var(--content-secondary)',
+    color: 'var(--content-tertiary)',
     marginTop: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -559,7 +578,7 @@ const s: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: 14,
     flexWrap: 'wrap',
-    borderTop: '1px solid var(--border-neutral)',
+    borderTop: '1px solid var(--divider)',
     padding: '14px 2px',
   },
   tag: {
@@ -572,49 +591,58 @@ const s: Record<string, CSSProperties> = {
     minWidth: 128,
   },
 
-  // Pastille pilule de statut (bagage et réclamation)
+  // Pastille pilule de statut (bagage et réclamation), casse normale
   pill: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
     borderRadius: 'var(--radius-full)',
-    padding: '4px 12px',
-    fontSize: 13,
+    padding: '3px 10px',
+    fontSize: 12,
     fontWeight: 600,
+    whiteSpace: 'nowrap',
   },
 
-  // Timeline d'étapes — points reliés, vert forêt
+  // Frise d'étapes : points reliés, l'accent pour le chemin parcouru
   steps: { display: 'inline-flex', alignItems: 'center' },
   stepDot: { width: 10, height: 10, borderRadius: '50%', flexShrink: 0 },
   stepBar: { width: 22, height: 2, flexShrink: 0 },
 
   scannedAt: { marginLeft: 'auto', color: 'var(--content-tertiary)', fontSize: 12, fontVariantNumeric: 'tabular-nums' },
-  reportBtn: { marginLeft: 'auto', fontSize: 13, padding: '6px 14px' },
+  reportBtn: { marginLeft: 'auto', height: 36, fontSize: 13, padding: '0 14px' },
 
   claimWrap: { listStyle: 'none', margin: 0, padding: 0 },
+  // Formulaire de réclamation : encart teinté, rayon 8
   claimForm: {
     display: 'flex',
     flexDirection: 'column',
     gap: 8,
     background: 'var(--bg-neutral)',
     border: 'none',
-    borderRadius: 'var(--radius-lg)',
+    borderRadius: 8,
     padding: 20,
   },
-  claimTitle: { fontSize: 15, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 2, color: 'var(--content-primary)' },
-  claimLabel: { fontSize: 13, fontWeight: 600, color: 'var(--content-primary)', marginTop: 4 },
+  claimTitle: {
+    fontFamily: 'var(--font-display)',
+    fontSize: 16,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    marginBottom: 2,
+    color: 'var(--content-primary)',
+  },
+  claimLabel: { fontSize: 14, fontWeight: 500, color: 'var(--content-secondary)', marginTop: 4 },
   claimErr: {
     color: 'var(--negative)',
     background: 'var(--negative-bg)',
     border: 'none',
-    borderRadius: 'var(--radius-full)',
+    borderRadius: 8,
     padding: '8px 14px',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 500,
   },
   claimActions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 6 },
-  claimCancel: { fontSize: 14, padding: '9px 18px' },
-  claimSubmit: { fontSize: 14, padding: '10px 20px' },
+  claimCancel: { fontSize: 14 },
+  claimSubmit: { fontSize: 14 },
   claimDone: {
     display: 'flex',
     alignItems: 'center',
@@ -622,20 +650,21 @@ const s: Record<string, CSSProperties> = {
     background: 'var(--positive-bg)',
     border: 'none',
     color: 'var(--positive)',
-    borderRadius: 'var(--radius-full)',
+    borderRadius: 8,
     padding: '14px 18px',
     fontSize: 14,
-    fontWeight: 600,
+    fontWeight: 500,
   },
 
-  // Carte d'aide : tuile teintée Wise, radius large
-  helpCard: { ...tile, borderRadius: 'var(--radius-lg)', padding: '32px 24px', marginTop: 6 },
+  // Carte d'aide : encart teinté, rayon 8
+  helpCard: { ...tile, borderRadius: 8, padding: '32px 24px', marginTop: 6 },
   helpTitle: {
     margin: '0 0 8px',
-    fontSize: 22,
-    fontWeight: 600,
-    letterSpacing: '-0.03em',
-    lineHeight: 1.1,
+    fontFamily: 'var(--font-display)',
+    fontSize: 24,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 'var(--lh-title)',
     color: 'var(--content-primary)',
   },
   helpText: { margin: '0 0 18px', color: 'var(--content-secondary)', lineHeight: 1.5, maxWidth: 640 },

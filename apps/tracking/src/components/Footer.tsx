@@ -1,10 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import type { CSSProperties, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { useLang } from '../i18n/LanguageProvider';
-import { shared as s } from './theme';
 import { SITE_APPS } from '@/lib/site-apps';
+
+/**
+ * Pied de page en colonnes, commun à toutes les pages du portail.
+ *
+ * Même gabarit que les autres portails du projet : colonnes de liens, puis un
+ * filet, la marque et le partenaire, enfin les réseaux et la ligne légale
+ * centrés. La mise en page (5 colonnes → 3 → 2 → 1) est portée par les classes
+ * `.sf-*` de globals.css, pas par un test de largeur en JS : le premier rendu
+ * serveur est déjà juste sur téléphone.
+ */
 
 // ── Marques des réseaux sociaux ──────────────────────────────────
 // Glyphes pleins, à part du jeu d'icônes en trait de icons.tsx : ces marques
@@ -62,143 +71,138 @@ const SOCIALS: { name: string; url: string; Icon: () => ReactElement }[] = [
   { name: 'Instagram', url: '', Icon: IconInstagram },
 ];
 
+// Liens vers le portail officiel de l'aéroport FIH
+const FIH_LINKS = [
+  { href: 'https://fih-rva.com', label: 'Site officiel FIH' },
+  { href: 'https://fih-rva.com/vols/departs', label: 'Départs et arrivées' },
+  { href: 'https://fih-rva.com/guide', label: 'Guide du voyageur' },
+  { href: 'https://fih-rva.com/guide/securite-bagages', label: 'Sécurité bagages' },
+  { href: 'https://fih-rva.com/stationnement-transport', label: 'Stationnement' },
+  { href: 'https://fih-rva.com/contact', label: "Contacter l'aéroport" },
+];
+
+interface FooterLink {
+  label: string;
+  href: string;
+  external?: boolean;
+}
+
 export function Footer() {
   const { t, lang } = useLang();
   const year = new Date().getFullYear();
 
-  const navLinks = [
-    { href: '/', label: t.nav.home },
-    { href: '/a-propos', label: t.nav.about },
-    { href: '/support', label: t.nav.support },
-  ];
-  const legalLinks = [
-    { href: '/mentions-legales', label: t.breadcrumb.mentions },
-    { href: '/confidentialite', label: t.breadcrumb.privacy },
-    { href: '/conditions', label: t.breadcrumb.terms },
-    { href: '/cookies', label: t.breadcrumb.cookies },
+  const columns: { title: string; links: FooterLink[] }[] = [
+    {
+      title: t.footer.navTitle,
+      links: [
+        { href: '/', label: t.nav.home },
+        { href: '/a-propos', label: t.nav.about },
+        { href: '/support', label: t.nav.support },
+      ],
+    },
+    {
+      title: t.footer.legalTitle,
+      links: [
+        { href: '/mentions-legales', label: t.breadcrumb.mentions },
+        { href: '/confidentialite', label: t.breadcrumb.privacy },
+        { href: '/conditions', label: t.breadcrumb.terms },
+        { href: '/cookies', label: t.breadcrumb.cookies },
+      ],
+    },
+    {
+      title: t.footer.contactTitle,
+      links: [
+        { href: `mailto:${t.support.email}`, label: t.support.email, external: true },
+        { href: `tel:${t.support.phone.replace(/\s+/g, '')}`, label: t.support.phone, external: true },
+      ],
+    },
+    {
+      // Portails voisins du projet, chacun sur son sous-domaine
+      title: t.footer.productsTitle,
+      links: SITE_APPS.map((a) => ({
+        href: a.url,
+        label: lang === 'en' ? (a.labelEn ?? a.label) : a.label,
+        external: true,
+      })),
+    },
+    {
+      title: 'Aéroport FIH',
+      links: FIH_LINKS.map((l) => ({ ...l, external: true })),
+    },
   ];
 
   return (
-    <footer className="site-footer" style={s.footer}>
-      <div style={s.footerInner}>
-        <div>
-          <div style={{ ...s.brand, flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
+    <footer className="sf site-footer">
+      <div className="sf-inner">
+        <div className="sf-cols sf-cols-5" data-rv-auto>
+          {columns.map((col) => (
+            <div key={col.title} className="sf-col">
+              <h3 className="sf-col-title">{col.title}</h3>
+              <ul className="sf-list">
+                {col.links.map((l) => (
+                  <li key={l.href + l.label}>
+                    {l.external ? (
+                      <a
+                        href={l.href}
+                        className="ft-link"
+                        {...(l.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      >
+                        {l.label}
+                      </a>
+                    ) : (
+                      <Link href={l.href} className="ft-link">
+                        {l.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="sf-bottom">
+          <div className="sf-brand">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/air.png" alt="Air Congo" height={38} style={{ objectFit: 'contain', display: 'block' }} />
-            <span style={s.footerBrandText}>{t.brand}</span>
+            <img src="/air.png" alt="Air Congo" className="sf-brand-logo" />
+            <span className="sf-brand-name">{t.brand}</span>
           </div>
-          <p style={s.footerTagline}>{t.footer.tagline}</p>
+
+          <div className="sf-partners">
+            <span className="sf-partner-label">Aéroport</span>
+            <a className="sf-partner-pill" href="https://fih-rva.com" target="_blank" rel="noopener noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/fih-logo.png" alt="RVA, Aéroport International de Kinshasa" className="sf-partner-logo" />
+            </a>
+          </div>
         </div>
 
-        <div>
-          <h3 style={s.footerColTitle}>{t.footer.navTitle}</h3>
-          <ul style={s.footerList}>
-            {navLinks.map((l) => (
-              <li key={l.href}>
-                <Link href={l.href} className="footer-link" style={s.footerLink}>
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h3 style={s.footerColTitle}>{t.footer.legalTitle}</h3>
-          <ul style={s.footerList}>
-            {legalLinks.map((l) => (
-              <li key={l.href}>
-                <Link href={l.href} className="footer-link" style={s.footerLink}>
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h3 style={s.footerColTitle}>{t.footer.contactTitle}</h3>
-          <ul style={s.footerList}>
-            <li style={s.footerLink}>{t.support.email}</li>
-            <li style={s.footerLink}>{t.support.phone}</li>
-          </ul>
-        </div>
-
-        {/* Portails voisins du projet, chacun sur son sous-domaine */}
-        <div>
-          <h3 style={s.footerColTitle}>{t.footer.productsTitle}</h3>
-          <ul style={s.footerList}>
-            {SITE_APPS.map((a) => (
-              <li key={a.url}>
-                <a href={a.url} className="footer-link" style={s.footerLink} target="_blank" rel="noopener noreferrer">
-                  {lang === 'en' ? (a.labelEn ?? a.label) : a.label}
+        {/* Bloc centré à toutes les largeurs : les icônes, puis la ligne
+            légale qui se replie d'elle-même sur les petits écrans. */}
+        <div className="sf-legal">
+          <div className="sf-social">
+            {SOCIALS.map(({ name, url, Icon }) =>
+              url ? (
+                <a key={name} href={url} target="_blank" rel="noopener noreferrer" className="sf-social-item" aria-label={name}>
+                  <Icon />
                 </a>
-              </li>
-            ))}
-          </ul>
-        </div>
+              ) : (
+                // Compte pas encore ouvert : l'icône reste décorative plutôt que
+                // de devenir un lien qui ne mène nulle part.
+                <span key={name} className="sf-social-item" title={name} aria-hidden="true">
+                  <Icon />
+                </span>
+              ),
+            )}
+          </div>
 
-        {/* Liens vers le portail officiel de l'aéroport FIH */}
-        <div>
-          <h3 style={s.footerColTitle}>Aéroport FIH</h3>
-          <ul style={s.footerList}>
-            {FIH_LINKS.map((l) => (
-              <li key={l.href}>
-                <a href={l.href} className="footer-link" style={f.fihLink} target="_blank" rel="noopener noreferrer">
-                  {l.label} ↗
-                </a>
-              </li>
-            ))}
-          </ul>
+          <div className="sf-legal-text">
+            <span className="sf-copy">© {year} African Transport Systems</span>
+            <span className="sf-legal-sep" aria-hidden="true" />
+            <span className="sf-copy">{t.footer.rights}</span>
+          </div>
         </div>
-      </div>
-
-      {/* Bannière site officiel */}
-      <div style={s.footerBottom}>
-        <a className="footer-link" style={f.fihBanner} href="https://fih-rva.com" target="_blank" rel="noopener noreferrer">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/fih-logo.png" alt="RVA" width={22} height={22} style={{ objectFit: 'contain', background: '#fff', borderRadius: 6, padding: 2 }} />
-          <span>Site officiel de l'Aéroport International de Kinshasa : <strong>fih-rva.com</strong></span>
-          <span style={{ opacity: 0.7 }}>↗</span>
-        </a>
-        <div className="sf-social" style={{ marginTop: 16 }}>
-          {SOCIALS.map(({ name, url, Icon }) =>
-            url ? (
-              <a key={name} href={url} target="_blank" rel="noopener noreferrer" className="sf-social-item" aria-label={name}>
-                <Icon />
-              </a>
-            ) : (
-              // Compte pas encore ouvert : l'icône reste décorative plutôt que
-              // de devenir un lien qui ne mène nulle part.
-              <span key={name} className="sf-social-item" title={name} aria-hidden="true">
-                <Icon />
-              </span>
-            ),
-          )}
-        </div>
-        <span style={{ marginTop: 12, display: 'block' }}>© {year} African Transport Systems. {t.footer.rights}</span>
       </div>
     </footer>
   );
 }
-
-const FIH_LINKS = [
-  { href: 'https://fih-rva.com',                     label: 'Site officiel FIH' },
-  { href: 'https://fih-rva.com/vols/departs',        label: 'Départs & arrivées' },
-  { href: 'https://fih-rva.com/guide',               label: 'Guide du voyageur' },
-  { href: 'https://fih-rva.com/guide/securite-bagages', label: 'Sécurité bagages' },
-  { href: 'https://fih-rva.com/stationnement-transport', label: 'Stationnement' },
-  { href: 'https://fih-rva.com/contact',             label: "Contacter l'aéroport" },
-];
-
-const f: Record<string, CSSProperties> = {
-  fihLink: { color: 'var(--content-secondary)', fontSize: 14, fontWeight: 500 },
-  fihBanner: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 10,
-    color: 'var(--content-secondary)',
-    fontSize: 13,
-    fontWeight: 500,
-  },
-};

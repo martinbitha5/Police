@@ -127,7 +127,7 @@ export function Footer() {
         <div className="sf-bottom">
           <div className="sf-brand">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Litige Bagage" className="sf-brand-logo" style={{ borderRadius: 7 }} />
+            <img src="/logo.png" alt="Litige Bagage" className="sf-brand-logo" />
             <span className="sf-brand-name">Litige Bagage</span>
           </div>
 

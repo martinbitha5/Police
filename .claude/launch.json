@@ -7,6 +7,27 @@
       "runtimeArgs": ["next", "dev", "-p", "3011"],
       "cwd": "apps/web",
       "port": 3011
+    },
+    {
+      "name": "litige",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "-p", "3013"],
+      "cwd": "apps/litige",
+      "port": 3013
+    },
+    {
+      "name": "vols",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "-p", "3014"],
+      "cwd": "apps/vols",
+      "port": 3014
+    },
+    {
+      "name": "tracking",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "-p", "3012"],
+      "cwd": "apps/tracking",
+      "port": 3012
     }
   ]
 }

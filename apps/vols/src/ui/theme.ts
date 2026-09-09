@@ -22,18 +22,6 @@ export const cardTinted: CSSProperties = {
   padding: 20,
 };
 
-// Anciens noms conservés : les pages existantes composent encore dessus. Ils
-// rendent la même surface blanche que `card`, sans padding ni rayon.
-export const glass: CSSProperties = {
-  background: 'var(--bg-elevated)',
-  borderWidth: 1,
-  borderStyle: 'solid',
-  borderColor: 'var(--divider)',
-  boxShadow: 'var(--shadow-card)',
-};
-
-export const glassStrong: CSSProperties = { ...glass };
-
 // Bouton primaire : pilule noire, texte blanc. Un seul par écran.
 export const btnPrimary: CSSProperties = {
   display: 'inline-flex',
@@ -52,7 +40,7 @@ export const btnPrimary: CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-// Bouton secondaire : aplat gris, texte noir, même pilule. Plus de bordure.
+// Bouton secondaire : aplat gris, texte noir, même pilule. Pas de bordure.
 export const btnSecondary: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -69,10 +57,6 @@ export const btnSecondary: CSSProperties = {
   textDecoration: 'none',
   whiteSpace: 'nowrap',
 };
-
-// Alias conservé pour les pages qui importent encore `btnGhost` : c'est le
-// même bouton secondaire.
-export const btnGhost: CSSProperties = { ...btnSecondary };
 
 // Lien-bouton : transparent, texte noir souligné. Pour les actions tertiaires.
 export const btnText: CSSProperties = {
@@ -93,26 +77,6 @@ export const btnText: CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-// Modales : voile sombre, panneau blanc rayon 8 porté par l'ombre de popover.
-export const modalOverlay: CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0, 0, 0, 0.45)',
-  zIndex: 50,
-  display: 'grid',
-  placeItems: 'center',
-  padding: 16,
-};
-
-export const modalPanel: CSSProperties = {
-  background: 'var(--bg-elevated)',
-  borderWidth: 1,
-  borderStyle: 'solid',
-  borderColor: 'var(--divider)',
-  borderRadius: 8,
-  boxShadow: 'var(--shadow-pop)',
-};
-
 // Champ : gris au repos, bordure transparente (le filet noir du focus,
 // posé par globals.css, ne décale alors rien).
 export const input: CSSProperties = {
@@ -127,8 +91,6 @@ export const input: CSSProperties = {
   width: '100%',
 };
 
-export const label: CSSProperties = { fontSize: 14, color: 'var(--content-secondary)', fontWeight: 500 };
-
 // Titre de section : Figtree 700, casse normale.
 export const sectionHeading: CSSProperties = {
   fontFamily: 'var(--font-display)',
@@ -140,8 +102,7 @@ export const sectionHeading: CSSProperties = {
   margin: '8px 0 14px',
 };
 
-// Petit libellé en capitales, gris : quand un vrai titre serait trop lourd
-// (au-dessus d'un groupe de champs, d'une colonne de chiffres).
+// Petit libellé en capitales, gris : quand un vrai titre serait trop lourd.
 export const eyebrow: CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
@@ -165,27 +126,4 @@ export const badge: CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
   whiteSpace: 'nowrap',
-};
-
-// Tons de pastilles (fond + texte) : un statut, jamais une décoration.
-export const badgeTone = {
-  positive: { background: 'var(--positive-bg)', color: 'var(--positive)' } as CSSProperties,
-  warning: { background: 'var(--warning-bg)', color: 'var(--warning-content)' } as CSSProperties,
-  negative: { background: 'var(--negative-bg)', color: 'var(--negative)' } as CSSProperties,
-  neutral: { background: 'var(--bg-neutral)', color: 'var(--content-secondary)' } as CSSProperties,
-};
-
-// Pastilles par statut de litige : ouvert = en attente, en cours = neutre,
-// résolu = réussi.
-export const DISPUTE_BADGE: Record<string, CSSProperties> = {
-  open: badgeTone.warning,
-  investigating: badgeTone.neutral,
-  resolved: badgeTone.positive,
-};
-
-// Couleurs par statut de litige (texte seul), conservé pour compatibilité.
-export const DISPUTE_COLOR: Record<string, string> = {
-  open: 'var(--warning-content)',
-  investigating: 'var(--content-secondary)',
-  resolved: 'var(--positive)',
 };

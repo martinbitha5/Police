@@ -57,7 +57,7 @@ export default function SupportPage() {
 const s: Record<string, CSSProperties> = {
   contactCard: {
     ...glass,
-    borderRadius: 'var(--radius-md)',
+    borderRadius: 8,
     padding: '24px 26px',
     display: 'flex',
     flexDirection: 'column',
@@ -65,7 +65,7 @@ const s: Record<string, CSSProperties> = {
   },
   contactList: { listStyle: 'none', margin: '6px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 14 },
   contactItem: { display: 'flex', alignItems: 'center', gap: 12, fontSize: 16 },
-  // Icônes posées dans des cercles teintés — recette Wise
+  // Icônes en disque gris, trait noir : les mêmes que les tuiles de la vitrine.
   contactIcon: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -75,21 +75,20 @@ const s: Record<string, CSSProperties> = {
     flexShrink: 0,
     borderRadius: 'var(--radius-full)',
     background: 'var(--bg-neutral)',
-    color: 'var(--interactive-primary)',
-    boxShadow: 'inset 0 0 0 1px var(--border-neutral)',
+    color: 'var(--content-primary)',
   },
   contactValue: { color: 'var(--content-primary)' },
 
   faqList: { display: 'flex', flexDirection: 'column', gap: 12 },
   faqItem: {
     ...glass,
-    borderRadius: 'var(--radius-md)',
+    borderRadius: 8,
     padding: '16px 20px',
   },
   faqQ: {
     fontSize: 16,
     fontWeight: 600,
-    letterSpacing: '-0.02em',
+    letterSpacing: '-0.01em',
     color: 'var(--content-primary)',
     cursor: 'pointer',
     listStyle: 'none',

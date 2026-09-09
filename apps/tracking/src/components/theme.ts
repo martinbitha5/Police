@@ -1,24 +1,27 @@
 import type { CSSProperties } from 'react';
 
-// Carte blanche Wise — remplace l'ancien panneau en verre dépoli.
-// Plus de blur, plus d'ombre par défaut : fond blanc + bordure fine.
+// Primitives de style du portail, registre Uber (voir apps/web/DESIGN.md).
+// Noir et blanc pour la structure, un seul accent bleu qui signale. Rayon 8
+// ou pilule. Une carte est portée par une ombre douce et un filet clair.
+
+// Carte blanche : l'ancien nom est conservé, les pages composent dessus.
 export const glass: CSSProperties = {
   background: 'var(--bg-elevated)',
-  border: '1px solid var(--border-neutral)',
+  border: '1px solid var(--divider)',
+  boxShadow: 'var(--shadow-card)',
 };
 
-// Tuile teintée Wise — cartes marketing : fond vert forêt à 8 %,
-// aucune bordure, aucune ombre, radius large.
+// Encart teinté : aplat gris, aucune bordure, aucune ombre.
 export const tile: CSSProperties = {
   background: 'var(--bg-neutral)',
   border: 'none',
 };
 
-// Styles partagés par toutes les pages (shell, header, breadcrumb, footer, contenu légal).
+// Styles partagés par toutes les pages (shell, header, breadcrumb, contenu légal).
 export const shared: Record<string, CSSProperties> = {
   shell: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-screen)' },
 
-  // Navbar Wise : sticky, blanche, 76px, liens en pilules neutres.
+  // Barre du haut : collante, blanche, 64 px, liens en pilules neutres.
   header: {
     position: 'sticky',
     top: 0,
@@ -29,21 +32,27 @@ export const shared: Record<string, CSSProperties> = {
     height: 'var(--nav-height)',
     padding: '0 32px',
     background: 'var(--bg-screen)',
-    borderBottom: '1px solid var(--border-neutral)',
+    borderBottom: '1px solid var(--divider)',
     color: 'var(--content-primary)',
   },
   brand: { display: 'flex', alignItems: 'center', gap: 10 },
-  brandIcon: { color: 'var(--interactive-primary)', fontSize: 22 },
-  brandText: { fontWeight: 700, letterSpacing: '-0.02em', fontSize: 18, color: 'var(--content-primary)' },
+  brandIcon: { color: 'var(--content-primary)', fontSize: 22 },
+  brandText: {
+    fontFamily: 'var(--font-display)',
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    fontSize: 17,
+    color: 'var(--content-primary)',
+  },
   nav: { display: 'flex', alignItems: 'center', gap: 4, fontSize: 15 },
   navActive: {
     display: 'inline-flex',
     alignItems: 'center',
     padding: '8px 12px',
     borderRadius: 'var(--radius-full)',
-    background: 'var(--bg-neutral)',
+    background: 'var(--bg-neutral-hover)',
     fontWeight: 600,
-    color: 'var(--interactive-primary)',
+    color: 'var(--content-primary)',
   },
   navLink: {
     display: 'inline-flex',
@@ -63,9 +72,9 @@ export const shared: Record<string, CSSProperties> = {
     borderRadius: 'var(--radius-full)',
     background: 'var(--bg-neutral)',
   },
-  globe: { display: 'inline-flex', alignItems: 'center', color: 'var(--interactive-primary)' },
-  langBtn: { background: 'none', border: 'none', padding: 0, color: 'var(--content-secondary)', fontWeight: 600 },
-  langActive: { color: 'var(--interactive-primary)', fontWeight: 700 },
+  globe: { display: 'inline-flex', alignItems: 'center', color: 'var(--content-primary)' },
+  langBtn: { background: 'none', border: 'none', padding: 0, color: 'var(--content-secondary)', fontWeight: 500 },
+  langActive: { color: 'var(--content-primary)', fontWeight: 700 },
   langSep: { color: 'var(--content-tertiary)' },
 
   breadcrumb: {
@@ -94,12 +103,13 @@ export const shared: Record<string, CSSProperties> = {
   // Pages de texte long (À propos, légal) : conteneur 700px
   mainText: { maxWidth: 'var(--container-text)', margin: '0 auto' } as CSSProperties,
 
-  // Pages de contenu (À propos, légal)
+  // Pages de contenu (À propos, légal) : titre Figtree 700, resserré.
   contentTitle: {
     margin: '20px 0 8px',
+    fontFamily: 'var(--font-display)',
     fontSize: 'clamp(1.75rem, 6vw, 2.25rem)',
-    fontWeight: 600,
-    letterSpacing: 'var(--ls-heading)',
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
     lineHeight: 'var(--lh-title)',
     color: 'var(--content-primary)',
     overflowWrap: 'break-word',
@@ -114,7 +124,7 @@ export const shared: Record<string, CSSProperties> = {
   updated: { margin: 0, color: 'var(--content-tertiary)', fontSize: 13 },
   contentCard: {
     ...glass,
-    borderRadius: 'var(--radius-md)',
+    borderRadius: 8,
     padding: '28px 30px',
     display: 'flex',
     flexDirection: 'column',
@@ -123,46 +133,12 @@ export const shared: Record<string, CSSProperties> = {
   section: { display: 'flex', flexDirection: 'column', gap: 8 },
   sectionHeading: {
     margin: 0,
-    fontSize: 19,
-    fontWeight: 600,
-    letterSpacing: 'var(--ls-heading)',
+    fontFamily: 'var(--font-display)',
+    fontSize: 20,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
     lineHeight: 'var(--lh-title)',
     color: 'var(--content-primary)',
   },
   paragraph: { margin: 0, color: 'var(--content-secondary)', fontSize: 15.5, lineHeight: 1.6 },
-
-  // Footer Wise — clair, fond teinté, aucune ombre
-  footer: {
-    background: 'var(--bg-neutral)',
-    padding: '80px 32px 40px',
-    color: 'var(--content-secondary)',
-    fontSize: 14,
-  },
-  footerInner: {
-    width: '100%',
-    maxWidth: 1180,
-    margin: '0 auto',
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: 32,
-  },
-  footerBrandText: { fontWeight: 700, letterSpacing: '-0.02em', fontSize: 17, color: 'var(--content-primary)' },
-  footerTagline: { margin: '10px 0 0', color: 'var(--content-secondary)', fontSize: 14, lineHeight: 1.55, maxWidth: 320 },
-  footerColTitle: {
-    margin: '0 0 12px',
-    fontSize: 14,
-    fontWeight: 600,
-    color: 'var(--content-primary)',
-  },
-  footerList: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 9 },
-  footerLink: { color: 'var(--content-secondary)', fontSize: 14 },
-  footerBottom: {
-    width: '100%',
-    maxWidth: 1180,
-    margin: '28px auto 0',
-    paddingTop: 18,
-    borderTop: '1px solid var(--border-neutral)',
-    color: 'var(--content-secondary)',
-    fontSize: 13,
-  },
 };

@@ -5,6 +5,14 @@ pour la structure, un seul accent bleu qui signale, rayon 8 ou pilule, Figtree p
 les titres et Inter pour le texte. Les tokens vivent dans `app/globals.css`, les
 primitives dans `src/ui/theme.ts`. Aucune page ne code une couleur en dur.
 
+Les trois portails publics suivent la même charte depuis le 2026-09-09 : leur
+`app/globals.css` reprend le bloc de tokens et les sections `.rv`, `.pb-*`, `.sf-*`
+de ce fichier (Litige reprend aussi `.lp-*` et `.lg-*`), puis ajoute ses règles
+propres sous un titre « Propre au portail ». Primitives : `apps/litige/src/ui/theme.ts`
+et `apps/vols/src/ui/theme.ts` (copies de celui-ci), `apps/tracking/src/components/theme.ts`
+(mêmes valeurs, noms historiques `glass`, `tile`, `shared`). Toute évolution des
+tokens se reporte dans les quatre feuilles.
+
 ## Tokens (`app/globals.css`)
 
 | Token | Valeur | Rôle |

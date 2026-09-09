@@ -6,7 +6,7 @@ import type { Baggage, Passenger, Flight, BaggageDispute, DisputeStatus } from '
 import { formatRoute, DISPUTE_STATUS_LABEL, todayAtAirport } from '@police/shared';
 import { createClient } from '@/supabase/client';
 import { AppShell, useSession } from '@/components/AppShell';
-import { card, input, label, btnPrimary, btnGhost, badge, badgeTone, DISPUTE_BADGE } from '@/ui/theme';
+import { card, input, label, btnPrimary, btnGhost, badge, badgeTone, DISPUTE_BADGE, modalOverlay, modalPanel } from '@/ui/theme';
 import { IconSearch, IconClose, IconBag, IconUser, IconCheck, IconAlert, IconDownload } from '@/components/icons';
 
 type BaggageRow = Baggage & {
@@ -375,13 +375,14 @@ function ExternalIcon() {
 
 const al: Record<string, CSSProperties> = {
   wrap: { display: 'flex', flexDirection: 'column', gap: 10 },
-  main: { display: 'flex', alignItems: 'center', gap: 14, background: 'var(--bg-neutral)', border: 'none', borderRadius: 16, padding: '14px 18px', color: 'var(--content-primary)' },
-  logoWrap: { width: 44, height: 44, borderRadius: 9999, background: '#fff', boxShadow: 'inset 0 0 0 1px var(--border-neutral)', display: 'grid', placeItems: 'center', flexShrink: 0 },
+  // Encart teinté : aplat gris, rayon 8, sans bordure ni ombre.
+  main: { display: 'flex', alignItems: 'center', gap: 14, background: 'var(--bg-neutral)', border: 'none', borderRadius: 8, padding: '14px 18px', color: 'var(--content-primary)' },
+  logoWrap: { width: 44, height: 44, borderRadius: 9999, background: 'var(--bg-elevated)', border: '1px solid var(--divider)', display: 'grid', placeItems: 'center', flexShrink: 0 },
   mainTexts: { display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 },
   mainName: { fontSize: 14, fontWeight: 600 },
   mainUrl: { fontSize: 12, color: 'var(--content-secondary)' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 },
-  card: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border-neutral)', borderRadius: 16, padding: '12px 14px', color: 'var(--content-primary)' },
+  card: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, ...card, padding: '12px 14px', color: 'var(--content-primary)' },
   cardTexts: { display: 'flex', flexDirection: 'column', gap: 2 },
   cardLabel: { fontSize: 14, fontWeight: 600 },
   cardDesc: { fontSize: 12, color: 'var(--content-secondary)' },
@@ -469,7 +470,7 @@ function DisputePanel({
             <IconBag size={20} />
             <div>
               <div style={{ fontWeight: 700, fontSize: 16 }}>{row.tag_number}</div>
-              <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+              <div style={{ color: 'var(--content-secondary)', fontSize: 13 }}>
                 {dispute
                   ? dispute.from_passenger
                     ? 'Réclamation passager'
@@ -519,13 +520,13 @@ function DisputePanel({
             <>
               <div>
                 <label style={label}>Motif (signalé par le passager)</label>
-                <div style={{ ...input, marginTop: 6, background: 'var(--surface-alt)', color: 'var(--muted)', cursor: 'default', userSelect: 'text' }}>
+                <div style={{ ...input, marginTop: 6, color: 'var(--content-secondary)', cursor: 'default', userSelect: 'text' }}>
                   {reason || 'N/A'}
                 </div>
               </div>
               <div>
                 <label style={label}>Signalement passager</label>
-                <pre style={{ ...input, marginTop: 6, minHeight: 90, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', fontSize: 13, background: 'var(--surface-alt)', color: 'var(--muted)', cursor: 'default', overflowX: 'auto', margin: 0 }}>
+                <pre style={{ ...input, marginTop: 6, minHeight: 90, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', fontSize: 13, color: 'var(--content-secondary)', cursor: 'default', overflowX: 'auto', margin: 0 }}>
                   {notes || 'N/A'}
                 </pre>
               </div>
@@ -590,7 +591,7 @@ function Detail({ icon, label: lab, value, mono }: { icon?: React.ReactNode; lab
         {icon}
         {lab}
       </div>
-      <div style={{ marginTop: 3, fontSize: 14, fontFamily: mono ? 'ui-monospace, monospace' : 'inherit' }}>{value}</div>
+      <div style={{ marginTop: 3, fontSize: 14, color: 'var(--content-primary)', fontFamily: mono ? 'ui-monospace, monospace' : 'inherit' }}>{value}</div>
     </div>
   );
 }
@@ -600,7 +601,15 @@ const s: Record<string, CSSProperties> = {
   wrapMobile: { padding: '16px 12px', gap: 14 },
   header: { display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' },
   headerMobile: { flexDirection: 'column', alignItems: 'flex-start', gap: 10 },
-  title: { margin: 0, fontSize: 26, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1 },
+  title: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontSize: 26,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 'var(--lh-title)',
+    color: 'var(--content-primary)',
+  },
   sub: { margin: '6px 0 0', color: 'var(--content-secondary)', fontSize: 14 },
 
   filters: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' },
@@ -612,65 +621,44 @@ const s: Record<string, CSSProperties> = {
   bagCardTag: { fontFamily: 'ui-monospace, monospace', fontWeight: 700, fontSize: 15 },
   bagCardRoute: { fontSize: 14, fontWeight: 600 },
   bagCardPax: { color: 'var(--content-secondary)', fontSize: 12.5 },
+  // Champ de recherche : même dessin que `input` (gris, sans bordure), l'icône
+  // posée à gauche du texte.
   searchBox: {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
     flex: 1,
     minWidth: 240,
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 10,
-    padding: '0 12px',
+    minHeight: 44,
+    background: 'var(--bg-neutral)',
+    border: '1px solid transparent',
+    borderRadius: 8,
+    padding: '0 14px',
     color: 'var(--content-secondary)',
   },
-  searchInput: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--content-primary)', fontSize: 15, padding: '11px 0' },
-  select: {
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 10,
-    padding: '10px 12px',
-    color: 'var(--content-primary)',
-    fontSize: 14,
-    colorScheme: 'light',
-  },
+  searchInput: { flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--content-primary)', fontSize: 14, padding: '10px 0' },
+  select: { ...input, width: 'auto' },
   dateGroup: { display: 'flex', alignItems: 'center', gap: 6 },
-  dateInput: {
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 10,
-    padding: '10px 12px',
-    color: 'var(--content-primary)',
-    fontSize: 14,
-    colorScheme: 'light',
-  },
-  todayBtn: {
-    background: 'transparent',
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: 'var(--border-neutral)',
-    borderRadius: 9999,
-    padding: '10px 16px',
-    color: 'var(--content-secondary)',
-    fontSize: 14,
-    fontWeight: 600,
-    whiteSpace: 'nowrap',
-  },
-  todayBtnActive: { background: 'var(--bg-neutral-hover)', color: 'var(--brand-forest)', borderColor: 'transparent' },
+  dateInput: { ...input, width: 'auto' },
+  // Raccourci « Aujourd'hui » : pilule grise au repos, noire quand la date du
+  // jour est sélectionnée.
+  todayBtn: { ...btnGhost, height: 40, padding: '0 16px', fontSize: 14 },
+  todayBtnActive: { background: 'var(--interactive-accent)', color: 'var(--interactive-control)' },
 
   tableScroll: { overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 14 },
   th: {
     textAlign: 'left',
     padding: '12px 16px',
-    color: 'var(--content-secondary)',
+    fontSize: 12,
     fontWeight: 600,
-    fontSize: 13,
-    letterSpacing: '-0.01em',
-    borderBottom: '1px solid var(--border-neutral)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    color: 'var(--content-tertiary)',
+    borderBottom: '1px solid var(--divider)',
     whiteSpace: 'nowrap',
   },
-  tr: { cursor: 'pointer', borderBottom: '1px solid var(--border-neutral)' },
+  tr: { cursor: 'pointer', borderBottom: '1px solid var(--divider)' },
   td: { padding: '12px 16px', whiteSpace: 'nowrap' },
   tdMono: { padding: '12px 16px', whiteSpace: 'nowrap', fontFamily: 'ui-monospace, monospace' },
   empty: { padding: '32px 16px', textAlign: 'center', color: 'var(--content-secondary)' },
@@ -682,35 +670,25 @@ const s: Record<string, CSSProperties> = {
     background: 'var(--negative-bg)',
     border: 'none',
     color: 'var(--negative)',
-    borderRadius: 10,
+    borderRadius: 8,
     padding: '10px 14px',
     fontSize: 14,
   },
 
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(14,15,12,0.4)',
-    display: 'grid',
-    placeItems: 'center',
-    padding: 24,
-    zIndex: 50,
-  },
+  overlay: { ...modalOverlay, padding: 24 },
   overlayMobile: { padding: 12, alignItems: 'end' },
   panel: {
+    ...modalPanel,
     width: 'min(680px, 100%)',
     maxWidth: '100%',
     maxHeight: '90vh',
     overflowY: 'auto',
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 24,
     padding: 24,
     display: 'flex',
     flexDirection: 'column',
     gap: 18,
   },
-  panelMobile: { padding: 18, borderRadius: 20, gap: 14 },
+  panelMobile: { padding: 18, gap: 14 },
   panelHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   iconBtn: {
     background: 'transparent',
@@ -727,7 +705,7 @@ const s: Record<string, CSSProperties> = {
     gap: 14,
     padding: 20,
     background: 'var(--bg-neutral)',
-    borderRadius: 16,
+    borderRadius: 8,
     border: 'none',
   },
   detailGridMobile: { gridTemplateColumns: '1fr', gap: 12, padding: 16 },

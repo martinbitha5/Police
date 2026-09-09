@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { card } from '@/ui/theme';
 import { SiteFooter } from './SiteFooter';
 
 export interface LegalSection {
@@ -17,7 +18,7 @@ interface LegalPageProps {
   sections: LegalSection[];
 }
 
-/** Page de contenu légal autonome (conditions, confidentialité, cookies) — thème clair Wise. */
+/** Page de contenu légal autonome (conditions, confidentialité, cookies), registre Uber. */
 export function LegalPage({ title, intro, updated, sections }: LegalPageProps) {
   const isMobile = useIsMobile();
   return (
@@ -25,7 +26,7 @@ export function LegalPage({ title, intro, updated, sections }: LegalPageProps) {
     <main style={isMobile ? { ...s.shell, ...s.shellMobile } : s.shell}>
       <div style={s.container}>
         <Link href="/" style={s.back}>
-          ← Retour aux vols
+          Retour aux vols
         </Link>
 
         <h1 style={isMobile ? { ...s.title, ...s.titleMobile } : s.title}>{title}</h1>
@@ -57,21 +58,27 @@ const s: Record<string, CSSProperties> = {
   shellMobile: { padding: '20px 16px 36px' },
   container: { width: '100%', maxWidth: 'var(--container-text)', display: 'flex', flexDirection: 'column', gap: 14 },
   back: {
-    color: 'var(--content-link)',
+    color: 'var(--content-primary)',
     fontSize: 14,
-    fontWeight: 600,
+    fontWeight: 500,
     alignSelf: 'flex-start',
     textDecoration: 'underline',
     textUnderlineOffset: '0.3em',
   },
-  title: { margin: '10px 0 0', fontSize: 34, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--content-primary)' },
-  titleMobile: { fontSize: 26 },
+  title: {
+    margin: '10px 0 0',
+    fontFamily: 'var(--font-display)',
+    fontSize: 36,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 'var(--lh-title)',
+    color: 'var(--content-primary)',
+  },
+  titleMobile: { fontSize: 28 },
   intro: { margin: 0, color: 'var(--content-secondary)', fontSize: 16, lineHeight: 1.5 },
   updated: { margin: 0, color: 'var(--content-tertiary)', fontSize: 13, fontWeight: 500 },
   card: {
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 16,
+    ...card,
     padding: 28,
     display: 'flex',
     flexDirection: 'column',
@@ -79,9 +86,14 @@ const s: Record<string, CSSProperties> = {
   },
   cardMobile: { padding: 18, gap: 20 },
   section: { display: 'flex', flexDirection: 'column', gap: 8 },
-  heading: { margin: 0, fontSize: 18, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--content-primary)' },
+  heading: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontSize: 20,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 'var(--lh-title)',
+    color: 'var(--content-primary)',
+  },
   paragraph: { margin: 0, color: 'var(--content-secondary)', fontSize: 15, lineHeight: 1.6, overflowWrap: 'break-word' },
-  footerNav: { display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center', marginTop: 12 },
-  footerLink: { color: 'var(--content-secondary)', fontSize: 13, fontWeight: 500 },
-  copyright: { color: 'var(--content-tertiary)', fontSize: 12, textAlign: 'center', margin: '4px 0 0' },
 };

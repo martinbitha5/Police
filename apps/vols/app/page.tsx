@@ -17,13 +17,14 @@ import type { PublicFlight, FlightsResponse } from '@/types';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { QuickBar } from '@/components/QuickBar';
 import { SiteFooter } from '@/components/SiteFooter';
+import { card, cardTinted, btnSecondary, input, eyebrow } from '@/ui/theme';
 
 /** Aéroport choisi par le visiteur — mémorisé d'une visite à l'autre. */
 const CITY_KEY = 'vols.airport';
 
-/** Statut vol : pastille pilule colorée (design Wise), fond doux + texte foncé,
-    lisible de loin sur fond blanc. À l'heure, embarquement, décollé, arrivé = vert ;
-    embarquement terminé et retardé = ambre ; annulé = rouge. */
+/** Statut vol : pastille pilule sémantique, fond doux + texte foncé, lisible de
+    loin sur fond blanc. À l'heure, embarquement, décollé, arrivé = réussi ;
+    embarquement terminé et retardé = en attente ; annulé = refusé. */
 const STATUS_PILL: Record<FlightStatus, { bg: string; fg: string }> = {
   scheduled: { bg: 'var(--positive-bg)', fg: 'var(--positive)' },
   delayed: { bg: 'var(--warning-bg)', fg: 'var(--warning-content)' },
@@ -64,12 +65,12 @@ function formatCountdown(ms: number): string {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 }
 
-/** Seule la couleur du point de statut varie — le reste est typographique. */
+/** Seule la couleur du point de statut varie, le reste est typographique. */
 const CHECKIN_DOT: Record<CheckInPhase, string> = {
-  before: '#6A6C6A',
-  open: '#054D28',
-  closed: '#4A3B1C',
-  departed: '#A8AAA8',
+  before: 'var(--content-tertiary)',
+  open: 'var(--positive)',
+  closed: 'var(--warning)',
+  departed: 'var(--border-strong)',
 };
 
 export default function VolsPage() {
@@ -513,23 +514,17 @@ function FlightCard({
   );
 }
 
-// Carte blanche (design Wise) : fond blanc, radius 16, bordure fine — jamais d'ombre par défaut.
-const whiteCard: CSSProperties = {
-  background: 'var(--bg-elevated)',
-  border: '1px solid var(--border-neutral)',
-  borderRadius: 16,
-};
+// Carte blanche : filet clair, rayon 8, portée par l'ombre douce (registre
+// Uber, voir apps/web/DESIGN.md). Le padding est posé par chaque usage.
+const whiteCard: CSSProperties = { ...card, padding: 0 };
 
-// Tuile teintée (design Wise) : fond vert très pâle, radius 24 — ni bordure, ni ombre, ni flou.
-const tintedTile: CSSProperties = {
-  background: 'var(--bg-neutral)',
-  borderRadius: 24,
-};
+// Encart teinté : aplat gris, rayon 8, ni bordure ni ombre.
+const tintedTile: CSSProperties = { ...cardTinted, padding: 0 };
 
-// En-tête clair sticky : fond blanc, simple filet inférieur.
+// En-tête blanc : simple filet inférieur, l'ombre courte vient au défilement.
 const headerLight: CSSProperties = {
   background: 'var(--bg-screen)',
-  borderBottom: '1px solid var(--border-neutral)',
+  borderBottom: '1px solid var(--divider)',
   color: 'var(--content-primary)',
 };
 
@@ -549,8 +544,8 @@ const s: Record<string, CSSProperties> = {
     alignItems: 'center',
     flexWrap: 'wrap' as const,
     gap: 14,
-    padding: '14px 32px',
-    minHeight: 76,
+    padding: '12px 32px',
+    minHeight: 'var(--nav-height)',
   },
   stickyHeaderMobile: {
     flexDirection: 'column' as const,
@@ -563,37 +558,20 @@ const s: Record<string, CSSProperties> = {
   container: { width: '100%', maxWidth: 980, display: 'flex', flexDirection: 'column', gap: 20 },
 
   // ── Sélecteur d'aéroport ────────────────────────────────────
-  changeCityBtn: {
-    background: 'transparent',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 9999,
-    padding: '9px 16px',
-    fontSize: 14,
-    fontWeight: 600,
-    color: 'var(--content-primary)',
-    whiteSpace: 'nowrap' as const,
-    cursor: 'pointer',
-  },
+  changeCityBtn: { ...btnSecondary, fontSize: 14 },
   pickerWrap: { ...tintedTile, padding: '28px 24px', display: 'flex', flexDirection: 'column' as const, gap: 8 },
   pickerTitle: {
     margin: 0,
     fontFamily: 'var(--font-display)',
-    fontWeight: 400,
+    fontWeight: 700,
     fontSize: 32,
-    lineHeight: 1.1,
-    letterSpacing: '-0.03em',
+    lineHeight: 'var(--lh-title)',
+    letterSpacing: '-0.02em',
     color: 'var(--content-primary)',
   },
   pickerText: { margin: 0, color: 'var(--content-secondary)', fontSize: 15, lineHeight: 1.5, maxWidth: 520 },
   pickerSection: { marginTop: 18 },
-  pickerGroupTitle: {
-    margin: '0 0 10px',
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase' as const,
-    color: 'var(--content-tertiary)',
-  },
+  pickerGroupTitle: { ...eyebrow, margin: '0 0 10px' },
   pickerGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 },
   pickerGridMobile: { gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))', gap: 8 },
   cityBtn: {
@@ -625,8 +603,8 @@ const s: Record<string, CSSProperties> = {
   },
   cityCode: {
     fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: '0.06em',
+    fontWeight: 600,
+    letterSpacing: 0.5,
     color: 'var(--content-tertiary)',
     flexShrink: 0,
   },
@@ -637,8 +615,9 @@ const s: Record<string, CSSProperties> = {
   boardTitle: {
     margin: 0,
     fontFamily: 'var(--font-display)',
-    fontWeight: 400,
+    fontWeight: 700,
     fontSize: 24,
+    lineHeight: 'var(--lh-title)',
     letterSpacing: '-0.02em',
     color: 'var(--content-primary)',
   },
@@ -653,43 +632,36 @@ const s: Record<string, CSSProperties> = {
     background: 'var(--bg-neutral)',
     color: 'var(--content-secondary)',
     fontSize: 13,
-    fontWeight: 700,
+    fontWeight: 600,
+    fontVariantNumeric: 'tabular-nums',
   },
   boardSubtitle: { margin: '0 0 8px', color: 'var(--content-secondary)', fontSize: 14 },
 
   brandBlock: { display: 'flex', alignItems: 'center', gap: 14 },
-  logo: { height: 44, objectFit: 'contain' as const, flexShrink: 0 },
+  logo: { height: 40, objectFit: 'contain' as const, flexShrink: 0 },
   footerLogo: { height: 36, objectFit: 'contain' as const, opacity: 0.9, display: 'block', margin: '0 auto 6px' },
   title: {
     margin: 0,
     fontFamily: 'var(--font-display)',
-    fontSize: 30,
-    fontWeight: 400,
-    lineHeight: 0.95,
-    letterSpacing: 0,
+    fontSize: 26,
+    fontWeight: 700,
+    lineHeight: 'var(--lh-title)',
+    letterSpacing: '-0.02em',
     color: 'var(--content-primary)',
   },
-  titleMobile: { fontSize: 24 },
-  subtitle: { margin: '4px 0 0', color: 'var(--content-secondary)', fontSize: 13.5, fontWeight: 500 },
+  titleMobile: { fontSize: 22 },
+  subtitle: { margin: '2px 0 0', color: 'var(--content-secondary)', fontSize: 13.5, fontWeight: 500 },
   controls: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' },
   controlsMobile: { flexDirection: 'column', alignItems: 'stretch', width: '100%' },
-  search: {
-    background: 'var(--bg-elevated)',
-    border: '1px solid var(--border-neutral)',
-    borderRadius: 9999,
-    padding: '12px 20px',
-    color: 'var(--content-primary)',
-    fontSize: 15,
-    minWidth: 260,
-  },
+  search: { ...input, width: 'auto', minWidth: 260, fontSize: 15 },
   searchMobile: { minWidth: 0, width: '100%' },
 
   error: {
     background: 'var(--negative-bg)',
     color: 'var(--negative)',
-    borderRadius: 16,
+    borderRadius: 8,
     padding: '14px 20px',
-    fontWeight: 600,
+    fontWeight: 500,
   },
 
   loader: {
@@ -706,8 +678,8 @@ const s: Record<string, CSSProperties> = {
     width: 30,
     height: 30,
     borderRadius: '50%',
-    border: '3px solid var(--border-neutral)',
-    borderTopColor: 'var(--interactive-primary)',
+    border: '3px solid var(--bg-neutral-active)',
+    borderTopColor: 'var(--content-primary)',
     animation: 'spin 0.8s linear infinite',
   },
   empty: { ...tintedTile, padding: '40px 20px', textAlign: 'center', color: 'var(--content-secondary)', fontSize: 15 },
@@ -723,24 +695,32 @@ const s: Record<string, CSSProperties> = {
   cardMain: { display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' },
   timeBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 80 },
   time: {
+    fontFamily: 'var(--font-display)',
     fontSize: 28,
-    fontWeight: 600,
+    fontWeight: 700,
     lineHeight: 1.1,
-    color: '#0E0F0C',
+    color: 'var(--content-primary)',
     fontVariantNumeric: 'tabular-nums',
-    letterSpacing: '-0.03em',
+    letterSpacing: '-0.02em',
   },
   kindLabel: {
     color: 'var(--content-tertiary)',
     fontSize: 11,
     fontWeight: 600,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
     marginTop: 2,
   },
-  vSep: { width: 1, alignSelf: 'stretch', background: 'var(--border-neutral)', flexShrink: 0 },
+  vSep: { width: 1, alignSelf: 'stretch', background: 'var(--divider)', flexShrink: 0 },
   cardInfo: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 },
-  flightNumber: { fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: '#0E0F0C', overflowWrap: 'break-word' },
+  flightNumber: {
+    fontFamily: 'var(--font-display)',
+    fontSize: 19,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    color: 'var(--content-primary)',
+    overflowWrap: 'break-word',
+  },
   route: { color: 'var(--content-secondary)', fontSize: 14.5, fontWeight: 500, overflowWrap: 'break-word' },
   statusBlock: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 },
   statusBlockMobile: {
@@ -754,9 +734,9 @@ const s: Record<string, CSSProperties> = {
   statusPill: {
     display: 'inline-flex',
     alignItems: 'center',
-    padding: '6px 14px',
+    padding: '5px 12px',
     borderRadius: 9999,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 600,
     lineHeight: 1.25,
     whiteSpace: 'nowrap',
@@ -773,12 +753,12 @@ const s: Record<string, CSSProperties> = {
     flexWrap: 'wrap',
     marginTop: 10,
     paddingTop: 12,
-    borderTop: '1px solid var(--border-neutral)',
+    borderTop: '1px solid var(--divider)',
   },
   checkinLeft: { display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flexWrap: 'wrap' },
   checkinDot: { width: 7, height: 7, borderRadius: '50%', flexShrink: 0 },
   checkinTitle: { fontSize: 13.5, fontWeight: 600, color: 'var(--content-primary)', letterSpacing: '-0.01em' },
-  checkinSep: { width: 1, height: 12, background: 'var(--border-neutral)', flexShrink: 0 },
+  checkinSep: { width: 1, height: 12, background: 'var(--divider)', flexShrink: 0 },
   checkinCaption: { fontSize: 13, fontWeight: 500, color: 'var(--content-secondary)', fontVariantNumeric: 'tabular-nums' },
   checkinCount: { display: 'flex', alignItems: 'baseline', gap: 6, flexShrink: 0 },
   checkinCountPrefix: { fontSize: 12.5, fontWeight: 500, color: 'var(--content-secondary)' },
@@ -790,7 +770,7 @@ const s: Record<string, CSSProperties> = {
     letterSpacing: 0.2,
   },
 
-  footer: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 20, borderTop: '1px solid var(--border-neutral)' },
+  footer: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 20, borderTop: '1px solid var(--divider)' },
   footerNav: { display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center' },
   footerLink: { color: 'var(--content-secondary)', fontSize: 13, fontWeight: 500 },
   footerText: { color: 'var(--content-tertiary)', fontSize: 12, textAlign: 'center', margin: 0 },
@@ -798,36 +778,40 @@ const s: Record<string, CSSProperties> = {
   servicesWrap: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 },
   servicesTitle: {
     margin: '4px 0',
+    fontFamily: 'var(--font-display)',
     fontSize: 22,
-    fontWeight: 600,
-    letterSpacing: '-0.03em',
-    lineHeight: 1.1,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 'var(--lh-title)',
     color: 'var(--content-primary)',
   },
+  // Bandeau d'encre : le lien vers le site officiel, texte inversé. Le seul
+  // endroit de la page où le blanc est écrit en clair, posé sur le noir.
   siteBanner: {
     display: 'flex',
     alignItems: 'center',
     gap: 14,
-    borderRadius: 24,
+    borderRadius: 8,
     padding: '18px 22px',
-    color: 'var(--brand-forest)',
-    background: 'var(--brand-green)',
+    color: '#FFFFFF',
+    background: 'var(--interactive-accent)',
   },
   siteBannerMobile: { padding: '16px 16px', gap: 12 },
+  // Le logo RVA est dessiné pour le blanc : il garde sa pastille blanche.
   siteIcon: {
     display: 'grid',
     placeItems: 'center',
     width: 48,
     height: 48,
     borderRadius: 9999,
-    background: '#ffffff',
+    background: '#FFFFFF',
     flexShrink: 0,
     overflow: 'hidden',
   },
   siteLogo: { width: 32, height: 32, objectFit: 'contain' },
   siteTexts: { display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 },
   siteName: { fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', overflowWrap: 'break-word' },
-  siteUrl: { fontSize: 13, color: 'rgba(22, 51, 0, 0.75)', fontWeight: 500, overflowWrap: 'break-word' },
+  siteUrl: { fontSize: 13, color: 'rgba(255, 255, 255, 0.7)', fontWeight: 500, overflowWrap: 'break-word' },
 
   linksGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 },
   linksGridMobile: { gridTemplateColumns: '1fr' },
