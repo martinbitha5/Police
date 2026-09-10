@@ -1,7 +1,7 @@
 # Revue de direction du SMSI
 
 - Organisation : African Transport Systems (ATS Handling)
-- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
+- Périmètre : le Centre des Solutions Informatiques (CSI) d'ATS, toutes activités, siège et escales (voir PC-00)
 - Référence : RD-05
 - Version : 0.1 (projet)
 - Date : 2026-09-07
@@ -24,10 +24,10 @@ Au moins une fois par an, et après tout incident critique ou changement majeur
 
 ## 3. Participants
 
-- Direction (décideur).
-- Responsable SMSI.
-- Développeur / administrateur système.
-- Représentant supervision (selon ordre du jour).
+- Direction Générale (décideur).
+- Responsable de la sécurité de l'information (Responsable Informatique).
+- Administrateur système et développeur.
+- Représentant des informaticiens d'escale et de la supervision (selon ordre du jour).
 
 ## 4. Données d'entrée (exigées par la clause 9.3.2)
 

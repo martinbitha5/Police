@@ -1,7 +1,7 @@
 # Registre des risques
 
 - Organisation : African Transport Systems (ATS Handling)
-- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
+- Périmètre : le Centre des Solutions Informatiques (CSI) d'ATS, toutes activités, siège et escales (voir PC-00)
 - Référence : RR-02
 - Version : 0.1 (projet)
 - Date : 2026-09-07
@@ -36,6 +36,9 @@ Les cotations « après » reflètent l'état une fois les correctifs de l'audit
 | Jetons de session | Confidentialité | PDA (AsyncStorage), navigateurs |
 | Clé service_role | Secret critique | env serveur API / web |
 | Code source | Intégrité, disponibilité | GitHub |
+| Postes et logiciels d'enregistrement des compagnies (matériel des compagnies) | Disponibilité, intégrité | escales, sous garde du CSI |
+| Connectivité Internet des escales | Disponibilité | terminaux Starlink, réseaux d'escale |
+| Informatique interne d'ATS | Confidentialité, disponibilité | postes, messagerie, réseau du siège |
 
 ## Registre
 
@@ -61,6 +64,12 @@ Les cotations « après » reflètent l'état une fois les correctifs de l'audit
 | R-18 | Régression de sécurité mise en prod sans contrôle | tous | F-13 | 3 | 3 | 9 | Réduire : CI (typecheck, tests, audit, secrets) | Traité (CI ajoutée, à activer) | 1 | 3 | 3 |
 | R-19 | MITM sur un PDA partagé (pas de pinning) | jetons, PII | I-03 | 2 | 3 | 6 | Réduire : certificate pinning | En attente | 2 | 3 | 6 |
 | R-20 | Injection de formule / en-tête via rapports et champs libres | intégrité rapports | M-02, M-08 | 2 | 2 | 4 | Réduire : assainissement | Traité (code, à déployer) | 1 | 2 | 2 |
+| R-21 | Coupure de la liaison Starlink ou du réseau d'escale pendant un enregistrement | connectivité des escales | CSI | 3 | 4 | 12 | Réduire : liaison de secours, supervision de la liaison, procédure dégradée convenue avec la compagnie | À traiter | 3 | 4 | 12 |
+| R-22 | Poste d'enregistrement d'une compagnie mal préparé ou compromis (logiciel non à jour, programme malveillant) | postes des compagnies | CSI | 3 | 4 | 12 | Réduire : check-list de préparation, protection contre les programmes malveillants, comptes de la compagnie uniquement | À traiter | 3 | 4 | 12 |
+| R-23 | Perte, vol ou dégradation de matériel appartenant à une compagnie sous garde du CSI | matériel des compagnies | CSI | 2 | 4 | 8 | Réduire : inventaire, responsabilités contractuelles, rangement sécurisé en escale | À traiter | 2 | 4 | 8 |
+| R-24 | Informaticien d'escale sans vérification préalable ni engagement de confidentialité | personnes | CSI | 3 | 4 | 12 | Réduire : sélection à l'embauche, clause de confidentialité, sensibilisation, retrait des accès au départ | À traiter | 3 | 4 | 12 |
+| R-25 | Réseau d'escale non cloisonné (trafic des compagnies, Police Bagage et usage interne mélangés) | réseau | CSI | 3 | 4 | 12 | Réduire : segmentation, filtrage, accès Wi-Fi distincts par usage | À traiter | 3 | 4 | 12 |
+| R-26 | Compromission d'un poste ou d'une messagerie interne d'ATS (hameçonnage) | informatique interne | CSI | 3 | 3 | 9 | Réduire : mises à jour, protection contre les programmes malveillants, sensibilisation, double authentification de la messagerie | À traiter | 3 | 3 | 9 |
 
 ## Risques ouverts prioritaires (résiduel élevé)
 
@@ -69,6 +78,8 @@ Les cotations « après » reflètent l'état une fois les correctifs de l'audit
 - **R-08** (12) : PDA volé. Test appareil requis.
 
 Ces trois dépassent l'appétit proposé et doivent recevoir un plan de traitement daté.
+
+L'extension du périmètre au Centre des Solutions Informatiques ajoute six risques (R-21 à R-26) liés aux escales, au réseau, au matériel des compagnies et aux personnes. Ils sont cotés à titre provisoire et seront confirmés lors de la première revue de direction, avec un plan de traitement daté pour ceux qui dépassent l'appétit au risque.
 
 ## Revue
 

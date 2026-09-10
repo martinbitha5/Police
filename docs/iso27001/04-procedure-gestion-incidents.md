@@ -1,7 +1,7 @@
 # Procédure de gestion des incidents de sécurité
 
 - Organisation : African Transport Systems (ATS Handling)
-- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
+- Périmètre : le Centre des Solutions Informatiques (CSI) d'ATS, toutes activités, siège et escales (voir PC-00)
 - Référence : PGI-04
 - Version : 0.1 (projet)
 - Date : 2026-09-07
@@ -33,6 +33,9 @@ disponibilité du système lui-même. Exemples :
 - Anti-fraude contournée, alertes ou preuves altérées ou disparues.
 - Indisponibilité anormale de l'API ou de la base pendant l'embarquement.
 - Vulnérabilité critique exploitée sur une application.
+- Coupure de la connectivité d'une escale pendant un enregistrement.
+- Poste d'enregistrement d'une compagnie compromis ou indisponible avant un vol.
+- Matériel d'une compagnie perdu, volé ou dégradé sous garde du CSI.
 
 ## 3. Signalement (A.6.8)
 
@@ -79,6 +82,13 @@ quel compte), ce qui a été observé.
   refresh token), vérifier l'activité récente de ce compte, documenter l'appareil.
 - **Compte admin/superviseur compromis :** rotation du mot de passe, activation
   MFA, revue des actions faites par ce compte via `movement_log`.
+- **Coupure Starlink pendant un vol :** basculer sur la liaison de secours si elle
+  existe, appliquer la procédure dégradée convenue avec la compagnie, prévenir la
+  compagnie et le Responsable Informatique, consigner l'heure et la durée.
+- **Poste de compagnie compromis :** isoler le poste du réseau, prévenir la compagnie,
+  le réinstaller depuis une image saine avant remise en service, consigner.
+- **Matériel de compagnie perdu ou volé :** prévenir la compagnie et la Direction,
+  déclarer auprès de l'exploitant aéroportuaire, révoquer les accès éventuels, consigner.
 
 ## 6. Journal des incidents
 

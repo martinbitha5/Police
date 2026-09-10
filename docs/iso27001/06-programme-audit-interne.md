@@ -1,7 +1,7 @@
 # Programme d'audit interne du SMSI
 
 - Organisation : African Transport Systems (ATS Handling)
-- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
+- Périmètre : le Centre des Solutions Informatiques (CSI) d'ATS, toutes activités, siège et escales (voir PC-00)
 - Référence : AI-06
 - Version : 0.1 (projet)
 - Date : 2026-09-07
@@ -75,6 +75,7 @@ Vérification de clôture : [date, preuve]
 | 5 | Développement sécurisé | A.8.25-8.32 (CI, migrations, tests) | T3 |
 | 6 | Protection des données / PII | A.5.34, A.8.10, A.8.11 | T3 |
 | 7 | Clauses 4-10 (SMSI) | politique, risques, revue de direction | T4 |
+| 8 | Escales et réseau | A.7.1-7.12, A.8.20-8.23 (Starlink, postes des compagnies, matériel confié) | T2 |
 
 ## 7. Réserve d'indépendance
 

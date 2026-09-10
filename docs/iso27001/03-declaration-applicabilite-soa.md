@@ -1,7 +1,7 @@
 # Déclaration d'Applicabilité (SoA)
 
 - Organisation : African Transport Systems (ATS Handling)
-- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
+- Périmètre : le Centre des Solutions Informatiques (CSI) d'ATS, toutes activités, siège et escales (voir PC-00)
 - Référence : SOA-03
 - Version : 0.1 (projet)
 - Date : 2026-09-07
@@ -34,8 +34,8 @@ références F-xx / C-xx renvoient au rapport d'audit (`00-rapport-ecart.md`,
 | 5.6 Relations avec groupes spécialisés | O | Veille via advisors Supabase, avis CVE | Partiel |
 | 5.7 Renseignement sur les menaces | O | Advisors Supabase + npm audit en CI | Partiel |
 | 5.8 Sécurité dans la gestion de projet | O | À intégrer au processus de dev | À faire |
-| 5.9 Inventaire des actifs | O | Amorcé dans RR-02 ; inventaire formel à tenir | Partiel |
-| 5.10 Utilisation acceptable des actifs | O | Charte d'usage PDA/comptes à rédiger | À faire |
+| 5.9 Inventaire des actifs | O | Actifs de Police Bagage dans RR-02 ; inventaire du matériel des compagnies sous garde du CSI et des terminaux Starlink à tenir par escale | Partiel |
+| 5.10 Utilisation acceptable des actifs | O | Charte d'usage à rédiger : PDA, comptes, matériel des compagnies confié au CSI | À faire |
 | 5.11 Restitution des actifs | O | Procédure de départ (PDA, comptes) à définir | À faire |
 | 5.12 Classification de l'information | O | PII passagers / anti-fraude à classifier | À faire |
 | 5.13 Marquage de l'information | O | Découle de 5.12 | À faire |
@@ -44,8 +44,8 @@ références F-xx / C-xx renvoient au rapport d'audit (`00-rapport-ecart.md`,
 | 5.16 Gestion des identités | O | Comptes nominatifs à généraliser (E-12) ; matricule staff_code | Partiel |
 | 5.17 Informations d'authentification | O | Mots de passe Supabase ; MFA à imposer (E-06) ; HIBP (F-02) | Partiel |
 | 5.18 Droits d'accès | O | Attribution/retrait par admin ; revue périodique à instaurer | Partiel |
-| 5.19 Sécurité dans les relations fournisseurs | O | Supabase, Hostinger, GitHub, Expo | Partiel |
-| 5.20 Sécurité dans les accords fournisseurs | O | Revue des engagements (SLA, données) à documenter | À faire |
+| 5.19 Sécurité dans les relations fournisseurs | O | Starlink (connectivité critique), Supabase, Hostinger, GitHub, Expo | Partiel |
+| 5.20 Sécurité dans les accords fournisseurs | O | Engagements Starlink et cloud à documenter ; responsabilités sur le matériel et les postes à préciser dans les accords avec chaque compagnie | À faire |
 | 5.21 Sécurité dans la chaîne ICT | O | Dépendances npm ; audit en CI (F-32) | Partiel |
 | 5.22 Suivi des services fournisseurs | O | Suivi des changements Supabase/Hostinger à formaliser | À faire |
 | 5.23 Sécurité des services cloud | O | Supabase/Hostinger : config, sauvegarde, accès | Partiel |
@@ -68,12 +68,12 @@ références F-xx / C-xx renvoient au rapport d'audit (`00-rapport-ecart.md`,
 
 | Mesure | Applicable | Justification / mise en œuvre | Statut |
 |---|---|---|---|
-| 6.1 Sélection (screening) | O | Recrutement des agents/superviseurs à cadrer | À faire |
+| 6.1 Sélection (screening) | O | Vérification préalable des informaticiens d'escale, agents et superviseurs à cadrer | À faire |
 | 6.2 Conditions d'embauche | O | Clause de sécurité dans les contrats | À faire |
 | 6.3 Sensibilisation et formation | O | Sensibilisation phishing/PDA à mettre en place | À faire |
 | 6.4 Processus disciplinaire | O | Référencé dans PSI-01 §7 | À faire |
 | 6.5 Responsabilités après départ | O | Retrait des accès, restitution PDA | À faire |
-| 6.6 Accords de confidentialité (NDA) | O | Pour les personnes accédant aux PII | À faire |
+| 6.6 Accords de confidentialité (NDA) | O | Pour les personnes accédant aux PII et pour les informaticiens en contact avec le matériel et les données des compagnies | À faire |
 | 6.7 Travail à distance | O | Superviseurs sur poste web ; règles à définir | À faire |
 | 6.8 Signalement des événements | O | Canal de signalement dans PGI-04 §3 | Partiel |
 
@@ -81,18 +81,18 @@ références F-xx / C-xx renvoient au rapport d'audit (`00-rapport-ecart.md`,
 
 | Mesure | Applicable | Justification / mise en œuvre | Statut |
 |---|---|---|---|
-| 7.1 Périmètres de sécurité physique | O | Zones aéroportuaires (sous contrôle exploitant) | À faire |
+| 7.1 Périmètres de sécurité physique | O | Six escales sous contrôle de l'exploitant ; zones et rangement du matériel CSI à définir par escale | À faire |
 | 7.2 Entrées physiques | O | Idem, à documenter | À faire |
 | 7.3 Bureaux, salles et installations | O | Poste superviseur | À faire |
 | 7.4 Surveillance physique | O | Selon l'aéroport | À faire |
 | 7.5 Menaces physiques et environnementales | O | Hébergement délégué (Supabase/Hostinger) | Partiel |
 | 7.6 Travail en zones sécurisées | O | Salle de supervision | À faire |
 | 7.7 Bureau et écran net | O | Verrouillage écran superviseur | À faire |
-| 7.8 Emplacement et protection du matériel | O | PDA, postes | À faire |
-| 7.9 Sécurité des actifs hors site | O | PDA sur le terrain (E-07, E-12) | Partiel |
+| 7.8 Emplacement et protection du matériel | O | Postes des compagnies, terminaux Starlink, PDA, postes du siège | À faire |
+| 7.9 Sécurité des actifs hors site | O | PDA et matériel des compagnies en escale (E-07, E-12) | Partiel |
 | 7.10 Supports de stockage | O | Pas de support amovible prévu | Partiel |
-| 7.11 Services supports (utilities) | N | Délégué aux hébergeurs cloud | N/A |
-| 7.12 Sécurité du câblage | N | Pas d'infra réseau propre | N/A |
+| 7.11 Services supports (utilities) | O | Alimentation et liaisons Starlink des escales ; secours à prévoir | À faire |
+| 7.12 Sécurité du câblage | O | Câblage et équipements réseau des escales exploités par le CSI | À faire |
 | 7.13 Maintenance du matériel | O | PDA (flotte à gérer) | À faire |
 | 7.14 Mise au rebut / réemploi sécurisé | O | Effacement d'un PDA réformé | À faire |
 
@@ -119,10 +119,10 @@ références F-xx / C-xx renvoient au rapport d'audit (`00-rapport-ecart.md`,
 | 8.17 Synchronisation d'horloge | O | Journée d'exploitation calculée serveur (jour PDA non fiable) | En place |
 | 8.18 Utilitaires privilégiés | O | Accès SQL restreint (service_role serveur) | Partiel |
 | 8.19 Installation de logiciels | O | Application mobile distribuée en test fermé Google Play, sur liste nominative de testeurs ; déploiements web contrôlés | En place |
-| 8.20 Sécurité des réseaux | O | HTTPS ; en-têtes de sécurité (M-01) | Partiel |
-| 8.21 Sécurité des services réseau | O | Endpoints API/portails ; rate-limit (E-08) | Partiel |
-| 8.22 Cloisonnement des réseaux | N | Architecture serverless/managée, pas de segmentation propre | N/A |
-| 8.23 Filtrage web | N | Pas de navigation sortante contrôlée côté produit | N/A |
+| 8.20 Sécurité des réseaux | O | Réseaux d'escale sur Starlink à protéger ; HTTPS et en-têtes de sécurité (M-01) côté applications | Partiel |
+| 8.21 Sécurité des services réseau | O | Service de connectivité rendu aux compagnies ; endpoints API/portails, rate-limit (E-08) | Partiel |
+| 8.22 Cloisonnement des réseaux | O | Séparer le trafic des compagnies, de Police Bagage et de l'usage interne sur chaque escale | À faire |
+| 8.23 Filtrage web | O | Filtrage sur les réseaux d'escale et internes à définir | À faire |
 | 8.24 Cryptographie | O | TLS ; jetons ; stockage sécurisé PDA à venir (E-07) | Partiel |
 | 8.25 Cycle de développement sécurisé | O | CI ajoutée (F-13) ; revue à formaliser | Partiel |
 | 8.26 Exigences de sécurité applicative | O | Anti-fraude serveur testée ; validation d'entrée (M-04) | Partiel |
@@ -139,11 +139,11 @@ références F-xx / C-xx renvoient au rapport d'audit (`00-rapport-ecart.md`,
 
 | Statut | Nombre (indicatif) |
 |---|---|
-| En place | 7 |
-| Partiel | ~43 |
-| À faire | ~37 |
-| N/A | 6 |
+| En place | 6 |
+| Partiel | 46 |
+| À faire | 40 |
+| N/A | 1 |
 
-Les mesures « N/A » sont justifiées par l'architecture (services cloud managés,
-pas d'infra réseau/physique propre, développement interne). Toute évolution
+La seule mesure « N/A » restante (développement externalisé) est justifiée par un
+développement entièrement interne. Toute évolution
 (infra propre, sous-traitance) rouvrira ces mesures.

@@ -1,7 +1,7 @@
 # Politique de sauvegarde et de reprise (DR)
 
 - Organisation : African Transport Systems (ATS Handling)
-- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
+- Périmètre : le Centre des Solutions Informatiques (CSI) d'ATS, toutes activités, siège et escales (voir PC-00)
 - Référence : DR-07
 - Version : 0.1 (projet)
 - Date : 2026-09-08
@@ -132,8 +132,17 @@ A.8.13 / A.5.30 n'est pas satisfaite.
 |---|---|---|---|---|---|
 | | | | | | |
 
+## Continuité de la connectivité des escales
+
+La connectivité Internet des escales, fournie par le CSI via Starlink, conditionne
+l'ouverture des enregistrements des compagnies. Chaque escale doit disposer d'une
+solution de secours identifiée (seconde liaison, partage de connexion ou procédure
+dégradée convenue avec la compagnie), d'une supervision de la liaison, et d'un
+contact d'escalade. Ces dispositions sont testées au moins une fois par an et
+consignées dans le journal ci-dessus.
+
 ## 8. Responsabilités
 
-- Exécution et vérification des sauvegardes : administrateur système (à nommer).
-- Test de restauration annuel : responsable SMSI + administrateur.
+- Exécution et vérification des sauvegardes : administrateur système (Martin Bitha).
+- Test de restauration annuel : Responsable Informatique et administrateur système.
 - Revue de la politique : à chaque revue de direction (RD-05).

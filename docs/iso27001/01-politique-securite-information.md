@@ -1,7 +1,7 @@
 # Politique de sécurité de l'information
 
 - Organisation : African Transport Systems (ATS Handling)
-- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
+- Périmètre : le Centre des Solutions Informatiques (CSI) d'ATS, toutes activités, siège et escales (voir PC-00)
 - Référence : PSI-01
 - Version : 0.1 (projet)
 - Date : 2026-09-07
@@ -20,33 +20,32 @@ Ce document est l'engagement de la direction sur la sécurité. C'est le texte d
 ## 1. Objet
 
 Cette politique fixe l'engagement d'African Transport Systems (ATS) à protéger la
-confidentialité, l'intégrité et la disponibilité des informations traitées par ses
-systèmes d'information numériques, dont la plateforme Police Bagage. Sont
-particulièrement concernées les données personnelles des passagers et les données
-anti-fraude bagages, dont dépendent des interventions physiques en aéroport.
+confidentialité, l'intégrité et la disponibilité des informations traitées par son
+Centre des Solutions Informatiques (CSI) : les services informatiques rendus aux
+compagnies aériennes partenaires sur les escales, la connectivité de ces escales, les
+produits numériques d'ATS dont la plateforme Police Bagage, et l'informatique interne.
+Sont particulièrement concernées les données de vol des compagnies, les données
+personnelles des passagers et les données anti-fraude bagages.
 
 ## 2. Périmètre
 
-Le périmètre du SMSI est centré sur les systèmes d'information
-numériques d'ATS, dont la plateforme Police Bagage, opérés depuis le siège de
-Kinshasa. Le périmètre complet, le contexte et les parties intéressées sont décrits
-dans le document PC-00 (Périmètre et contexte du SMSI). En résumé, le SMSI couvre :
+Le périmètre du SMSI est le Centre des Solutions Informatiques (CSI) d'ATS dans
+l'ensemble de ses activités, depuis le siège de Kinshasa et les escales de Kinshasa,
+Lubumbashi, Gemena, Mbuji-Mayi, Kisangani et Kananga. Il est décrit en détail dans le
+document PC-00 (Périmètre et contexte du SMSI). En résumé, le SMSI couvre :
 
-- Les applications : application mobile agents (Expo/React Native sur PDA Zebra),
-  dashboard superviseur (Next.js), portails publics tracking, vols et litige,
-  et l'API de scan (Fastify).
-- La base de données et les services Supabase (PostgreSQL, Auth, Realtime),
-  projet de production unique.
-- L'hébergement de l'API (Hostinger Cloud) et l'hébergement des applications web.
-- Les dépôts de code (GitHub : monorepo et snapshot API).
-- Les terminaux d'exploitation (PDA Zebra Android) et les postes des superviseurs.
-- Les comptes et rôles : administrateurs, superviseurs, agents.
+- Les services informatiques aux compagnies aériennes partenaires : préparation et test
+  des postes et logiciels d'enregistrement avant chaque vol, assistance, présence d'un
+  informaticien du CSI sur chaque vol, sur du matériel appartenant aux compagnies.
+- La connectivité Internet des escales (liaisons Starlink et réseaux d'escale).
+- Les produits numériques d'ATS, dont la plateforme Police Bagage (application mobile,
+  tableau de bord, portails publics, API), ses services Supabase, son hébergement et
+  ses dépôts de code.
+- L'informatique interne d'ATS (postes, messagerie, réseau du siège).
+- Les comptes et rôles associés, et les terminaux d'exploitation (PDA, postes).
 
-Les autres métiers d'ATS (fret, manutention, sûreté physique, catering) sont hors
-périmètre à ce stade et pourront être intégrés lors d'un élargissement ultérieur.
-
-Aéroports concernés : hub principal FIH (Kinshasa) et escales desservies.
-Compagnie(s) : ET (Ethiopian / Air Congo), avec ouverture prévue au multi-compagnies.
+Les autres métiers d'ATS (assistance au sol, fret, manutention, sûreté physique,
+catering) sont hors périmètre à ce stade et pourront être intégrés ultérieurement.
 
 ## 3. Objectifs de sécurité
 
@@ -56,6 +55,9 @@ Compagnie(s) : ET (Ethiopian / Air Congo), avec ouverture prévue au multi-compa
 3. Assurer le cloisonnement strict des données entre compagnies et aéroports.
 4. Maintenir la disponibilité du service pendant les fenêtres d'embarquement.
 5. Pouvoir restaurer les données en cas d'incident, dans des délais définis.
+6. Garantir que les postes d'enregistrement et la connectivité des compagnies sont
+   prêts et disponibles avant et pendant chaque vol.
+7. Protéger le matériel des compagnies confié au CSI et n'en faire qu'un usage autorisé.
 
 Des indicateurs mesurables seront associés à chaque objectif (à définir lors de
 la première revue de direction, voir RD-05).
@@ -77,18 +79,19 @@ la première revue de direction, voir RD-05).
 
 | Rôle | Responsabilité sécurité | Titulaire |
 |---|---|---|
-| Direction | Approuve la politique, fournit les ressources, revue de direction | Michel TSHEFU (Directeur Général) |
-| Responsable SMSI (RSSI de fait) | Pilote le SMSI, le registre des risques, les audits | Martin Bitha |
-| Administrateur système | Gestion des comptes, configuration Supabase/Hostinger, exploitation de la plateforme web | Martin Bitha |
-| Développeur | Développement sécurisé, correctifs, migrations | Martin Bitha |
+| Direction Générale | Approuve la politique, fournit les ressources, préside la revue de direction | Michel TSHEFU, Directeur Général |
+| Responsable de la sécurité de l'information | Pilote le SMSI, le registre des risques et les audits ; dirige le CSI | Aristarque Kasonga, Responsable Informatique |
+| Administrateur système et développeur | Développement sécurisé, correctifs, migrations, gestion des comptes, exploitation des plateformes | Martin Bitha |
+| Informaticien d'escale | Préparation et test des postes des compagnies, connectivité, garde du matériel confié, signalement des incidents | informaticiens du CSI |
 | Superviseur | Traitement des alertes, gestion des litiges | équipe supervision |
 | Agent | Scan terrain, signalement des incidents | équipe agents |
 
 ## 6. Conformité et exigences légales
 
-ATS respecte, pour les traitements de la plateforme Police Bagage, les obligations
-applicables en matière de protection des données personnelles des passagers (base
-légale, minimisation, conservation) et les exigences de l'autorité de l'aviation civile. Le registre des obligations
+ATS respecte, pour les traitements du CSI et notamment ceux de la plateforme Police
+Bagage, les obligations applicables en matière de protection des données personnelles
+des passagers (base légale, minimisation, conservation), les engagements pris envers
+les compagnies partenaires et les exigences de l'autorité de l'aviation civile. Le registre des obligations
 légales et réglementaires est à établir (A.5.31).
 
 ## 7. Gestion des manquements
