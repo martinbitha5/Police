@@ -23,3 +23,6 @@ docs/.capture-profile-mobile/
 docs/__pycache__/
 # Images annotees : derivees de <nom>.png + <nom>.json, regenerees par annotate.py
 docs/img/*_annote.png
+
+# Fichiers verrou Word/Office
+~$*
