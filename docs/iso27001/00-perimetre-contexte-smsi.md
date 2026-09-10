@@ -6,7 +6,7 @@
 - Date : 2026-09-10
 - Propriétaire du document : Direction d'ATS
 - Contrôle ISO/IEC 27001:2022 : Clauses 4.1, 4.2, 4.3
-- Statut : projet à valider (périmètre choisi par la direction : option A)
+- Statut : projet à valider par la Direction Générale
 
 ## Comment utiliser ce document
 
@@ -20,7 +20,7 @@ Sa division de solutions informatiques conçoit et exploite des produits numéri
 
 ## 2. Périmètre du SMSI (clause 4.3)
 
-La direction a retenu, le 2026-09-10, le périmètre suivant (option A) :
+Le périmètre du système de management de la sécurité de l'information est défini comme suit :
 
 > Le système de management de la sécurité de l'information couvre la conception, le développement, l'exploitation et la maintenance des systèmes d'information numériques d'ATS Handling RDC, dont la plateforme Police Bagage (application mobile, tableau de bord web, API) et les données associées, opérés depuis le siège de Kinshasa.
 

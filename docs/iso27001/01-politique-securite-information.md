@@ -27,7 +27,7 @@ anti-fraude bagages, dont dépendent des interventions physiques en aéroport.
 
 ## 2. Périmètre
 
-La direction a retenu (option A) un périmètre centré sur les systèmes d'information
+Le périmètre du SMSI est centré sur les systèmes d'information
 numériques d'ATS, dont la plateforme Police Bagage, opérés depuis le siège de
 Kinshasa. Le périmètre complet, le contexte et les parties intéressées sont décrits
 dans le document PC-00 (Périmètre et contexte du SMSI). En résumé, le SMSI couvre :

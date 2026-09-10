@@ -99,9 +99,9 @@ ou job CI programmé avec le secret stocké côté plateforme). Conserver au moi
 Ne **jamais** tester une restauration sur la base de production. Restaurer dans
 une cible isolée :
 
-- **Option A. Branche Supabase.** Créer une branche du projet (isolée), y
+- **Sur une branche Supabase.** Créer une branche du projet (isolée), y
   restaurer la sauvegarde, vérifier, puis supprimer la branche.
-- **Option B. PostgreSQL local ou conteneur.** Restaurer dans une base jetable.
+- **Sur un PostgreSQL local ou un conteneur.** Restaurer dans une base jetable.
 
 Étapes :
 

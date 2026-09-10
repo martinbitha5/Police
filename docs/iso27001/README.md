@@ -11,7 +11,7 @@ Les champs « à définir » attendent une décision d'organisation.
 |---|---|---|---|
 | n/a | [Rapport d'écart](00-rapport-ecart.md) | Audit initial de readiness | n/a |
 | n/a | [Audit pentest 2026-09-07](../audit-securite-pentest-2026-09-07.md) | Constats techniques, correctifs, preuves | n/a |
-| PC-00 | [Périmètre et contexte](00-perimetre-contexte-smsi.md) | Périmètre (option A), contexte, parties intéressées | 4.1, 4.2, 4.3 |
+| PC-00 | [Périmètre et contexte](00-perimetre-contexte-smsi.md) | Périmètre, contexte, parties intéressées | 4.1, 4.2, 4.3 |
 | PSI-01 | [Politique de sécurité](01-politique-securite-information.md) | Engagement, périmètre, principes, rôles | 5.2, A.5.1 |
 | RR-02 | [Registre des risques](02-registre-des-risques.md) | Risques cotés, traitement, statut | 6.1, 8.2, 8.3 |
 | SOA-03 | [Déclaration d'Applicabilité](03-declaration-applicabilite-soa.md) | Les 93 mesures de l'annexe A | 6.1.3 d) |
