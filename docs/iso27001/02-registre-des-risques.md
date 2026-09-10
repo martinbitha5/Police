@@ -10,14 +10,7 @@
 
 ## Comment utiliser ce document
 
-C'est la liste de vos risques, avec leur gravité et leur état de traitement. C'est le document que vous consulterez le plus souvent.
-
-**À faire :**
-- Relire les risques et confirmer ceux que vous acceptez tels quels.
-- Pour les risques encore ouverts (portail public, double authentification, appareil mobile perdu), décider quoi faire et fixer une date.
-- Le mettre à jour après chaque correctif ou incident.
-
-**Prochaine étape :** traiter en priorité les trois risques les plus élevés encore ouverts.
+C'est la liste de vos risques, avec leur gravité et leur état de traitement. C'est le document que vous consulterez le plus souvent. Relire les risques et confirmer ceux que vous acceptez tels quels. Pour les risques encore ouverts (portail public, double authentification, appareil mobile perdu), décider quoi faire et fixer une date. Le mettre à jour après chaque correctif ou incident. La prochaine étape consiste à traiter en priorité les trois risques les plus élevés encore ouverts.
 
 ## Méthode
 

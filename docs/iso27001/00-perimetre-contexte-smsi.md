@@ -10,13 +10,7 @@
 
 ## Comment utiliser ce document
 
-C'est le document fondateur de la démarche. Il dit sur quoi porte la certification (le périmètre), dans quel contexte, et pour qui. Tous les autres documents s'y rattachent.
-
-**À faire :**
-- Faire valider ce périmètre et ce contexte par la direction.
-- S'y référer dans tous les autres documents (politique, risques, etc.).
-
-**Prochaine étape :** approuver le périmètre, puis vérifier que les autres documents sont bien alignés dessus.
+C'est le document fondateur de la démarche. Il dit sur quoi porte la certification (le périmètre), dans quel contexte, et pour qui. Tous les autres documents s'y rattachent. Faire valider ce périmètre et ce contexte par la direction. S'y référer dans tous les autres documents (politique, risques, etc.). La prochaine étape consiste à approuver le périmètre, puis vérifier que les autres documents sont bien alignés dessus.
 
 ## 1. Présentation de l'organisation
 
@@ -38,6 +32,8 @@ Sont inclus dans le périmètre :
 - Les dépôts de code source (GitHub).
 - Les comptes et les rôles : administrateurs, superviseurs, agents.
 - Les terminaux d'exploitation (PDA) et les postes des superviseurs utilisés pour ces systèmes.
+
+L'application mobile des agents n'est pas publiée au grand public. Elle est distribuée en test fermé, depuis le compte développeur Google Play d'ATS, à une liste nominative de testeurs : seuls les agents dont l'adresse a été inscrite par l'administrateur peuvent l'installer, à partir d'un lien qui leur est envoyé. Les portails web de suivi bagage, de vols et de litige sont, eux, accessibles au public par nature.
 
 Sont exclus du périmètre à ce stade : les autres métiers d'ATS (fret physique, manutention, sûreté physique des escales, catering, restauration). Ils pourront être intégrés lors d'un élargissement ultérieur du périmètre.
 

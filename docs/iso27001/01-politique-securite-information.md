@@ -5,7 +5,7 @@
 - Référence : PSI-01
 - Version : 0.1 (projet)
 - Date : 2026-09-07
-- Propriétaire du document : Direction d'ATS (CEO)
+- Propriétaire du document : Direction Générale d'ATS
 - Contrôle ISO/IEC 27001:2022 : Clause 5.2, A.5.1
 - Statut : projet à valider par la direction
 
@@ -15,13 +15,7 @@
 
 ## Comment utiliser ce document
 
-Ce document est l'engagement de la direction sur la sécurité. C'est le texte de référence dont tous les autres découlent.
-
-**À faire :**
-- La direction le lit et complète les champs « à définir », surtout : qui est responsable de la sécurité.
-- La direction l'approuve et le date en dernière page.
-
-**Prochaine étape :** nommer la personne responsable de la sécurité, puis faire approuver ce document.
+Ce document est l'engagement de la direction sur la sécurité. C'est le texte de référence dont tous les autres découlent. La Direction Générale le lit, vérifie les rôles et les principes qu'il fixe, puis l'approuve et le signe en dernière page. La prochaine étape consiste à faire approuver et signer ce document par le Directeur Général.
 
 ## 1. Objet
 
@@ -83,7 +77,7 @@ la première revue de direction, voir RD-05).
 
 | Rôle | Responsabilité sécurité | Titulaire |
 |---|---|---|
-| Direction | Approuve la politique, fournit les ressources, revue de direction | Michel TSHEFU (CEO) |
+| Direction | Approuve la politique, fournit les ressources, revue de direction | Michel TSHEFU (Directeur Général) |
 | Responsable SMSI (RSSI de fait) | Pilote le SMSI, le registre des risques, les audits | Martin Bitha |
 | Administrateur système | Gestion des comptes, configuration Supabase/Hostinger, exploitation de la plateforme web | Martin Bitha |
 | Développeur | Développement sécurisé, correctifs, migrations | Martin Bitha |
@@ -108,9 +102,3 @@ selon la procédure PGI-04.
 Cette politique est revue au moins une fois par an et après tout changement majeur
 (nouvel environnement, incident significatif, évolution multi-compagnies).
 
-## 9. Approbation
-
-| | Nom | Fonction | Date | Signature |
-|---|---|---|---|---|
-| Rédigé par | Martin Bitha | Responsable SMSI | 2026-09-07 | |
-| Approuvé par | Michel TSHEFU | CEO, Direction | | |

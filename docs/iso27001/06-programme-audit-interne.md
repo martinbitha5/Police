@@ -10,13 +10,7 @@
 
 ## Comment utiliser ce document
 
-C'est le contrôle interne planifié qui vérifie que tout fonctionne réellement, pas seulement sur le papier.
-
-**À faire :**
-- Faire auditer un domaine par une personne qui n'en est pas responsable.
-- Consigner les écarts trouvés et les corriger.
-
-**Prochaine étape :** réaliser un premier audit interne avant de contacter un certificateur. Si l'indépendance est difficile en interne, prévoir un auditeur externe.
+C'est le contrôle interne planifié qui vérifie que tout fonctionne réellement, pas seulement sur le papier. Faire auditer un domaine par une personne qui n'en est pas responsable. Consigner les écarts trouvés et les corriger. La prochaine étape consiste à réaliser un premier audit interne avant de contacter un certificateur. Si l'indépendance est difficile en interne, prévoir un auditeur externe.
 
 ## 1. Objet
 

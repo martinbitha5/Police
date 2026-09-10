@@ -10,13 +10,7 @@
 
 ## Comment utiliser ce document
 
-C'est la réunion par laquelle la direction pilote la sécurité et prend les décisions.
-
-**À faire :**
-- Planifier et tenir une première vraie réunion (l'ordre du jour est fourni à la fin).
-- En rédiger un compte rendu daté.
-
-**Prochaine étape :** fixer la date de la première revue de direction. Le compte rendu daté est une preuve que l'auditeur demande.
+C'est la réunion par laquelle la direction pilote la sécurité et prend les décisions. Planifier et tenir une première vraie réunion (l'ordre du jour est fourni à la fin). En rédiger un compte rendu daté. La prochaine étape consiste à fixer la date de la première revue de direction. Le compte rendu daté est une preuve que l'auditeur demande.
 
 ## 1. Objet
 

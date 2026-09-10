@@ -10,14 +10,7 @@
 
 ## Comment utiliser ce document
 
-C'est la marche à suivre quand un problème de sécurité survient (compte compromis, appareil volé, fuite).
-
-**À faire :**
-- Le faire lire à toute l'équipe pour que les bons réflexes soient connus.
-- Définir clairement le canal de signalement : qui appeler, comment.
-- Faire une fois un exercice sur table, par exemple « un PDA a été volé ».
-
-**Prochaine étape :** désigner qui reçoit les signalements et commencer à tenir le registre des incidents.
+C'est la marche à suivre quand un problème de sécurité survient (compte compromis, appareil volé, fuite). Le faire lire à toute l'équipe pour que les bons réflexes soient connus. Définir clairement le canal de signalement : qui appeler, comment. Faire une fois un exercice sur table, par exemple « un PDA a été volé ». La prochaine étape consiste à désigner qui reçoit les signalements et commencer à tenir le registre des incidents.
 
 ## 1. Objet
 

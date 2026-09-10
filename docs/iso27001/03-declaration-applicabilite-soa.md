@@ -11,13 +11,7 @@
 
 ## Comment utiliser ce document
 
-C'est la liste complète des 93 mesures de la norme et votre position sur chacune. Elle sert surtout de référence à l'auditeur.
-
-**À faire :**
-- L'utiliser comme une liste de contrôle, sans chercher à tout remplir d'un coup.
-- Planifier progressivement les lignes marquées « à faire ».
-
-**Prochaine étape :** choisir trois à cinq mesures « à faire » à traiter ce trimestre.
+C'est la liste complète des 93 mesures de la norme et votre position sur chacune. Elle sert surtout de référence à l'auditeur. L'utiliser comme une liste de contrôle, sans chercher à tout remplir d'un coup. Planifier progressivement les lignes marquées « à faire ». La prochaine étape consiste à choisir trois à cinq mesures « à faire » à traiter ce trimestre.
 
 ## Légende
 
@@ -106,7 +100,7 @@ références F-xx / C-xx renvoient au rapport d'audit (`00-rapport-ecart.md`,
 
 | Mesure | Applicable | Justification / mise en œuvre | Statut |
 |---|---|---|---|
-| 8.1 Terminaux utilisateurs | O | PDA : stockage sécurisé (E-07), backup off, pinning (I-03) | Partiel |
+| 8.1 Terminaux utilisateurs | O | Application non publique (test fermé) ; PDA : stockage sécurisé (E-07), backup off, pinning (I-03) à compléter | Partiel |
 | 8.2 Droits d'accès privilégiés | O | Rôle admin restreint ; suppression vol admin only | Partiel |
 | 8.3 Restriction d'accès à l'information | O | RLS scopée par compagnie/aéroport | En place |
 | 8.4 Accès au code source | O | GitHub ; protection de branche à activer | Partiel |
@@ -124,7 +118,7 @@ références F-xx / C-xx renvoient au rapport d'audit (`00-rapport-ecart.md`,
 | 8.16 Surveillance des activités | O | movement_log ; alerting à mettre en place | Partiel |
 | 8.17 Synchronisation d'horloge | O | Journée d'exploitation calculée serveur (jour PDA non fiable) | En place |
 | 8.18 Utilitaires privilégiés | O | Accès SQL restreint (service_role serveur) | Partiel |
-| 8.19 Installation de logiciels | O | Déploiement contrôlé ; OTA mobile absent (F-27) | Partiel |
+| 8.19 Installation de logiciels | O | Application mobile distribuée en test fermé Google Play, sur liste nominative de testeurs ; déploiements web contrôlés | En place |
 | 8.20 Sécurité des réseaux | O | HTTPS ; en-têtes de sécurité (M-01) | Partiel |
 | 8.21 Sécurité des services réseau | O | Endpoints API/portails ; rate-limit (E-08) | Partiel |
 | 8.22 Cloisonnement des réseaux | N | Architecture serverless/managée, pas de segmentation propre | N/A |
@@ -145,8 +139,8 @@ références F-xx / C-xx renvoient au rapport d'audit (`00-rapport-ecart.md`,
 
 | Statut | Nombre (indicatif) |
 |---|---|
-| En place | 6 |
-| Partiel | ~44 |
+| En place | 7 |
+| Partiel | ~43 |
 | À faire | ~37 |
 | N/A | 6 |
 
