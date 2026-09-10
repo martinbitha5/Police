@@ -1,6 +1,7 @@
 # Procédure de gestion des incidents de sécurité
 
-- Organisation : Police Bagage
+- Organisation : African Transport Systems (ATS Handling)
+- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
 - Référence : PGI-04
 - Version : 0.1 (projet)
 - Date : 2026-09-07

@@ -1,6 +1,7 @@
 # Revue de direction du SMSI
 
-- Organisation : Police Bagage
+- Organisation : African Transport Systems (ATS Handling)
+- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
 - Référence : RD-05
 - Version : 0.1 (projet)
 - Date : 2026-09-07

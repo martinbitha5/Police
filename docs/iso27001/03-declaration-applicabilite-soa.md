@@ -1,6 +1,7 @@
 # Déclaration d'Applicabilité (SoA)
 
-- Organisation : Police Bagage
+- Organisation : African Transport Systems (ATS Handling)
+- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
 - Référence : SOA-03
 - Version : 0.1 (projet)
 - Date : 2026-09-07

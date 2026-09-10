@@ -1,10 +1,11 @@
 # Politique de sécurité de l'information
 
-- Organisation : Police Bagage
+- Organisation : African Transport Systems (ATS Handling)
+- Périmètre : systèmes d'information numériques d'ATS, dont Police Bagage (voir PC-00)
 - Référence : PSI-01
 - Version : 0.1 (projet)
 - Date : 2026-09-07
-- Propriétaire du document : Direction Police Bagage
+- Propriétaire du document : Direction d'ATS (CEO)
 - Contrôle ISO/IEC 27001:2022 : Clause 5.2, A.5.1
 - Statut : projet à valider par la direction
 
@@ -24,14 +25,18 @@ Ce document est l'engagement de la direction sur la sécurité. C'est le texte d
 
 ## 1. Objet
 
-Cette politique fixe l'engagement de Police Bagage à protéger la confidentialité,
-l'intégrité et la disponibilité des informations qu'elle traite, en particulier
-les données personnelles des passagers et les données anti-fraude bagages, dont
-dépendent des interventions physiques en aéroport.
+Cette politique fixe l'engagement d'African Transport Systems (ATS) à protéger la
+confidentialité, l'intégrité et la disponibilité des informations traitées par ses
+systèmes d'information numériques, dont la plateforme Police Bagage. Sont
+particulièrement concernées les données personnelles des passagers et les données
+anti-fraude bagages, dont dépendent des interventions physiques en aéroport.
 
 ## 2. Périmètre
 
-Le système de management de la sécurité de l'information (SMSI) couvre :
+La direction a retenu (option A) un périmètre centré sur les systèmes d'information
+numériques d'ATS, dont la plateforme Police Bagage, opérés depuis le siège de
+Kinshasa. Le périmètre complet, le contexte et les parties intéressées sont décrits
+dans le document PC-00 (Périmètre et contexte du SMSI). En résumé, le SMSI couvre :
 
 - Les applications : application mobile agents (Expo/React Native sur PDA Zebra),
   dashboard superviseur (Next.js), portails publics tracking, vols et litige,
@@ -42,6 +47,9 @@ Le système de management de la sécurité de l'information (SMSI) couvre :
 - Les dépôts de code (GitHub : monorepo et snapshot API).
 - Les terminaux d'exploitation (PDA Zebra Android) et les postes des superviseurs.
 - Les comptes et rôles : administrateurs, superviseurs, agents.
+
+Les autres métiers d'ATS (fret, manutention, sûreté physique, catering) sont hors
+périmètre à ce stade et pourront être intégrés lors d'un élargissement ultérieur.
 
 Aéroports concernés : hub principal FIH (Kinshasa) et escales desservies.
 Compagnie(s) : ET (Ethiopian / Air Congo), avec ouverture prévue au multi-compagnies.
@@ -75,7 +83,7 @@ la première revue de direction, voir RD-05).
 
 | Rôle | Responsabilité sécurité | Titulaire |
 |---|---|---|
-| Direction | Approuve la politique, fournit les ressources, revue de direction | à définir |
+| Direction | Approuve la politique, fournit les ressources, revue de direction | Michel TSHEFU (CEO) |
 | Responsable SMSI (RSSI de fait) | Pilote le SMSI, le registre des risques, les audits | Martin Bitha |
 | Administrateur système | Gestion des comptes, configuration Supabase/Hostinger, exploitation de la plateforme web | Martin Bitha |
 | Développeur | Développement sécurisé, correctifs, migrations | Martin Bitha |
@@ -84,9 +92,9 @@ la première revue de direction, voir RD-05).
 
 ## 6. Conformité et exigences légales
 
-Police Bagage respecte les obligations applicables en matière de protection des
-données personnelles des passagers (base légale, minimisation, conservation) et
-les exigences de l'autorité de l'aviation civile. Le registre des obligations
+ATS respecte, pour les traitements de la plateforme Police Bagage, les obligations
+applicables en matière de protection des données personnelles des passagers (base
+légale, minimisation, conservation) et les exigences de l'autorité de l'aviation civile. Le registre des obligations
 légales et réglementaires est à établir (A.5.31).
 
 ## 7. Gestion des manquements
@@ -104,5 +112,5 @@ Cette politique est revue au moins une fois par an et après tout changement maj
 
 | | Nom | Fonction | Date | Signature |
 |---|---|---|---|---|
-| Rédigé par | | | 2026-09-07 | |
-| Approuvé par | | Direction | | |
+| Rédigé par | Martin Bitha | Responsable SMSI | 2026-09-07 | |
+| Approuvé par | Michel TSHEFU | CEO, Direction | | |
