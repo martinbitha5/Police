@@ -81,7 +81,7 @@ la première revue de direction, voir RD-05).
 |---|---|---|
 | Direction Générale | Approuve la politique, fournit les ressources, préside la revue de direction | Michel TSHEFU, Directeur Général |
 | Responsable de la sécurité de l'information | Pilote le SMSI, le registre des risques et les audits ; dirige le CSI | Aristarque Kasonga, Responsable Informatique |
-| Administrateur système et développeur | Développement sécurisé, correctifs, migrations, gestion des comptes, exploitation des plateformes | Martin Bitha |
+| Administrateur système et développeur | Développement sécurisé, correctifs, migrations, gestion des comptes, exploitation des plateformes | Martin Bitha, Développeur Full Stack |
 | Informaticien d'escale | Préparation et test des postes des compagnies, connectivité, garde du matériel confié, signalement des incidents | informaticiens du CSI |
 | Superviseur | Traitement des alertes, gestion des litiges | équipe supervision |
 | Agent | Scan terrain, signalement des incidents | équipe agents |
