@@ -167,14 +167,14 @@ group by service_key, (checked_at at time zone 'utc')::date;
 grant select on public.service_current, public.service_uptime_daily to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- Services surveillés. Le portail superviseur est désactivé tant que son
--- adresse publique n'est pas confirmée (mettre l'URL, puis enabled = true).
--- La clé « apikey » est la clé anonyme publique du projet, déjà embarquée
+-- Services surveillés. Le portail superviseur vit sur brsats.com (le rôle
+-- décide de l'écran après connexion) ; sa page de connexion, publique, sert
+-- de sonde. La clé « apikey » est la clé anonyme publique du projet, déjà embarquée
 -- dans les applications ; elle n'ouvre rien de plus que ce que la RLS permet.
 -- ---------------------------------------------------------------------------
 
 insert into public.service_catalog (key, name, url, headers, sort, enabled) values
-  ('web',      'Portail superviseur',                       'https://police.brsats.com/login',                         '{}'::jsonb, 10, false),
+  ('web',      'Portail superviseur',                       'https://brsats.com/login',                                '{}'::jsonb, 10, true),
   ('api',      'API de scan',                               'https://api-police.brsats.com/health',                    '{}'::jsonb, 20, true),
   ('db',       'Base de données',                           'https://zdnktpdtolyhdischulk.supabase.co/rest/v1/service_catalog?select=key&limit=1', jsonb_build_object('apikey','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpkbmt0cGR0b2x5aGRpc2NodWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyOTk5OTYsImV4cCI6MjA5NTg3NTk5Nn0.ewGrLr8L7rOxhlyuNpBVBRiaYjaaTL3f7Xbk_ZrzGVc'), 30, true),
   ('auth',     'Authentification',                          'https://zdnktpdtolyhdischulk.supabase.co/auth/v1/health', jsonb_build_object('apikey', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpkbmt0cGR0b2x5aGRpc2NodWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyOTk5OTYsImV4cCI6MjA5NTg3NTk5Nn0.ewGrLr8L7rOxhlyuNpBVBRiaYjaaTL3f7Xbk_ZrzGVc'), 35, true),
