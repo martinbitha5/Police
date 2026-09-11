@@ -1,0 +1,792 @@
+:root {
+  /* ════════════════════════════════════════════════════════════
+     Tokens du registre Uber, identiques à la vitrine web (apps/web/DESIGN.md).
+
+     Noir et blanc pour la structure, un seul accent bleu qui signale
+     (liens, états actifs, arcs des jauges) et ne décore jamais. Les NOMS
+     des variables sont ceux du thème précédent : des dizaines de styles
+     inline en dépendent. Seules les VALEURS changent.
+     ════════════════════════════════════════════════════════════ */
+
+  /* Marque : l'encre. Les deux anciens verts pointent sur le noir pour que
+     tout style inline résiduel retombe sur un rendu monochrome lisible. */
+  --brand-green: #000000;
+  --brand-forest: #000000;
+
+  /* Texte */
+  --content-primary: #000000;
+  --content-secondary: #4B4B4B;
+  --content-tertiary: #757575;
+  --content-link: #0064D6;
+  --content-link-hover: #004FA8;
+
+  /* Surfaces */
+  --bg-screen: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-neutral: #F3F3F3;           /* champs, sections teintées, pilules au repos */
+  --bg-neutral-hover: #E8E8E8;     /* boutons secondaires, entrée de nav active */
+  --bg-neutral-active: #DCDCDC;
+
+  /* Filets */
+  --border-neutral: #E2E2E2;
+  --divider: #EEEEEE;              /* cartes, lignes de tableau, séparateurs */
+
+  /* Boutons : le primaire est noir, jamais bleu. */
+  --interactive-accent: #000000;
+  --interactive-accent-hover: #333333;
+  --interactive-accent-active: #4B4B4B;
+  --interactive-control: #FFFFFF;  /* texte posé sur le bouton primaire */
+  --interactive-primary: #000000;
+  --interactive-primary-hover: #333333;
+
+  /* Accent unique : liens, états actifs, arcs des jauges. Jamais en fond
+     de bouton. */
+  --accent: #0064D6;
+  --accent-soft: #EAF3FF;
+
+  /* Sémantiques : un statut, jamais une décoration. */
+  --positive: #067647; --positive-bg: #E1EFE9;
+  --negative: #D3232F; --negative-bg: #FAE5E6;
+  --warning: #B25E09;  --warning-bg: #F6ECE1; --warning-content: #975008;
+
+  /* Typo */
+  --font-display: var(--font-figtree), Inter, sans-serif;
+  --font-body: var(--font-inter), 'Inter', Helvetica, Arial, sans-serif;
+  --lh-display: 1.1;
+  --lh-title: 1.2;
+  --lh-body: 1.5;
+  --ls-heading: -0.02em;
+  --ls-body: 0;
+
+  /* Rayons : 8 px ou pilule, rien d'autre. */
+  --radius-sm: 8px; --radius-md: 8px; --radius-lg: 8px;
+  --radius-xl: 8px; --radius-full: 9999px;
+
+  /* Espacement fluide */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px;
+  --space-4: clamp(1rem, 0.94rem + 0.26vw, 1.25rem);
+  --space-6: clamp(1.5rem, 1.41rem + 0.38vw, 1.875rem);
+  --space-8: clamp(2rem, 1.88rem + 0.51vw, 2.5rem);
+  --space-12: clamp(3rem, 2.83rem + 0.77vw, 3.75rem);
+  --space-16: clamp(4rem, 3.77rem + 1.03vw, 5rem);
+  --space-24: clamp(6rem, 5.65rem + 1.54vw, 7.5rem);
+
+  /* Layout */
+  --container-max: 1440px; --container-text: 700px; --nav-height: 64px;
+
+  /* Ombres : une carte est portée par son ombre douce et un filet clair ;
+     la seconde ne sert qu'aux modales. */
+  --shadow-card: 0 0 8px rgba(0, 0, 0, 0.1), 0 4px 4px rgba(0, 0, 0, 0.04);
+  --shadow-pop: 0 0 25px rgba(0, 0, 0, 0.1);
+
+  /* ── Alias hérités ──
+     Filet de sécurité : tout style inline résiduel qui référencerait
+     encore les anciens noms retombe sur les tokens ci-dessus. */
+  --bg: var(--bg-screen);
+  --surface: var(--bg-elevated);
+  --surface-alt: var(--bg-neutral);
+  --border: var(--border-neutral);
+  --border-strong: #C7C7C7;
+  --text: var(--content-primary);
+  --muted: var(--content-secondary);
+  --faint: var(--content-tertiary);
+  --primary: var(--interactive-primary);
+  --primary-hover: var(--interactive-primary-hover);
+  --primary-soft: var(--bg-neutral);
+  --success: var(--positive);
+  --success-soft: var(--positive-bg);
+  --danger: var(--negative);
+  --danger-soft: var(--negative-bg);
+  --warning-soft: var(--warning-bg);
+  --glass-border: var(--border-neutral);
+  --overlay: rgba(0, 0, 0, 0.45);
+  --panel: var(--bg-elevated);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: var(--shadow-card);
+  --shadow-xl: var(--shadow-pop);
+  /* Encore lu par un badge de la page Bagages : alias transitoire vers le
+     fond d'accent, à retirer quand la page sera passée sur --accent-soft. */
+  --brand-blue: var(--accent-soft);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg-screen);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--content-primary);
+  background: var(--bg-screen);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  min-height: 100vh;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  cursor: pointer;
+  font: inherit;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+a {
+  color: var(--content-link);
+  text-decoration: none;
+}
+
+/* Micro-interactions globales : changement de fond au survol, 200 ms sur les
+   couleurs seulement, jamais de déplacement ni d'élévation. */
+button,
+a {
+  transition: background-color 0.2s cubic-bezier(0, 0, 1, 1), border-color 0.2s cubic-bezier(0, 0, 1, 1),
+    color 0.2s cubic-bezier(0, 0, 1, 1), box-shadow 0.2s cubic-bezier(0, 0, 1, 1), opacity 0.2s cubic-bezier(0, 0, 1, 1);
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  transition: border-color 0.2s cubic-bezier(0, 0, 1, 1), background-color 0.2s cubic-bezier(0, 0, 1, 1);
+}
+
+/* Le champ d'Uber : gris au repos, blanc avec un filet noir au focus. Pas de
+   halo. */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--content-primary) !important;
+  background: var(--bg-elevated);
+  box-shadow: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--content-tertiary);
+}
+
+select option {
+  background: var(--bg-elevated);
+  color: var(--content-primary);
+}
+
+::selection {
+  background: rgba(0, 100, 214, 0.2);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #C7C7C7;
+  border-radius: 999px;
+  border: 3px solid var(--bg-screen);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A6A6A6;
+}
+
+/* Entrée de navigation du back-office (AppShell) : le survol est ici, un
+   style inline ne sachant pas survoler. L'entrée active garde son fond
+   inline, plus soutenu, qui l'emporte. */
+.nav-item:hover {
+  background: var(--bg-neutral);
+  color: var(--content-primary);
+}
+
+/* Lignes de tableau : survol discret sur tout le back-office */
+tbody tr {
+  transition: background-color 0.15s ease;
+}
+tbody tr:hover {
+  background: var(--bg-neutral);
+}
+
+/* ════════════════════════════════════════════════════════════
+   Révélation au défilement (.rv) — voir RevealObserver.tsx
+   Le bloc monte de 24 px en s'affichant quand il entre dans l'écran.
+   Tout est conditionné à `js-reveal`, posée par le script de tête : sans
+   JavaScript, ou si l'utilisateur refuse les animations, rien ne bouge et
+   rien n'est masqué.
+   ════════════════════════════════════════════════════════════ */
+
+:root.js-reveal .rv {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root.js-reveal .rv-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ════════════════════════════════════════════════════════════
+   Barre du haut sur téléphone — deux états (.pb-*)
+   En haut de page : la barre complète (marque, actions).
+   Dès qu'on défile : elle cède la place à une rangée d'icônes, les
+   raccourcis les plus utiles à portée de pouce.
+   L'échange est fait en CSS depuis `data-scrolled`, sans état React :
+   la barre ne se reconstruit pas à chaque pixel défilé.
+   ════════════════════════════════════════════════════════════ */
+
+.pb-bar {
+  display: flex;
+  align-items: center;
+}
+
+/* Les deux états font la même hauteur : la barre est collante, une hauteur
+   qui change en cours de défilement décalerait tout le contenu sous elle. */
+.lp-topbar-icons {
+  min-height: var(--nav-height);
+}
+
+/* La rangée d'icônes ne sort que sur téléphone, et seulement en défilement. */
+.pb-icons {
+  display: none;
+  align-items: stretch;
+}
+
+@media (max-width: 767px) {
+  :root[data-scrolled='true'] .pb-full {
+    display: none;
+  }
+  :root[data-scrolled='true'] .pb-icons {
+    display: flex;
+  }
+}
+
+.pb-icon {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--divider);
+  color: var(--content-secondary);
+  text-decoration: none;
+}
+
+.pb-icon:last-child {
+  border-right: none;
+}
+
+.pb-icon:active {
+  background: var(--bg-neutral);
+}
+
+/* Section en cours : la même touche d'accent que la navigation latérale. */
+.pb-icon-on {
+  color: var(--accent);
+}
+
+/* Dernière cellule : action principale, en pastille pleine. */
+.pb-icon-cta:active {
+  background: transparent;
+}
+
+.pb-icon-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.pb-icon-cta:active .pb-icon-pill {
+  background: var(--interactive-primary-hover);
+}
+
+/* Barre du haut au défilement : le filet cède la place à une ombre courte,
+   la barre se détache du contenu qui passe dessous. */
+.lp-topbar,
+.app-topbar {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+:root[data-scrolled='true'] .lp-topbar {
+  border-bottom-color: transparent;
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-scrolled='true'] .app-topbar {
+  box-shadow: var(--shadow-card);
+}
+
+/* Lien de pied de page (composant Footer) */
+.ft-link {
+  color: var(--content-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.ft-link:hover {
+  color: var(--content-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+/* ════════════════════════════════════════════════════════════
+   Pied de page global (.sf-*) — colonnes de liens, marque,
+   partenaires puis ligne légale. Même bloc sur la vitrine, les
+   pages légales et le back-office (composant Footer).
+   ════════════════════════════════════════════════════════════ */
+
+.sf {
+  background: var(--bg-neutral);
+  color: var(--content-secondary);
+  margin-top: auto;
+}
+
+.sf-inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 48px 32px 28px;
+}
+
+.sf-cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px 24px;
+}
+
+.sf-col-title {
+  margin: 0 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--content-primary);
+}
+
+.sf-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Marque et partenaires */
+.sf-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 36px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border-neutral);
+}
+
+.sf-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sf-brand-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+.sf-brand-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+  color: var(--content-primary);
+  white-space: nowrap;
+}
+
+.sf-partners {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sf-partner-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--content-tertiary);
+  white-space: nowrap;
+}
+
+/* Pastille blanche : les logos compagnie sont dessinés sur fond blanc et
+   perdent leur lisibilité sur le gris du pied de page. */
+.sf-partner-pill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-screen);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-full);
+  padding: 6px 13px;
+}
+
+.sf-partner-logo {
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Ligne légale : centrée à toutes les largeurs */
+.sf-legal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-neutral);
+  text-align: center;
+}
+
+.sf-legal-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 14px;
+  flex-wrap: wrap;
+}
+
+/* Point de séparation, masqué dès que la ligne se replie sur deux lignes :
+   un séparateur en fin de ligne serait orphelin. */
+.sf-legal-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--content-tertiary);
+  flex-shrink: 0;
+}
+
+.sf-copy {
+  color: var(--content-secondary);
+  font-size: 13px;
+}
+
+.sf-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+/* Rendu identique qu'il s'agisse d'un lien ou, tant que le compte n'existe
+   pas, d'une simple icône : seul le survol distingue les deux. */
+.sf-social-item {
+  display: inline-flex;
+  color: var(--content-secondary);
+}
+
+a.sf-social-item:hover {
+  color: var(--content-primary);
+}
+
+@media (max-width: 900px) {
+  .sf-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 20px;
+  }
+}
+
+@media (max-width: 560px) {
+  .sf-inner {
+    padding: 32px 16px 24px;
+  }
+  .sf-cols {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+  }
+  /* Marque et partenaires empilés et centrés, dans l'axe du bloc légal. */
+  .sf-bottom {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .sf-legal-text {
+    gap: 4px;
+  }
+}
+
+/* Sous cette largeur la ligne légale passe sur deux lignes : le point de
+   séparation se retrouverait seul en bout de ligne. */
+@media (max-width: 640px) {
+  .sf-legal-sep {
+    display: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   Propre au portail Vols du jour
+   ════════════════════════════════════════════════════════════ */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Point « live » de l'enregistrement ouvert : l'onde reprend la couleur du
+   point (--ci-dot), posée en style inline. */
+@keyframes ci-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--ci-dot, rgba(6, 118, 71, 0.4));
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(6, 118, 71, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(6, 118, 71, 0);
+  }
+}
+.ci-dot-live {
+  animation: ci-pulse 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ci-dot-live {
+    animation: none;
+  }
+}
+
+/* Cartes de vol : portées par l'ombre douce, aucune élévation au survol
+   (elles ne sont pas cliquables). */
+.fl-card {
+  transition: border-color 0.2s cubic-bezier(0, 0, 1, 1);
+}
+
+/* Boutons du sélecteur d'aéroport : le filet se marque au survol. */
+.fl-city {
+  transition: border-color 0.2s cubic-bezier(0, 0, 1, 1), background-color 0.2s cubic-bezier(0, 0, 1, 1),
+    box-shadow 0.2s cubic-bezier(0, 0, 1, 1);
+}
+.fl-city:hover {
+  border-color: var(--content-primary);
+  background: var(--bg-elevated);
+}
+
+/* Liens services : carte blanche cliquable, l'ombre de popover au survol. */
+.fl-link {
+  transition: box-shadow 0.2s cubic-bezier(0, 0, 1, 1), background-color 0.2s cubic-bezier(0, 0, 1, 1);
+}
+.fl-link:hover {
+  box-shadow: var(--shadow-pop);
+}
+
+/* Barre du haut à deux états (voir QuickBar) : même ombre courte au
+   défilement que sur les autres portails. */
+.pb-topbar {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+:root[data-scrolled='true'] .pb-topbar {
+  box-shadow: var(--shadow-card);
+}
+
+/* Le tableau des vols n'a pas d'en-tête collant : il défile avec la page. La
+   rangée de raccourcis vient donc se poser en haut de l'écran, hors du flux,
+   dès qu'on a dépassé le seuil. Aucune boîte ne change de hauteur, donc aucun
+   saut de contenu au franchissement. */
+.pb-icons-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: var(--bg-screen);
+  border-bottom: 1px solid var(--divider);
+  box-shadow: var(--shadow-card);
+}
+
+/* L'en-tête du tableau des vols garde sa place dans le flux au défilement :
+   le masquer par `display` le retirerait de la mise en page et remonterait
+   tout le contenu d'un coup. Il devient seulement invisible, la rangée fixe
+   passant par-dessus. */
+@media (max-width: 767px) {
+  :root[data-scrolled='true'] .pb-fade {
+    visibility: hidden;
+  }
+}
+
+/* La marque du pied de page est ici le logo de la compagnie, dessiné en
+   largeur : pas de carré rogné ni de coins arrondis. */
+.sf-brand-logo {
+  width: auto;
+  height: 30px;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+/* ════════════════════════════════════════════════════════════
+   Trust Center (.tc-*) : barre du haut, bandeau à vague, onglets,
+   cartes et tableaux de contrôles. Même registre que le reste :
+   noir et blanc, filets fins, un seul accent, états sémantiques.
+   ════════════════════════════════════════════════════════════ */
+
+.tc-root { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg-screen); }
+
+/* Barre du haut */
+.tc-top { position: sticky; top: 0; z-index: 20; background: var(--bg-screen); border-bottom: 1px solid var(--divider); }
+.tc-top-inner { max-width: 1120px; margin: 0 auto; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.tc-top-brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--content-primary); min-width: 0; }
+.tc-top-logo { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; display: block; flex-shrink: 0; }
+.tc-top-sep { width: 1px; height: 22px; background: var(--border-neutral); flex-shrink: 0; }
+.tc-top-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.tc-btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: var(--radius-full); background: var(--interactive-accent); color: var(--interactive-control); font-size: 13.5px; font-weight: 600; text-decoration: none; white-space: nowrap; border: 1px solid var(--interactive-accent); }
+.tc-btn:hover { background: var(--interactive-accent-hover); border-color: var(--interactive-accent-hover); }
+.tc-btn-ghost { background: var(--bg-screen); color: var(--content-primary); border-color: var(--border-neutral); height: 34px; padding: 0 13px; font-size: 13px; }
+.tc-btn-ghost:hover { background: var(--bg-neutral); border-color: var(--border-neutral); }
+.tc-btn-off { color: var(--content-tertiary); cursor: default; }
+.tc-btn-off:hover { background: var(--bg-screen); }
+
+/* Bandeau de présentation */
+.tc-hero { position: relative; background: var(--bg-neutral); padding: 56px 24px 96px; }
+.tc-hero-inner { max-width: 1120px; margin: 0 auto; }
+.tc-h1 { margin: 0 0 14px; font-family: var(--font-display); font-size: 34px; line-height: 1.15; font-weight: 700; letter-spacing: var(--ls-heading); color: var(--content-primary); }
+.tc-desc { margin: 0; max-width: 640px; font-size: 15.5px; line-height: 1.6; color: var(--content-secondary); }
+.tc-mail { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; color: var(--content-link); font-size: 14px; font-weight: 500; text-decoration: none; }
+.tc-mail:hover { text-decoration: underline; text-underline-offset: 0.25em; }
+.tc-wave { position: absolute; left: 0; right: 0; bottom: -1px; width: 100%; height: 56px; display: block; }
+
+/* Onglets */
+.tc-tabs { border-bottom: 1px solid var(--divider); }
+.tc-tabs-inner { max-width: 1120px; margin: 0 auto; padding: 0 24px; display: flex; gap: 22px; overflow-x: auto; }
+.tc-tab { padding: 14px 0 12px; font-size: 14px; font-weight: 500; color: var(--content-secondary); text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tc-tab:hover { color: var(--content-primary); }
+.tc-tab-on { color: var(--content-primary); font-weight: 600; border-bottom-color: var(--content-primary); }
+
+/* Contenu */
+.tc-main { flex: 1; width: 100%; max-width: 1120px; margin: 0 auto; padding: 28px 24px 56px; }
+.tc-grid { display: grid; grid-template-columns: 340px 1fr; gap: 28px; align-items: start; }
+.tc-col { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.tc-block { display: flex; flex-direction: column; gap: 12px; }
+.tc-h2 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: var(--ls-heading); color: var(--content-primary); }
+.tc-h2-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.tc-link { color: var(--content-link); font-size: 13.5px; font-weight: 500; text-decoration: none; }
+.tc-link:hover { text-decoration: underline; text-underline-offset: 0.25em; }
+.tc-link-right { margin-left: auto; }
+.tc-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--radius-full); background: var(--positive-bg); color: var(--positive); font-size: 12.5px; font-weight: 600; }
+
+.tc-card { background: var(--bg-elevated); border: 1px solid var(--divider); border-radius: 12px; padding: 6px 18px; }
+.tc-card-lines { padding: 0 18px; }
+.tc-row { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--divider); }
+.tc-row:last-child { border-bottom: none; }
+.tc-row-body { min-width: 0; }
+.tc-row-title { font-size: 14px; font-weight: 600; color: var(--content-primary); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tc-row-sub { margin-top: 3px; font-size: 13px; line-height: 1.5; color: var(--content-secondary); }
+
+/* Sceau de conformité : rond noir avec la coche, ou cerclé quand la démarche est en cours. */
+.tc-seal { width: 40px; height: 40px; border-radius: 50%; background: var(--interactive-accent); color: var(--interactive-control); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tc-seal-wip { background: var(--bg-screen); color: var(--content-primary); border: 2px solid var(--content-primary); }
+.tc-seal-text { font-size: 8.5px; font-weight: 700; line-height: 1.1; text-align: center; letter-spacing: 0.2px; }
+
+.tc-sub { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--content-tertiary); padding: 14px 0 6px; }
+.tc-list { list-style: none; margin: 0; padding: 0; }
+.tc-res { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.tc-res-link { color: var(--content-link); font-size: 13.5px; text-decoration: none; }
+.tc-res-link:hover { text-decoration: underline; text-underline-offset: 0.25em; }
+.tc-res-lock { color: var(--content-tertiary); display: inline-flex; flex-shrink: 0; }
+
+.tc-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.tc-group { padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; }
+.tc-group-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14.5px; font-weight: 600; color: var(--content-primary); text-decoration: none; }
+.tc-group-title:hover { text-decoration: underline; text-underline-offset: 0.25em; }
+.tc-ctl { display: flex; align-items: flex-start; gap: 10px; padding: 5px 0; font-size: 13.5px; line-height: 1.45; color: var(--content-secondary); }
+.tc-ctl-text { min-width: 0; }
+
+.tc-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; display: inline-block; margin-top: 5px; background: var(--content-tertiary); }
+.tc-dot-ok { background: var(--positive); }
+.tc-dot-wip { background: var(--border-strong); }
+.tc-tag { font-size: 11px; font-weight: 600; color: var(--content-tertiary); border: 1px solid var(--divider); border-radius: var(--radius-full); padding: 1px 8px; white-space: nowrap; }
+
+.tc-sp { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--divider); }
+.tc-sp:last-child { border-bottom: none; }
+.tc-sp-name { font-size: 14px; font-weight: 600; color: var(--content-primary); }
+.tc-sp-role { font-size: 13px; color: var(--content-secondary); }
+.tc-mark { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-neutral); color: var(--content-primary); font-family: var(--font-display); font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* Pages à navigation latérale (Ressources, Contrôles) */
+.tc-page { display: grid; grid-template-columns: 220px 1fr; gap: 32px; align-items: start; }
+.tc-side { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 10px; }
+.tc-side-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--content-primary); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.tc-side-nav { display: flex; flex-direction: column; gap: 2px; }
+.tc-side-link { padding: 7px 10px; border-radius: var(--radius-full); font-size: 13.5px; color: var(--content-secondary); text-decoration: none; }
+.tc-side-link:hover { background: var(--bg-neutral); color: var(--content-primary); }
+.tc-content { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.tc-content-full { max-width: 820px; margin: 0 auto; width: 100%; }
+.tc-anchor { scroll-margin-top: 80px; }
+.tc-note { margin: 0; font-size: 14px; line-height: 1.6; color: var(--content-secondary); }
+
+.tc-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.tc-search { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border: 1px solid var(--border-neutral); border-radius: var(--radius-full); background: var(--bg-screen); color: var(--content-tertiary); min-width: 240px; }
+.tc-search input { border: none; outline: none; background: transparent; font: inherit; font-size: 14px; color: var(--content-primary); width: 100%; }
+.tc-count { font-size: 13px; color: var(--content-tertiary); font-variant-numeric: tabular-nums; }
+
+.tc-thead { display: flex; justify-content: space-between; padding: 12px 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--content-tertiary); border-bottom: 1px solid var(--divider); }
+.tc-line { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--divider); }
+.tc-line:last-child { border-bottom: none; }
+.tc-line-body { min-width: 0; flex: 1; }
+.tc-line-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; font-weight: 600; color: var(--content-primary); }
+.tc-line-sub { margin-top: 3px; font-size: 13px; line-height: 1.5; color: var(--content-secondary); }
+.tc-line-ctl { align-items: flex-start; }
+.tc-line-state { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; font-size: 12.5px; color: var(--content-secondary); padding-top: 2px; }
+.tc-line-state .tc-dot { margin-top: 0; }
+.tc-line-sp .tc-sp-role { font-weight: 400; }
+.tc-chip { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: var(--radius-full); border: 1px solid var(--border-neutral); background: var(--bg-screen); color: var(--content-secondary); font: inherit; font-size: 12px; font-weight: 500; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.tc-chip:hover { background: var(--bg-neutral); color: var(--content-primary); }
+.tc-legend { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; font-size: 13px; color: var(--content-tertiary); }
+.tc-legend .tc-dot { margin-top: 0; }
+.tc-legend-gap { width: 12px; }
+
+@media (max-width: 900px) {
+  .tc-grid, .tc-page { grid-template-columns: 1fr; }
+  .tc-groups { grid-template-columns: 1fr; }
+  .tc-side { position: static; }
+  .tc-side-nav { flex-direction: row; flex-wrap: wrap; }
+  .tc-hero { padding: 40px 20px 80px; }
+  .tc-h1 { font-size: 28px; }
+  .tc-line { flex-wrap: wrap; }
+}

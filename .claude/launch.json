@@ -28,6 +28,13 @@
       "runtimeArgs": ["next", "dev", "-p", "3012"],
       "cwd": "apps/tracking",
       "port": 3012
+    },
+    {
+      "name": "trust",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "-p", "3015"],
+      "cwd": "apps/trust",
+      "port": 3015
     }
   ]
 }
