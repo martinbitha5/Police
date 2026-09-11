@@ -790,3 +790,6 @@ a.sf-social-item:hover {
   .tc-h1 { font-size: 28px; }
   .tc-line { flex-wrap: wrap; }
 }
+
+/* Sceau ISO 27001 (en cours) : image SVG bleue, meme style qu un sceau officiel, sans en etre un. */
+.tc-seal-img { width: 56px; height: 56px; flex-shrink: 0; display: block; }

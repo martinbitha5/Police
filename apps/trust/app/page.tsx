@@ -20,9 +20,14 @@ export default function OverviewPage() {
             <div className="tc-card">
               {COMPLIANCE.map((c) => (
                 <div key={c.name} className="tc-row">
-                  <span className={`tc-seal${c.status === 'en cours' ? ' tc-seal-wip' : ''}`} aria-hidden="true">
-                    {c.name.includes('27001') ? <span className="tc-seal-text">ISO<br />27001</span> : <IconCheck size={16} />}
-                  </span>
+                  {c.name.includes('27001') ? (
+                    // Sceau maison, dans le style d'un sceau officiel mais sans en être un :
+                    // il dit « démarche en cours ». Le vrai sceau le remplacera à la certification.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src="/iso-27001-en-cours.svg" alt="" className="tc-seal-img" />
+                  ) : (
+                    <span className="tc-seal" aria-hidden="true"><IconCheck size={16} /></span>
+                  )}
                   <div className="tc-row-body">
                     <div className="tc-row-title">{c.name} <Tag status={c.status} /></div>
                     <div className="tc-row-sub">{c.detail}</div>
