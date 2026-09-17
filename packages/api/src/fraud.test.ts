@@ -16,7 +16,7 @@ function ctx(overrides: Partial<BaggageScanContext>): BaggageScanContext {
     flightId: FLIGHT,
     gate: 'Gate 3',
     registeredBag: { id: 'bag-1', passengerId: 'pax-1', tagNumber: '0071161002', isConfirmed: false },
-    passenger: { id: 'pax-1', fullName: 'KALONJI KABWE Oscar', pnr: 'EYFMKNE', flightId: FLIGHT, declaredBaggageCount: 2 },
+    passenger: { id: 'pax-1', fullName: 'KALONJI KABWE Oscar', pnr: 'EYFMKNE', flightId: FLIGHT, declaredBaggageCount: 2, attachedBaggageCount: 0 },
     confirmedCountForPassenger: 0,
     duplicateConfirmedTag: false,
     ...overrides,
@@ -54,7 +54,7 @@ describe('evaluateBaggageScan', () => {
 
   it('Règle 2 — 0 bagage déclaré → alerte ZERO_DECLARED', () => {
     const d = evaluateBaggageScan(
-      ctx({ passenger: { id: 'pax-1', fullName: 'DIASOLWA Pierre', pnr: 'XYZ', flightId: FLIGHT, declaredBaggageCount: 0 } }),
+      ctx({ passenger: { id: 'pax-1', fullName: 'DIASOLWA Pierre', pnr: 'XYZ', flightId: FLIGHT, declaredBaggageCount: 0, attachedBaggageCount: 0 } }),
     );
     expect(d.result).toMatchObject({ status: 'rejected', reason: FRAUD_REASON.ZERO_DECLARED, fraudAlert: true });
     expect(d.fraudAlert?.passenger_name).toBe('DIASOLWA Pierre');
@@ -82,7 +82,7 @@ describe('evaluateBaggageScan', () => {
 
   it('Règle 5 — bagage sur un autre vol → rejet sans alerte', () => {
     const d = evaluateBaggageScan(
-      ctx({ passenger: { id: 'pax-1', fullName: 'X', pnr: 'P', flightId: 'autre-vol', declaredBaggageCount: 2 } }),
+      ctx({ passenger: { id: 'pax-1', fullName: 'X', pnr: 'P', flightId: 'autre-vol', declaredBaggageCount: 2, attachedBaggageCount: 0 } }),
     );
     expect(d.result).toMatchObject({ status: 'rejected', reason: FRAUD_REASON.WRONG_FLIGHT, fraudAlert: false });
   });
@@ -94,7 +94,7 @@ describe('evaluateBaggageScan', () => {
     const d = evaluateBaggageScan(
       ctx({
         registeredBag: { id: 'bag-9', passengerId: 'pax-9', tagNumber: '0071161002', isConfirmed: true },
-        passenger: { id: 'pax-9', fullName: 'Y', pnr: 'Q', flightId: 'autre-vol', declaredBaggageCount: 0 },
+        passenger: { id: 'pax-9', fullName: 'Y', pnr: 'Q', flightId: 'autre-vol', declaredBaggageCount: 0, attachedBaggageCount: 0 },
       }),
     );
     expect(d.result).toMatchObject({ status: 'rejected', reason: FRAUD_REASON.WRONG_FLIGHT, fraudAlert: false });
@@ -107,5 +107,51 @@ describe('evaluateBaggageScan', () => {
     expect(d.result.status).toBe('accepted');
     if (d.result.status !== 'accepted') throw new Error('unreachable');
     expect(d.result.confirmedCount).toBe(2);
+  });
+
+  // Rattachement superviseur : une 3e étiquette imprimée après le boarding
+  // pass (excédent encaissé, pass non réimprimé) rattachée à la main. La ligne
+  // baggage existe désormais, le quota vaut boarding pass + rattachés.
+  describe('étiquette rattachée par le superviseur', () => {
+    const pax = { id: 'pax-1', fullName: 'KIBANGU Zue Kakule', pnr: 'YCECFQ', flightId: FLIGHT, declaredBaggageCount: 2, attachedBaggageCount: 1 };
+
+    it('le 3e bagage passe au tapis, compteur 3/3', () => {
+      const d = evaluateBaggageScan(
+        ctx({
+          passenger: pax,
+          registeredBag: { id: 'bag-3', passengerId: 'pax-1', tagNumber: '0706161865', isConfirmed: false },
+          confirmedCountForPassenger: 2,
+        }),
+      );
+      expect(d.result.status).toBe('accepted');
+      if (d.result.status !== 'accepted') throw new Error('unreachable');
+      expect(d.result.confirmedCount).toBe(3);
+      expect(d.result.declaredCount).toBe(3);
+      expect(d.confirmBagId).toBe('bag-3');
+    });
+
+    it('un 4e bagage reste refusé (règle 3, quota 3)', () => {
+      const d = evaluateBaggageScan(ctx({ passenger: pax, confirmedCountForPassenger: 3 }));
+      expect(d.result).toMatchObject({ status: 'rejected', reason: FRAUD_REASON.QUOTA_EXCEEDED, fraudAlert: true });
+      expect(d.fraudAlert?.declared_baggage_count).toBe(3);
+      if (d.result.status !== 'rejected') throw new Error('unreachable');
+      expect(d.result.message).toContain('3 bagages');
+    });
+
+    it('un passager à 0 bagage déclaré avec 1 rattaché n’est plus en règle 2', () => {
+      const d = evaluateBaggageScan(
+        ctx({ passenger: { ...pax, declaredBaggageCount: 0 }, confirmedCountForPassenger: 0 }),
+      );
+      expect(d.result.status).toBe('accepted');
+      if (d.result.status !== 'accepted') throw new Error('unreachable');
+      expect(d.result.declaredCount).toBe(1);
+    });
+
+    it('sans ligne baggage, une étiquette reste orpheline (règle 1) même si le passager a des rattachés', () => {
+      // Le rattachement crée une ligne pour UNE étiquette précise : il n'ouvre
+      // pas le quota à n'importe quel sac.
+      const d = evaluateBaggageScan(ctx({ passenger: null, registeredBag: null }));
+      expect(d.result).toMatchObject({ status: 'rejected', reason: FRAUD_REASON.UNLINKED_TAG });
+    });
   });
 });

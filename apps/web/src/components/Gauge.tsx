@@ -28,6 +28,11 @@ export interface GaugeProps {
   /** Diamètre de l'anneau en pixels. */
   size?: number;
   style?: CSSProperties;
+  /**
+   * Rend la carte cliquable (bouton) : pour ouvrir le détail de ce que le
+   * chiffre résume, par exemple la liste des passagers pas encore embarqués.
+   */
+  onClick?: () => void;
 }
 
 const STROKE = 7;
@@ -51,6 +56,7 @@ export function Gauge({
   loading = false,
   size: sizeProp = 84,
   style,
+  onClick,
 }: GaugeProps) {
   // Sous 768 px, la carte se resserre d'elle-même : anneau plus petit, textes
   // centrés dessous, pour tenir à deux par rangée sur un téléphone. Les pages
@@ -65,12 +71,17 @@ export function Gauge({
   const offset = circumference * (1 - ratio);
   const color = danger && !loading ? 'var(--negative)' : 'var(--accent)';
 
+  const ariaLabel = loading ? `${label} : chargement` : `${label} : ${value} sur ${total}`;
+  const wrapStyle = { ...card, ...(compact ? s.wrapCompact : s.wrap), ...style };
+  // Cliquable : un vrai bouton (clavier, lecteur d'écran), même dessin, le
+  // curseur seul dit qu'on peut ouvrir. Sinon une simple carte.
+  const Wrap = onClick ? 'button' : 'div';
+  const wrapProps = onClick
+    ? { type: 'button' as const, onClick, 'aria-label': `${ariaLabel}. Voir le détail`, style: { ...wrapStyle, ...s.clickable } }
+    : { role: 'img', 'aria-label': ariaLabel, style: wrapStyle };
+
   return (
-    <div
-      role="img"
-      aria-label={loading ? `${label} : chargement` : `${label} : ${value} sur ${total}`}
-      style={{ ...card, ...(compact ? s.wrapCompact : s.wrap), ...style }}
-    >
+    <Wrap {...wrapProps}>
       <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
           <circle
@@ -112,12 +123,14 @@ export function Gauge({
           {loading ? 'chargement' : (caption ?? (total > 0 ? `sur ${total}` : 'aucun'))}
         </div>
       </div>
-    </div>
+    </Wrap>
   );
 }
 
 const s: Record<string, CSSProperties> = {
   wrap: { display: 'flex', alignItems: 'center', gap: 16, padding: 16 },
+  // Bouton habillé en carte : on neutralise le dessin natif, on garde tout le reste.
+  clickable: { width: '100%', font: 'inherit', color: 'inherit', textAlign: 'left', cursor: 'pointer' },
   wrapCompact: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: 14, minWidth: 0 },
   center: {
     position: 'absolute',

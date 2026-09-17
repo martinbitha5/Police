@@ -30,6 +30,10 @@ export interface BoardingScanResponse {
     declaredBaggageCount: number;
     legs: { origin: string; destination: string; flightNumber: string; order: number }[];
   };
+  /** true = passager déjà connu (même billet), sa ligne a été mise à jour au lieu d'être doublée. */
+  updated?: boolean;
+  /** Ancien siège quand la réédition du boarding pass l'a changé. */
+  previousSeat?: string | null;
 }
 
 function send(path: string, body: unknown, token: string): Promise<Response> {

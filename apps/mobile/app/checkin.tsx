@@ -39,6 +39,10 @@ export default function CheckIn() {
   const flight = flightId ? getFlight(flightId) : undefined;
   const count = flightId ? statsFor(flightId).pax : 0;
   const [last, setLast] = useState<BoardingScanResponse['passenger'] | null>(null);
+  // Re-scan d'un passager connu (changement de siège au comptoir) : la ligne
+  // est mise à jour, pas doublée. L'agent doit le voir pour ne pas s'inquiéter
+  // d'un compteur qui ne bouge pas.
+  const [updateNote, setUpdateNote] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const [scanState, setScanState] = useState<ScanState>('scanning');
   const scanSeq = useRef(0);
@@ -51,6 +55,13 @@ export default function CheckIn() {
     try {
       const res = await scanBoarding(raw, flightId, profile?.id);
       setLast(res.passenger);
+      setUpdateNote(
+        res.updated
+          ? res.previousSeat
+            ? `Passager déjà enregistré, siège modifié : ${res.previousSeat} devient ${res.passenger.seat}.`
+            : 'Passager déjà enregistré, fiche mise à jour.'
+          : null,
+      );
       setMessage(null);
       setScanState('success');
       feedbackSuccess();
@@ -102,7 +113,9 @@ export default function CheckIn() {
               replayKey={scanSeq.current}
               title={
                 scanState === 'success'
-                  ? 'Passager enregistré'
+                  ? updateNote
+                    ? 'Passager mis à jour'
+                    : 'Passager enregistré'
                   : scanState === 'error'
                     ? 'Scan refusé'
                     : 'Scannez un boarding pass'
@@ -117,6 +130,8 @@ export default function CheckIn() {
                 <InlineAlert tone="danger" message={errorText} />
               )
             ) : null}
+
+            {last && updateNote ? <InlineAlert tone="warning" message={updateNote} /> : null}
 
             {last ? (
               <ScanResult

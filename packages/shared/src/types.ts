@@ -165,6 +165,15 @@ export interface ParsedBoardingPass {
   seat: string;
   class: string;
   sequenceNumber: number;
+  /**
+   * Billet électronique : code numérique compagnie (3) + n° de document (10),
+   * soit 13 chiffres (« 0712163324677 »). C'est l'identité stable d'un
+   * passager dans un vol : elle survit à un changement de siège, à une
+   * réédition du boarding pass et à un nouveau n° de séquence, là où le PNR
+   * est partagé par toute une réservation et le siège change. Chaîne vide si
+   * le boarding pass ne porte pas la section conditionnelle.
+   */
+  ticketNumber: string;
   declaredBaggageCount: number;
   baggageTags: string[];
   legs: ParsedBoardingPassLeg[];
@@ -223,6 +232,8 @@ export interface Passenger {
   seat: string | null;
   class: string | null;
   sequence_number: number | null;
+  /** Billet électronique (13 chiffres), clé d'identité du passager dans le vol. Null sur les lignes antérieures à cette colonne ou sans section conditionnelle. */
+  ticket_number: string | null;
   declared_baggage_count: number;
   raw_bcbp: string | null;
   scanned_at: string;
@@ -310,6 +321,29 @@ export interface Baggage {
   pulled: boolean;
   pulled_at: string | null;
   pulled_by: string | null;
+  /**
+   * true = étiquette orpheline rattachée à ce passager par un superviseur,
+   * hors boarding pass (excédent encaissé après l'impression du pass, sans
+   * réimpression). Étend le quota du passager d'un bagage : voir
+   * `baggageQuota`. Repassé à false si un boarding pass réimprimé finit par
+   * porter cette étiquette.
+   */
+  attached: boolean;
+  attached_by: string | null;
+  attached_at: string | null;
+  attach_reason: string | null;
+}
+
+/**
+ * Nombre de bagages qu'un passager peut passer au tapis : les étiquettes de
+ * son boarding pass, plus celles qu'un superviseur lui a rattachées à la main.
+ * `attachedCount` = lignes `baggage` attached et non annulées du passager.
+ */
+export function baggageQuota(
+  passenger: Pick<Passenger, 'declared_baggage_count'>,
+  attachedCount: number,
+): number {
+  return passenger.declared_baggage_count + attachedCount;
 }
 
 export interface FraudAlert {
@@ -628,6 +662,7 @@ export type MovementKind =
   | 'passenger_boarded'
   | 'passenger_offloaded'
   | 'baggage_declared'
+  | 'baggage_attached'
   | 'baggage_belt'
   | 'rush_announced'
   | 'baggage_rush_in'
@@ -651,6 +686,7 @@ export const MOVEMENT_ORDER: MovementKind[] = [
   'passenger_boarded',
   'passenger_offloaded',
   'baggage_declared',
+  'baggage_attached',
   'baggage_belt',
   'rush_announced',
   'baggage_rush_in',
@@ -674,6 +710,7 @@ export const MOVEMENT_LABEL: Record<MovementKind, string> = {
   passenger_boarded: 'Passager embarqué',
   passenger_offloaded: 'Passager débarqué',
   baggage_declared: 'Bagage déclaré au check-in',
+  baggage_attached: 'Bagage rattaché par le superviseur',
   baggage_belt: 'Bagage enregistré au tapis',
   rush_announced: 'Bagage rush annoncé par le superviseur',
   baggage_rush_in: 'Bagage expédié (rush) enregistré',
@@ -700,6 +737,7 @@ export const MOVEMENT_FAMILY: Record<MovementKind, MovementFamily> = {
   passenger_boarded: 'passenger',
   passenger_offloaded: 'passenger',
   baggage_declared: 'baggage',
+  baggage_attached: 'baggage',
   baggage_belt: 'baggage',
   rush_announced: 'baggage',
   baggage_rush_in: 'baggage',

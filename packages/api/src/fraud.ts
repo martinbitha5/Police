@@ -25,7 +25,20 @@ export interface ScanPassenger {
   fullName: string;
   pnr: string;
   flightId: string;
+  /** Étiquettes portées par le boarding pass. */
   declaredBaggageCount: number;
+  /**
+   * Étiquettes rattachées à la main par un superviseur (excédent encaissé
+   * après l'impression du pass, sans réimpression), hors annulées. Elles
+   * étendent le quota : la ligne baggage existe, le sac passe au tapis comme
+   * les autres. Ce n'est pas un contournement : sans ligne, règle 1.
+   */
+  attachedBaggageCount: number;
+}
+
+/** Quota du passager : boarding pass + rattachements superviseur. */
+function quotaOf(p: ScanPassenger): number {
+  return p.declaredBaggageCount + p.attachedBaggageCount;
 }
 
 export interface BaggageScanContext {
@@ -86,7 +99,9 @@ function rejectWithAlert(ctx: BaggageScanContext, reason: FraudReason, message: 
       pnr: ctx.passenger?.pnr ?? null,
       passenger_name: ctx.passenger?.fullName ?? null,
       tag_number: ctx.parsedTag.rawTag,
-      declared_baggage_count: ctx.passenger?.declaredBaggageCount ?? null,
+      // Ce que le passager a le droit de charger, rattachements compris :
+      // c'est le chiffre que le superviseur compare au sac écarté.
+      declared_baggage_count: ctx.passenger ? quotaOf(ctx.passenger) : null,
       gate: ctx.gate,
       reason,
       note: ctx.tagNote ?? null,
@@ -126,8 +141,10 @@ export function evaluateBaggageScan(ctx: BaggageScanContext): BaggageScanDecisio
     return reject(FRAUD_REASON.ALREADY_SCANNED, 'Ce bagage a déjà été enregistré. Passez au suivant.');
   }
 
-  // Règle 2 — 0 bagage déclaré sur le boarding pass.
-  if (passenger.declaredBaggageCount === 0) {
+  const quota = quotaOf(passenger);
+
+  // Règle 2 — 0 bagage déclaré sur le boarding pass (et rien de rattaché).
+  if (quota === 0) {
     return rejectWithAlert(
       ctx,
       FRAUD_REASON.ZERO_DECLARED,
@@ -136,11 +153,11 @@ export function evaluateBaggageScan(ctx: BaggageScanContext): BaggageScanDecisio
   }
 
   // Règle 3 — quota de bagages dépassé.
-  if (ctx.confirmedCountForPassenger >= passenger.declaredBaggageCount) {
+  if (ctx.confirmedCountForPassenger >= quota) {
     return rejectWithAlert(
       ctx,
       FRAUD_REASON.QUOTA_EXCEEDED,
-      `Bagage refusé. ${passenger.fullName} a déjà ses ${passenger.declaredBaggageCount} bagage${passenger.declaredBaggageCount > 1 ? 's' : ''}. Mettez celui-ci de côté, le superviseur arrive.`,
+      `Bagage refusé. ${passenger.fullName} a déjà ses ${quota} bagage${quota > 1 ? 's' : ''}. Mettez celui-ci de côté, le superviseur arrive.`,
     );
   }
 
@@ -150,7 +167,7 @@ export function evaluateBaggageScan(ctx: BaggageScanContext): BaggageScanDecisio
       status: 'accepted',
       passengerName: passenger.fullName,
       confirmedCount: ctx.confirmedCountForPassenger + 1,
-      declaredCount: passenger.declaredBaggageCount,
+      declaredCount: quota,
     },
     fraudAlert: null,
     confirmBagId: registeredBag.id,

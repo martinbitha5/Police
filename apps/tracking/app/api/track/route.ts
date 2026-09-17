@@ -16,12 +16,14 @@ const TAG_RE = /^\d{10}$/;
 const NOT_FOUND = (message: string): BaggageTrackingResult => ({ status: 'not_found', message });
 
 const BAG_COLUMNS =
-  'id, tag_number, is_confirmed, in_hold, in_hold_at, rush, arrived, arrived_at, scanned_at, passenger_id, flight_id';
+  'id, tag_number, is_confirmed, in_hold, in_hold_at, rush, arrived, arrived_at, scanned_at, passenger_id, flight_id, attached';
 
 interface BagRow {
   id: string;
   tag_number: string;
   is_confirmed: boolean;
+  /** Étiquette rattachée par un superviseur, hors boarding pass : compte dans le quota. */
+  attached: boolean;
   in_hold: boolean;
   in_hold_at: string | null;
   rush: boolean;
@@ -244,7 +246,9 @@ export async function POST(request: NextRequest) {
       flightDate: flight?.date ?? 'N/A',
       flightStatus: (flight?.status ?? 'scheduled') as FlightStatus,
       departureTime: flight?.departure_time ?? null,
-      declaredBaggageCount: pax.declared_baggage_count,
+      // Boarding pass + étiquettes rattachées par un superviseur (excédent
+      // encaissé après l'impression du pass) : sinon le passager lisait 3 sur 2.
+      declaredBaggageCount: pax.declared_baggage_count + bags.filter((b) => b.attached).length,
       // « confirmés » = bagages au moins enregistrés (scannés au tapis).
       confirmedBaggageCount: trackedBags.filter((b) => b.status !== 'pending').length,
       bags: trackedBags,
